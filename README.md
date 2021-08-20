@@ -4,7 +4,7 @@
 
 # Development Setup
 
-Setup on *nix or Windows WSL involves installing `nvm`using the provided
+Setup on *nix or Windows WSL involves installing `nvm` using the provided
 install script:
 
 ```shell
