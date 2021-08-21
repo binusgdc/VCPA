@@ -211,7 +211,7 @@ client.on("messageCreate", msg => {
 							console.log(`>>> Session in ${sessions[i].channel} by ${sessions[i].owner} was stopped by ${msg.author.id}!`);
 							clientChannel.send(`<@${sessions[i].owner}>'s session was stopped by <@${msg.author.id}>!`);
 
-							let embed = new Discord.MessageEmbed()
+							let embed = new MessageEmbed()
 								.setColor("#d548b0")
 								.setTitle("Session Stats")
 								.addFields(
