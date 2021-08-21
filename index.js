@@ -58,7 +58,7 @@ client.on("messageCreate", msg => {
 	// console.log(`>>> Message from ${msg.author.tag}: ${msg.content}`);
 
 	if (msg.channel !== clientChannel) return;
-	if (!msg.member.roles.cache.has(clientCommandAccessRole)) return;
+	if (!msg.member.roles.cache.has(clientCommandAccessRoleId)) return;
 
 	if (msg.content.startsWith(".start")) {
 		if (msg.content === ".start") {
