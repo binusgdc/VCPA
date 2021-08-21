@@ -149,6 +149,13 @@ client.on("messageCreate", msg => {
 						console.log(`>>> Session in ${sessions[i].channel} by ${sessions[i].owner} was stopped!`);
 						clientChannel.send(`Session stopped by <@${sessions[i].owner}>`);
 
+						const durationMsecs = new Date(sessions[i].end) - new Date(sessions[i].start);
+						const durationSecs = Math.floor(durationMsecs / 1000);
+						const durationMins = Math.floor(durationSecs / 60);
+						const durationHours = Math.floor(durationMins / 60);
+
+						let duration = `${durationHours} hours, ${durationMins % 60} minutes, ${durationSecs % 60}.${durationMsecs % 1000} seconds`;
+
 						let embed = new MessageEmbed()
 							.setColor("#d548b0")
 							.setTitle("Session Stats")
@@ -156,7 +163,7 @@ client.on("messageCreate", msg => {
 								{ name: "Channel Name", value: `<#${sessions[i].channel}>` },
 								{ name: "Start Time", value: `${sessions[i].start}`},
 								{ name: "End Time", value: `${sessions[i].end}`},
-								{ name: "Duration", value: `${new Date(sessions[i].end) - new Date(sessions[i].start)} milliseconds`}
+								{ name: "Duration", value: `${duration}`}
 							);
 						clientChannel.send({ embeds: [embed] });
 
@@ -211,6 +218,13 @@ client.on("messageCreate", msg => {
 							console.log(`>>> Session in ${sessions[i].channel} by ${sessions[i].owner} was stopped by ${msg.author.id}!`);
 							clientChannel.send(`<@${sessions[i].owner}>'s session was stopped by <@${msg.author.id}>!`);
 
+							const durationMsecs = new Date(sessions[i].end) - new Date(sessions[i].start);
+							const durationSecs = Math.floor(durationMsecs / 1000);
+							const durationMins = Math.floor(durationSecs / 60);
+							const durationHours = Math.floor(durationMins / 60);
+
+							let duration = `${durationHours} hours, ${durationMins % 60} minutes, ${durationSecs % 60}.${durationMsecs % 1000} seconds`;
+
 							let embed = new MessageEmbed()
 								.setColor("#d548b0")
 								.setTitle("Session Stats")
@@ -218,7 +232,7 @@ client.on("messageCreate", msg => {
 									{ name: "Channel Name", value: `<#${sessions[i].channel}>` },
 									{ name: "Start Time", value: `${sessions[i].start}`},
 									{ name: "End Time", value: `${sessions[i].end}`},
-									{ name: "Duration", value: `${new Date(sessions[i].end) - new Date(sessions[i].start)} milliseconds`}
+									{ name: "Duration", value: `${duration}`}
 								);
 							clientChannel.send({ embeds: [embed] });
 
