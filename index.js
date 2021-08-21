@@ -2,6 +2,8 @@ const fs = require("fs");
 
 require("dotenv").config();
 
+const dateFormat = require("dateformat");
+
 const { Client, Intents, MessageEmbed } = require("discord.js");
 const client = new Client({
 	intents: [
@@ -31,7 +33,7 @@ class Session {
 	constructor(owner, channel) {
 		this.owner = owner;
 		this.channel = channel;
-		this.start = new Date().toISOString();
+		this.start = new Date();
 		this.end = undefined;
 		this.events = [];
 	}
@@ -127,12 +129,12 @@ client.on("messageCreate", msg => {
 			for (let i = 0; i < maxSessionCount; i++) {
 				if (sessions[i] !== undefined) {
 					if (sessions[i].owner === msg.author.id) {
-						sessions[i].end = new Date().toISOString();
+						sessions[i].end = new Date();
 
 						console.log(`>>> Session in ${sessions[i].channel} by ${sessions[i].owner} was stopped!`);
 						clientChannel.send(`Session stopped by <@${sessions[i].owner}>`);
 
-						const durationMsecs = new Date(sessions[i].end) - new Date(sessions[i].start);
+						const durationMsecs = sessions[i].end.getTime() - sessions[i].start.getTime();
 						const durationSecs = Math.floor(durationMsecs / 1000);
 						const durationMins = Math.floor(durationSecs / 60);
 						const durationHours = Math.floor(durationMins / 60);
@@ -144,8 +146,8 @@ client.on("messageCreate", msg => {
 							.setTitle("Session Stats")
 							.addFields(
 								{ name: "Channel Name", value: `<#${sessions[i].channel}>` },
-								{ name: "Start Time", value: `${sessions[i].start}`},
-								{ name: "End Time", value: `${sessions[i].end}`},
+								{ name: "Start Time", value: dateFormat(sessions[i].start, "UTC:d mmmm yyyy HH:MM:ss.l \"UTC\"") },
+								{ name: "End Time", value: dateFormat(sessions[i].end, "UTC:d mmmm yyyy HH:MM:ss.l \"UTC\"") },
 								{ name: "Duration", value: `${duration}`}
 							);
 						clientChannel.send({ embeds: [embed] });
@@ -190,12 +192,12 @@ client.on("messageCreate", msg => {
 				for (let i = 0; i < maxSessionCount; i++) {
 					if (sessions[i] !== undefined) {
 						if (sessions[i].owner === tid) {
-							sessions[i].end = new Date().toISOString();
+							sessions[i].end = new Date();
 
 							console.log(`>>> Session in ${sessions[i].channel} by ${sessions[i].owner} was stopped by ${msg.author.id}!`);
 							clientChannel.send(`<@${sessions[i].owner}>'s session was stopped by <@${msg.author.id}>!`);
 
-							const durationMsecs = new Date(sessions[i].end) - new Date(sessions[i].start);
+							const durationMsecs = sessions[i].end.getTime() - sessions[i].start.getTime();
 							const durationSecs = Math.floor(durationMsecs / 1000);
 							const durationMins = Math.floor(durationSecs / 60);
 							const durationHours = Math.floor(durationMins / 60);
@@ -207,8 +209,8 @@ client.on("messageCreate", msg => {
 								.setTitle("Session Stats")
 								.addFields(
 									{ name: "Channel Name", value: `<#${sessions[i].channel}>` },
-									{ name: "Start Time", value: `${sessions[i].start}`},
-									{ name: "End Time", value: `${sessions[i].end}`},
+									{ name: "Start Time", value: dateFormat(sessions[i].start, "UTC:d mmmm yyyy HH:MM:ss.l \"UTC\"") },
+									{ name: "End Time", value: dateFormat(sessions[i].end, "UTC:d mmmm yyyy HH:MM:ss.l \"UTC\"") },
 									{ name: "Duration", value: `${duration}`}
 								);
 							clientChannel.send({ embeds: [embed] });
@@ -251,8 +253,8 @@ client.on("messageCreate", msg => {
 				if (sessions[i] !== undefined) {
 					str += `"owner": "${sessions[i].owner}",\n`
 					str += `"channel": "${sessions[i].channel}",\n`;
-					str += `"start": "${sessions[i].start}",\n`;
-					str += `"end": "${(sessions[i].end === undefined) ? "undefined" : sessions[i].end}",\n`;
+					str += `"start": "${sessions[i].start.toISOString()}",\n`;
+					str += `"end": "${(sessions[i].end === undefined) ? "undefined" : sessions[i].end.toISOString()}",\n`;
 					str += "\"events\": [\n";
 					for (let j = 0; j < sessions[i].events.length; j++) {
 						str += "{\n";
@@ -304,7 +306,6 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 	let oldChannel = oldState.channelId;
 	let newChannel = newState.channelId;
 	let time = new Date();
-	let stamp = `${time.getUTCFullYear()}-${time.getUTCMonth()}-${time.getUTCDate()} ${time.getUTCHours()}:${time.getUTCMinutes()}:${time.getUTCSeconds()}`;
 
 	if ((oldChannel === null) && (newChannel !== null)) {
 		//console.log(`uid ${person} joined channel ${newChannel} on ${stamp}`);
@@ -314,7 +315,7 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 			if (sessions[i] !== undefined) {
 				if (sessions[i].channel === newChannel) {
 					//if (sessions[i].owner !== person) {
-						sessions[i].log("join", person, stamp);
+						sessions[i].log("join", person, time);
 					//}
 				}
 			}
@@ -327,7 +328,7 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 			if (sessions[i] !== undefined) {
 				if (sessions[i].channel === oldChannel) {
 					//if (sessions[i].owner !== person) {
-						sessions[i].log("leave", person, stamp);
+						sessions[i].log("leave", person, time);
 					//}
 				}
 			}
@@ -340,13 +341,13 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 			if (sessions[i] !== undefined) {
 				if (sessions[i].channel === oldChannel) {
 					//if (sessions[i].owner !== person) {
-						sessions[i].log("leave", person, stamp);
+						sessions[i].log("leave", person, time);
 					//}
 				}
 
 				if (sessions[i].channel === newChannel) {
 					//if (sessions[i].owner !== person) {
-						sessions[i].log("join", person, stamp);
+						sessions[i].log("join", person, time);
 					//}
 				}
 			}
