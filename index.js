@@ -175,7 +175,7 @@ client.on("messageCreate", msg => {
 				}
 
 				if (i === (maxSessionCount-1)) {
-					console.log(`>>> uid ${msg.author.id} tried to stop a non-existent session`);
+					console.log(`>>> UID ${msg.author.id} tried to stop a non-existent session`);
 					clientChannel.send(`UID <@${msg.author.id}> has no running sessions!`);
 				}
 			}
