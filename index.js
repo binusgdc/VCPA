@@ -56,15 +56,10 @@ client.on("messageCreate", msg => {
 	// console.log(`>>> Message from ${msg.author.tag}: ${msg.content}`);
 
 	if (msg.channel !== clientChannel) return;
+	if (!msg.member.roles.cache.has(clientCommandAccessRole)) return;
 
 	if (msg.content.startsWith(".start")) {
 		if (msg.content === ".start") {
-			if (!msg.member.roles.cache.has(clientCommandAccessRole)) {
-				console.log(`>>> Failed to start session: ${msg.author.id} does not have the role needed to start and/or stop a session!`);
-				clientChannel.send(`UID <@${msg.author.id}> does not have the role needed to start and/or stop a session!`);
-				return;
-			}
-
 			if (msg.member.voice.channelId === null) {
 				console.log(`>>> Failed to start session: uid ${msg.author.id} is not in a voice chat channel!`);
 				clientChannel.send(`UID <@${msg.author.id}> is not in a voice chat channel!`);
@@ -93,12 +88,6 @@ client.on("messageCreate", msg => {
 		} else {
 			let res = msg.content.match(/^.start <@![0-9]+>$/g);
 			if ((res !== undefined) && (res !== null) && (res.length === 1) && (res[0] === msg.content)) {
-				if (!msg.member.roles.cache.has(clientCommandAccessRole)) {
-					console.log(`>>> Failed to start session: ${msg.author.id} does not have the role needed to start and/or stop a session!`);
-					clientChannel.send(`UID <@${msg.author.id}> does not have the role needed to start and/or stop a session!`);
-					return;
-				}
-
 				let tid = msg.content.match(/[0-9]+/g)[0];
 				if (!msg.guild.members.cache.has(tid)) {
 					console.log(`>>> Failed to start session: ${msg.author.id} tried to start a session for ${tid}, who isn't a server member!`);
@@ -135,12 +124,6 @@ client.on("messageCreate", msg => {
 		}
 	} else if (msg.content.startsWith(".stop")) {
 		if (msg.content === ".stop") {
-			if (!msg.member.roles.cache.has(clientCommandAccessRole)) {
-				console.log(`>>> Failed to stop session: ${msg.author.id} does not have the role needed to start and/or stop a session!`);
-				clientChannel.send(`UID <@${msg.author.id}> does not have the role needed to start and/or stop a session!`);
-				return;
-			}
-
 			for (let i = 0; i < maxSessionCount; i++) {
 				if (sessions[i] !== undefined) {
 					if (sessions[i].owner === msg.author.id) {
@@ -197,12 +180,6 @@ client.on("messageCreate", msg => {
 		} else {
 			let res = msg.content.match(/^.stop <@![0-9]+>$/g);
 			if ((res !== undefined) && (res !== null) && (res.length === 1) && (res[0] === msg.content)) {
-				if (!msg.member.roles.cache.has(clientCommandAccessRole)) {
-					console.log(`>>> Failed to stop session: ${msg.author.id} does not have the role needed to start and/or stop a session!`);
-					clientChannel.send(`UID <@${msg.author.id}> does not have the role needed to start and/or stop a session!`);
-					return;
-				}
-
 				let tid = msg.content.match(/[0-9]+/g)[0];
 				if (!msg.guild.members.cache.has(tid)) {
 					console.log(`>>> Failed to stop session: ${msg.author.id} tried to stop ${tid}'s session, who isn't a server member!`);
