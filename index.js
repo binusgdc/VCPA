@@ -59,7 +59,7 @@ client.on("messageCreate", msg => {
 
 	if (msg.content.startsWith(".start")) {
 		if (msg.content === ".start") {
-			if (!msg.member.roles.cache.has("742209122023506012")) {
+			if (!msg.member.roles.cache.has(clientCommandAccessRole)) {
 				console.log(`>>> Failed to start session: ${msg.author.id} does not have the role needed to start and/or stop a session!`);
 				clientChannel.send(`UID <@${msg.author.id}> does not have the role needed to start and/or stop a session!`);
 				return;
@@ -93,7 +93,7 @@ client.on("messageCreate", msg => {
 		} else {
 			let res = msg.content.match(/^.start <@![0-9]+>$/g);
 			if ((res !== undefined) && (res !== null) && (res.length === 1) && (res[0] === msg.content)) {
-				if (!msg.member.roles.cache.has("742209122023506012")) {
+				if (!msg.member.roles.cache.has(clientCommandAccessRole)) {
 					console.log(`>>> Failed to start session: ${msg.author.id} does not have the role needed to start and/or stop a session!`);
 					clientChannel.send(`UID <@${msg.author.id}> does not have the role needed to start and/or stop a session!`);
 					return;
@@ -135,7 +135,7 @@ client.on("messageCreate", msg => {
 		}
 	} else if (msg.content.startsWith(".stop")) {
 		if (msg.content === ".stop") {
-			if (!msg.member.roles.cache.has("742209122023506012")) {
+			if (!msg.member.roles.cache.has(clientCommandAccessRole)) {
 				console.log(`>>> Failed to stop session: ${msg.author.id} does not have the role needed to start and/or stop a session!`);
 				clientChannel.send(`UID <@${msg.author.id}> does not have the role needed to start and/or stop a session!`);
 				return;
@@ -197,7 +197,7 @@ client.on("messageCreate", msg => {
 		} else {
 			let res = msg.content.match(/^.stop <@![0-9]+>$/g);
 			if ((res !== undefined) && (res !== null) && (res.length === 1) && (res[0] === msg.content)) {
-				if (!msg.member.roles.cache.has("742209122023506012")) {
+				if (!msg.member.roles.cache.has(clientCommandAccessRole)) {
 					console.log(`>>> Failed to stop session: ${msg.author.id} does not have the role needed to start and/or stop a session!`);
 					clientChannel.send(`UID <@${msg.author.id}> does not have the role needed to start and/or stop a session!`);
 					return;
