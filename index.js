@@ -1,8 +1,23 @@
 const fs = require("fs");
 
-const Discord = require("discord.js");
-const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES", "GUILD_VOICE_STATES"] });
+require("dotenv").config();
+
+const { Client, Intents, MessageEmbed } = require("discord.js");
+const client = new Client({
+	intents: [
+		Intents.FLAGS.GUILDS,
+		Intents.FLAGS.GUILD_MESSAGES,
+		Intents.FLAGS.GUILD_VOICE_STATES
+	]
+});
+
+let clientGuild = undefined;
 let clientChannel = undefined;
+let clientCommandAccessRole = undefined;
+
+const clientGuildId = process.env.GUILD_ID;
+const clientChannelId = process.env.CHANNEL_ID;
+const clientCommandAccessRoleId = process.env.COMMAND_ACCESS_ROLE_ID;
 
 class Event {
 	constructor(type, uid, time) {
@@ -32,7 +47,9 @@ client.on("ready", async () => {
 	console.log(`>>> Logged in as ${client.user.tag}`);
 	console.log(">>> Bonjour!");
 
-	clientChannel = client.channels.cache.get("876009242757320784");
+	clientGuild = client.guilds.cache.get(clientGuildId);
+	clientChannel = client.channels.cache.get(clientChannelId);
+	clientCommandAccessRole = clientGuild.roles.cache.get(clientCommandAccessRoleId);
 });
 
 client.on("messageCreate", msg => {
@@ -132,7 +149,7 @@ client.on("messageCreate", msg => {
 						console.log(`>>> Session in ${sessions[i].channel} by ${sessions[i].owner} was stopped!`);
 						clientChannel.send(`Session stopped by <@${sessions[i].owner}>`);
 
-						let embed = new Discord.MessageEmbed()
+						let embed = new MessageEmbed()
 							.setColor("#d548b0")
 							.setTitle("Session Stats")
 							.addFields(
@@ -239,7 +256,7 @@ client.on("messageCreate", msg => {
 			let str = "[\n";
 			for (let i = 0; i < maxSessionCount; i++) {
 				str += "{\n";
-				
+
 				if (sessions[i] !== undefined) {
 					str += `"owner": "${sessions[i].owner}",\n`
 					str += `"channel": "${sessions[i].channel}",\n`;
@@ -278,7 +295,7 @@ client.on("messageCreate", msg => {
 		if ((res !== undefined) && (res !== null) && (res.length === 1) && (res[0] === msg.content)) {
 			let oldval = maxSessionCount;
 			let newval = Math.floor(msg.content.match(/(-?|\+?)\d+/g)[0]);
-			
+
 			if (newVal >= 0) {
 				maxSessionCount = newval;
 				console.log(`>>> Set maxSessionCount to ${newval} (was previously ${oldval})!`);
@@ -301,7 +318,7 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 	if ((oldChannel === null) && (newChannel !== null)) {
 		//console.log(`uid ${person} joined channel ${newChannel} on ${stamp}`);
 		//clientChannel.send(`uid <@${person}> joined channel <#${newChannel}> on ${stamp}`);
-		
+
 		for (let i = 0; i < maxSessionCount; i++) {
 			if (sessions[i] !== undefined) {
 				if (sessions[i].channel === newChannel) {
