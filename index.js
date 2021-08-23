@@ -134,27 +134,22 @@ client.on("messageCreate", msg => {
 						console.log(`>>> Session in ${sessions[i].channel} by ${sessions[i].owner} was stopped!`);
 						clientChannel.send(`Session stopped by <@${sessions[i].owner}>`);
 
-						const durationMsecs = sessions[i].end.getTime() - sessions[i].start.getTime();
-						const durationSecs = Math.floor(durationMsecs / 1000);
-						const durationMins = Math.floor(durationSecs / 60);
-						const durationHours = Math.floor(durationMins / 60);
-
-						let duration = `${durationHours} hours, ${durationMins % 60} minutes, ${durationSecs % 60}.${durationMsecs % 1000} seconds`;
+						const { formatDate, formatPeriod } = require("./util");
 
 						let embed = new MessageEmbed()
 							.setColor("#d548b0")
 							.setTitle("Session Stats")
 							.addFields(
 								{ name: "Channel Name", value: `<#${sessions[i].channel}>` },
-								{ name: "Start Time", value: dateFormat(sessions[i].start, "UTC:d mmmm yyyy HH:MM:ss.l \"UTC\"") },
-								{ name: "End Time", value: dateFormat(sessions[i].end, "UTC:d mmmm yyyy HH:MM:ss.l \"UTC\"") },
-								{ name: "Duration", value: `${duration}`}
+								{ name: "Start Time", value: formatDate(sessions[i].start, "verbose") },
+								{ name: "End Time", value: formatDate(sessions[i].end, "verbose") },
+								{ name: "Duration", value: formatPeriod(sessions[i].end.getTime() - sessions[i].start.getTime()) }
 							);
 						clientChannel.send({ embeds: [embed] });
 
 						let str = "uid,type,time\n";
 						for (let j = 0; j < sessions[i].events.length; j++) {
-							str += `<@${sessions[i].events[j].uid}>,${sessions[i].events[j].type},${sessions[i].events[j].time}\n`;
+							str += `<@${sessions[i].events[j].uid}>,${sessions[i].events[j].type},${formatDate(sessions[i].events[j].time, "excel")}\n`;
 						}
 
 						let fname = `${new Date().toISOString()}.csv`;
@@ -197,27 +192,22 @@ client.on("messageCreate", msg => {
 							console.log(`>>> Session in ${sessions[i].channel} by ${sessions[i].owner} was stopped by ${msg.author.id}!`);
 							clientChannel.send(`<@${sessions[i].owner}>'s session was stopped by <@${msg.author.id}>!`);
 
-							const durationMsecs = sessions[i].end.getTime() - sessions[i].start.getTime();
-							const durationSecs = Math.floor(durationMsecs / 1000);
-							const durationMins = Math.floor(durationSecs / 60);
-							const durationHours = Math.floor(durationMins / 60);
-
-							let duration = `${durationHours} hours, ${durationMins % 60} minutes, ${durationSecs % 60}.${durationMsecs % 1000} seconds`;
+							const { formatDate, formatPeriod } = require("./util");
 
 							let embed = new MessageEmbed()
 								.setColor("#d548b0")
 								.setTitle("Session Stats")
 								.addFields(
 									{ name: "Channel Name", value: `<#${sessions[i].channel}>` },
-									{ name: "Start Time", value: dateFormat(sessions[i].start, "UTC:d mmmm yyyy HH:MM:ss.l \"UTC\"") },
-									{ name: "End Time", value: dateFormat(sessions[i].end, "UTC:d mmmm yyyy HH:MM:ss.l \"UTC\"") },
-									{ name: "Duration", value: `${duration}`}
+									{ name: "Start Time", value: formatDate(sessions[i].start, "verbose") },
+									{ name: "End Time", value: formatDate(sessions[i].end, "verbose") },
+									{ name: "Duration", value: formatPeriod(sessions[i].end.getTime() - sessions[i].start.getTime()) }
 								);
 							clientChannel.send({ embeds: [embed] });
 
 							let str = "uid,type,time\n";
 							for (let j = 0; j < sessions[i].events.length; j++) {
-								str += `<@${sessions[i].events[j].uid}>,${sessions[i].events[j].type},${sessions[i].events[j].time}\n`;
+								str += `<@${sessions[i].events[j].uid}>,${sessions[i].events[j].type},${formatDate(sessions[i].events[j].time, "excel")}\n`;
 							}
 
 							let fname = `${new Date().toISOString()}.csv`;
