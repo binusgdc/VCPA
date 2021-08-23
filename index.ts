@@ -2,8 +2,6 @@ const fs = require("fs");
 
 require("dotenv").config();
 
-const dateFormat = require("dateformat");
-
 const { Client, Intents, MessageEmbed } = require("discord.js");
 const client = new Client({
 	intents: [
@@ -13,16 +11,20 @@ const client = new Client({
 	]
 });
 
-let clientGuild = undefined;
-let clientChannel = undefined;
-let clientCommandAccessRole = undefined;
+let clientGuild : any = undefined;
+let clientChannel : any = undefined;
+let clientCommandAccessRole : any = undefined;
 
 const clientGuildId = process.env.GUILD_ID;
 const clientChannelId = process.env.CHANNEL_ID;
 const clientCommandAccessRoleId = process.env.COMMAND_ACCESS_ROLE_ID;
 
 class Event {
-	constructor(type, uid, time) {
+	type : any;
+	uid : any;
+	time : any;
+
+	constructor(type : any, uid : any, time : any) {
 		this.type = type;
 		this.uid = uid;
 		this.time = time;
@@ -30,7 +32,13 @@ class Event {
 };
 
 class Session {
-	constructor(owner, channel) {
+	owner : any;
+	channel : any;
+	start : any;
+	end : any;
+	events : any;
+
+	constructor(owner : any, channel : any) {
 		this.owner = owner;
 		this.channel = channel;
 		this.start = new Date();
@@ -38,12 +46,12 @@ class Session {
 		this.events = [];
 	}
 
-	log(type, uid, time) {
+	log(type : any, uid : any, time : any) {
 		this.events[this.events.length] = new Event(type, uid, time);
 	}
 };
-let sessions = [];
-let maxSessionCount = 3;
+let sessions : any = [];
+let maxSessionCount : any = 3;
 
 client.on("ready", async () => {
 	console.log(`>>> Logged in as ${client.user.tag}`);
@@ -54,7 +62,7 @@ client.on("ready", async () => {
 	clientCommandAccessRole = clientGuild.roles.cache.get(clientCommandAccessRoleId);
 });
 
-client.on("messageCreate", msg => {
+client.on("messageCreate", (msg : any) => {
 	// console.log(`>>> Message from ${msg.author.tag}: ${msg.content}`);
 
 	if (msg.channel !== clientChannel) return;
@@ -88,9 +96,9 @@ client.on("messageCreate", msg => {
 				}
 			}
 		} else {
-			let res = msg.content.match(/^.start <@![0-9]+>$/g);
+			let res : any = msg.content.match(/^.start <@![0-9]+>$/g);
 			if ((res !== undefined) && (res !== null) && (res.length === 1) && (res[0] === msg.content)) {
-				let tid = msg.content.match(/[0-9]+/g)[0];
+				let tid : any = msg.content.match(/[0-9]+/g)[0];
 				if (!msg.guild.members.cache.has(tid)) {
 					console.log(`>>> Failed to start session: ${msg.author.id} tried to start a session for ${tid}, who isn't a server member!`);
 					clientChannel.send(`UID <@${msg.author.id}> tried to start a session for UID <@${tid}>, who isn't a server member!`);
@@ -136,7 +144,7 @@ client.on("messageCreate", msg => {
 
 						const { formatDate, formatPeriod } = require("./util");
 
-						let embed = new MessageEmbed()
+						let embed : any = new MessageEmbed()
 							.setColor("#d548b0")
 							.setTitle("Session Stats")
 							.addFields(
@@ -147,13 +155,13 @@ client.on("messageCreate", msg => {
 							);
 						clientChannel.send({ embeds: [embed] });
 
-						let str = "uid,type,time\n";
+						let str : any = "uid,type,time\n";
 						for (let j = 0; j < sessions[i].events.length; j++) {
 							str += `<@${sessions[i].events[j].uid}>,${sessions[i].events[j].type},${formatDate(sessions[i].events[j].time, "excel")}\n`;
 						}
 
-						let fname = `${new Date().toISOString()}.csv`;
-						fs.writeFile(fname, str, (err) => {
+						let fname : any = `${new Date().toISOString()}.csv`;
+						fs.writeFile(fname, str, (err : any) => {
 							if (err) {
 								console.log("Failed to write event log!");
 								console.log(err);
@@ -175,9 +183,9 @@ client.on("messageCreate", msg => {
 				}
 			}
 		} else {
-			let res = msg.content.match(/^.stop <@![0-9]+>$/g);
+			let res : any = msg.content.match(/^.stop <@![0-9]+>$/g);
 			if ((res !== undefined) && (res !== null) && (res.length === 1) && (res[0] === msg.content)) {
-				let tid = msg.content.match(/[0-9]+/g)[0];
+				let tid : any = msg.content.match(/[0-9]+/g)[0];
 				if (!msg.guild.members.cache.has(tid)) {
 					console.log(`>>> Failed to stop session: ${msg.author.id} tried to stop ${tid}'s session, who isn't a server member!`);
 					clientChannel.send(`UID <@${msg.author.id}> tried to stop <@${tid}>'s session, who isn't a server member!`);
@@ -194,7 +202,7 @@ client.on("messageCreate", msg => {
 
 							const { formatDate, formatPeriod } = require("./util");
 
-							let embed = new MessageEmbed()
+							let embed : any = new MessageEmbed()
 								.setColor("#d548b0")
 								.setTitle("Session Stats")
 								.addFields(
@@ -211,7 +219,7 @@ client.on("messageCreate", msg => {
 							}
 
 							let fname = `${new Date().toISOString()}.csv`;
-							fs.writeFile(fname, str, (err) => {
+							fs.writeFile(fname, str, (err : any) => {
 								if (err) {
 									console.log("Failed to write event log!");
 									console.log(err);
@@ -236,7 +244,7 @@ client.on("messageCreate", msg => {
 		}
 	} else if (msg.content.startsWith(".sessions")) {
 		if (msg.content === ".sessions") {
-			let str = "[\n";
+			let str : any = "[\n";
 			for (let i = 0; i < maxSessionCount; i++) {
 				str += "{\n";
 
@@ -265,7 +273,7 @@ client.on("messageCreate", msg => {
 		if (msg.content === ".help") {
 			console.log(`UID ${msg.author.id} requested help info!`);
 
-			let str = "These are the available commands:\n";
+			let str : any = "These are the available commands:\n";
 			str += ".start [@user] - Start a session for yourself or someone else\n";
 			str += ".stop [@user] - Stops a session for yourself or someone else\n";
 			str += ".sessions - Lists information about current sessions\n";
@@ -279,7 +287,7 @@ client.on("messageCreate", msg => {
 			let oldval = maxSessionCount;
 			let newval = Math.floor(msg.content.match(/(-?|\+?)\d+/g)[0]);
 
-			if (newVal >= 0) {
+			if (newval >= 0) {
 				maxSessionCount = newval;
 				console.log(`>>> Set maxSessionCount to ${newval} (was previously ${oldval})!`);
 				clientChannel.send(`Set maxSessionCount to ${newval} (was previously ${oldval})!`);
@@ -291,11 +299,11 @@ client.on("messageCreate", msg => {
 	}
 });
 
-client.on("voiceStateUpdate", (oldState, newState) => {
-	let person = newState.id;
-	let oldChannel = oldState.channelId;
-	let newChannel = newState.channelId;
-	let time = new Date();
+client.on("voiceStateUpdate", (oldState : any, newState : any) => {
+	let person : any = newState.id;
+	let oldChannel : any = oldState.channelId;
+	let newChannel : any = newState.channelId;
+	let time : any = new Date();
 
 	if ((oldChannel === null) && (newChannel !== null)) {
 		//console.log(`uid ${person} joined channel ${newChannel} on ${stamp}`);
