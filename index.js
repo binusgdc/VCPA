@@ -11,20 +11,16 @@ const client = new Client({
 	]
 });
 
-let clientGuild : any = undefined;
-let clientChannel : any = undefined;
-let clientCommandAccessRole : any = undefined;
+let clientGuild = undefined;
+let clientChannel = undefined;
+let clientCommandAccessRole = undefined;
 
 const clientGuildId = process.env.GUILD_ID;
 const clientChannelId = process.env.CHANNEL_ID;
 const clientCommandAccessRoleId = process.env.COMMAND_ACCESS_ROLE_ID;
 
 class Event {
-	type : any;
-	uid : any;
-	time : any;
-
-	constructor(type : any, uid : any, time : any) {
+	constructor(type, uid, time) {
 		this.type = type;
 		this.uid = uid;
 		this.time = time;
@@ -32,13 +28,7 @@ class Event {
 };
 
 class Session {
-	owner : any;
-	channel : any;
-	start : any;
-	end : any;
-	events : any;
-
-	constructor(owner : any, channel : any) {
+	constructor(owner, channel) {
 		this.owner = owner;
 		this.channel = channel;
 		this.start = new Date();
@@ -46,12 +36,12 @@ class Session {
 		this.events = [];
 	}
 
-	log(type : any, uid : any, time : any) {
+	log(type, uid, time) {
 		this.events[this.events.length] = new Event(type, uid, time);
 	}
 };
-let sessions : any = [];
-let maxSessionCount : any = 3;
+let sessions = [];
+let maxSessionCount = 3;
 
 client.on("ready", async () => {
 	console.log(`>>> Logged in as ${client.user.tag}`);
@@ -62,7 +52,7 @@ client.on("ready", async () => {
 	clientCommandAccessRole = clientGuild.roles.cache.get(clientCommandAccessRoleId);
 });
 
-client.on("messageCreate", (msg : any) => {
+client.on("messageCreate", (msg) => {
 	// console.log(`>>> Message from ${msg.author.tag}: ${msg.content}`);
 
 	if (msg.channel !== clientChannel) return;
@@ -96,9 +86,9 @@ client.on("messageCreate", (msg : any) => {
 				}
 			}
 		} else {
-			let res : any = msg.content.match(/^.start <@![0-9]+>$/g);
+			let res = msg.content.match(/^.start <@![0-9]+>$/g);
 			if ((res !== undefined) && (res !== null) && (res.length === 1) && (res[0] === msg.content)) {
-				let tid : any = msg.content.match(/[0-9]+/g)[0];
+				let tid = msg.content.match(/[0-9]+/g)[0];
 				if (!msg.guild.members.cache.has(tid)) {
 					console.log(`>>> Failed to start session: ${msg.author.id} tried to start a session for ${tid}, who isn't a server member!`);
 					clientChannel.send(`UID <@${msg.author.id}> tried to start a session for UID <@${tid}>, who isn't a server member!`);
@@ -144,7 +134,7 @@ client.on("messageCreate", (msg : any) => {
 
 						const { formatDate, formatPeriod } = require("./util");
 
-						let embed : any = new MessageEmbed()
+						let embed = new MessageEmbed()
 							.setColor("#d548b0")
 							.setTitle("Session Stats")
 							.addFields(
@@ -155,13 +145,13 @@ client.on("messageCreate", (msg : any) => {
 							);
 						clientChannel.send({ embeds: [embed] });
 
-						let str : any = "uid,type,time\n";
+						let str = "uid,type,time\n";
 						for (let j = 0; j < sessions[i].events.length; j++) {
 							str += `<@${sessions[i].events[j].uid}>,${sessions[i].events[j].type},${formatDate(sessions[i].events[j].time, "excel")}\n`;
 						}
 
-						let fname : any = `${new Date().toISOString()}.csv`;
-						fs.writeFile(fname, str, (err : any) => {
+						let fname = `${new Date().toISOString()}.csv`;
+						fs.writeFile(fname, str, (err) => {
 							if (err) {
 								console.log("Failed to write event log!");
 								console.log(err);
@@ -183,9 +173,9 @@ client.on("messageCreate", (msg : any) => {
 				}
 			}
 		} else {
-			let res : any = msg.content.match(/^.stop <@![0-9]+>$/g);
+			let res = msg.content.match(/^.stop <@![0-9]+>$/g);
 			if ((res !== undefined) && (res !== null) && (res.length === 1) && (res[0] === msg.content)) {
-				let tid : any = msg.content.match(/[0-9]+/g)[0];
+				let tid = msg.content.match(/[0-9]+/g)[0];
 				if (!msg.guild.members.cache.has(tid)) {
 					console.log(`>>> Failed to stop session: ${msg.author.id} tried to stop ${tid}'s session, who isn't a server member!`);
 					clientChannel.send(`UID <@${msg.author.id}> tried to stop <@${tid}>'s session, who isn't a server member!`);
@@ -202,7 +192,7 @@ client.on("messageCreate", (msg : any) => {
 
 							const { formatDate, formatPeriod } = require("./util");
 
-							let embed : any = new MessageEmbed()
+							let embed = new MessageEmbed()
 								.setColor("#d548b0")
 								.setTitle("Session Stats")
 								.addFields(
@@ -219,7 +209,7 @@ client.on("messageCreate", (msg : any) => {
 							}
 
 							let fname = `${new Date().toISOString()}.csv`;
-							fs.writeFile(fname, str, (err : any) => {
+							fs.writeFile(fname, str, (err) => {
 								if (err) {
 									console.log("Failed to write event log!");
 									console.log(err);
@@ -244,7 +234,7 @@ client.on("messageCreate", (msg : any) => {
 		}
 	} else if (msg.content.startsWith(".sessions")) {
 		if (msg.content === ".sessions") {
-			let str : any = "[\n";
+			let str = "[\n";
 			for (let i = 0; i < maxSessionCount; i++) {
 				str += "{\n";
 
@@ -273,7 +263,7 @@ client.on("messageCreate", (msg : any) => {
 		if (msg.content === ".help") {
 			console.log(`UID ${msg.author.id} requested help info!`);
 
-			let str : any = "These are the available commands:\n";
+			let str = "These are the available commands:\n";
 			str += ".start [@user] - Start a session for yourself or someone else\n";
 			str += ".stop [@user] - Stops a session for yourself or someone else\n";
 			str += ".sessions - Lists information about current sessions\n";
@@ -299,11 +289,11 @@ client.on("messageCreate", (msg : any) => {
 	}
 });
 
-client.on("voiceStateUpdate", (oldState : any, newState : any) => {
-	let person : any = newState.id;
-	let oldChannel : any = oldState.channelId;
-	let newChannel : any = newState.channelId;
-	let time : any = new Date();
+client.on("voiceStateUpdate", (oldState, newState) => {
+	let person = newState.id;
+	let oldChannel = oldState.channelId;
+	let newChannel = newState.channelId;
+	let time = new Date();
 
 	if ((oldChannel === null) && (newChannel !== null)) {
 		//console.log(`uid ${person} joined channel ${newChannel} on ${stamp}`);

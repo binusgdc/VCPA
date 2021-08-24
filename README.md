@@ -49,13 +49,6 @@ CHANNEL_ID=
 COMMAND_ACCESS_ROLE_ID=
 ```
 
-Compile any typescript into javascript:
-
-```shell
-$ npm install -g typescript
-$ tsc --lib es2021 --target es2021 *.ts
-```
-
 The bot is now ready to run:
 
 ```shell
