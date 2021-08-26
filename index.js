@@ -2,12 +2,12 @@ const fs = require("fs");
 
 require("dotenv").config();
 
-const { Client, Intents, MessageEmbed } = require("discord.js");
-const client = new Client({
+const Discord = require("discord.js");
+const client = new Discord.Client({
 	intents: [
-		Intents.FLAGS.GUILDS,
-		Intents.FLAGS.GUILD_MESSAGES,
-		Intents.FLAGS.GUILD_VOICE_STATES
+		Discord.Intents.FLAGS.GUILDS,
+		Discord.Intents.FLAGS.GUILD_MESSAGES,
+		Discord.Intents.FLAGS.GUILD_VOICE_STATES
 	]
 });
 
@@ -134,7 +134,7 @@ client.on("messageCreate", (msg) => {
 
 						const { formatDate, formatPeriod } = require("./util");
 
-						let embed = new MessageEmbed()
+						let embed = new Discord.MessageEmbed()
 							.setColor("#d548b0")
 							.setTitle("Session Stats")
 							.addFields(
@@ -192,7 +192,7 @@ client.on("messageCreate", (msg) => {
 
 							const { formatDate, formatPeriod } = require("./util");
 
-							let embed = new MessageEmbed()
+							let embed = new Discord.MessageEmbed()
 								.setColor("#d548b0")
 								.setTitle("Session Stats")
 								.addFields(
