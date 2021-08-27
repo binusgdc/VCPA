@@ -21,7 +21,7 @@ module.exports = {
 				if (global.sessions[i].owner === target) {
 					global.sessions[i].end = new Date();
 
-					console.log(`>>> ${global.sessions[i].owner}' session in ${global.sessions[i].channel} was stopped by ${msg.author.id}!`);
+					console.log(`>>> ${global.sessions[i].owner}'s session in ${global.sessions[i].channel} was stopped by ${msg.author.id}!`);
 					clientChannel.send(`<@${global.sessions[i].owner}>'s session in <#${global.sessions[i].channel}> was stopped by <@${msg.author.id}>!`);
 
 					let embed = new Discord.MessageEmbed()
