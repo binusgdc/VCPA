@@ -28,7 +28,7 @@ module.exports = {
 						.setColor("#d548b0")
 						.setTitle("Session Stats")
 						.addFields(
-							{ name: "Channel Name", value: `<#${global.sessions[i].owner}>` },
+							{ name: "Channel Name", value: `<#${global.sessions[i].channel}>` },
 							{ name: "Start Time", value: Util.formatDate(global.sessions[i].start, "verbose") },
 							{ name: "End Time", value: Util.formatDate(global.sessions[i].end, "verbose") },
 							{ name: "Duration", value: Util.formatPeriod(global.sessions[i].end.getTime() - global.sessions[i].start.getTime()) }
