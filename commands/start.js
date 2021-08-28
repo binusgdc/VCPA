@@ -10,7 +10,7 @@ module.exports = {
 
 		if (!msg.guild.members.cache.has(target)) {
 			console.log(`>>> Failed to start session: ${msg.author.id} tried to start a session for ${target}, who isn't a server member!`);
-			clientChannel.send(`UID <@${msg.author.id}> tried to start a session for UID <@${target}>, who isn't a server member!`);
+			clientChannel.send(`<@${msg.author.id}> tried to start a session for <@${target}>, who isn't a server member!`);
 			return;
 		}
 

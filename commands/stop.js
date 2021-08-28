@@ -12,7 +12,7 @@ module.exports = {
 
 		if (!msg.guild.members.cache.has(target)) {
 			console.log(`>>> Failed to stop session: ${msg.author.id} tried to stop ${target}'s session, who isn't a server member!`);
-			clientChannel.send(`UID <@${msg.author.id}> tried to stop <@${target}>'s session, who isn't a server member!`);
+			clientChannel.send(`<@${msg.author.id}> tried to stop <@${target}>'s session, who isn't a server member!`);
 			return;
 		}
 
@@ -58,8 +58,8 @@ module.exports = {
 			}
 
 			if (i === (global.maxSessionCount-1)) {
-				console.log(`>>> UID ${msg.author.id} tried to stop a non-existent session`);
-				clientChannel.send(`UID <@${msg.author.id}> has no running sessions!`);
+				console.log(`>>> ${msg.author.id} tried to stop a non-existent session`);
+				clientChannel.send(`<@${msg.author.id}> has no running sessions!`);
 			}
 		}
 	}
