@@ -1,6 +1,6 @@
-# 0x69420af
+# VCPA
 
-`0x69420af` is a Discord bot that records voice call participants' attendance.
+`VCPA` is a Discord bot that records voice call participants' attendance.
 
 # Development Setup
 
@@ -31,8 +31,8 @@ v16.7.0
 Clone the repository and install the required packages:
 
 ```shell
-$ git clone https://github.com/500-internal-server-error/0x69420af.git
-$ cd ./0x69420af
+$ git clone https://github.com/500-internal-server-error/VCPA.git
+$ cd ./VCPA
 $ npm install
 ```
 
