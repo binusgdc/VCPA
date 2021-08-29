@@ -24,6 +24,13 @@ module.exports = {
 					console.log(`>>> ${global.sessions[i].owner}'s session in ${global.sessions[i].channel} was stopped by ${msg.author.id}!`);
 					clientChannel.send(`<@${global.sessions[i].owner}>'s session in <#${global.sessions[i].channel}> was stopped by <@${msg.author.id}>!`);
 
+					let outputs = Util.processSession(global.sessions[i]);
+					let output = "";
+					output += "```\n" + outputs[0] + "```\n";
+					output += "```\n" + outputs[1] + "```\n";
+					output += "```\n" + outputs[2] + "```\n";
+					global.clientChannel.send(output);
+
 					let embed = new Discord.MessageEmbed()
 						.setColor("#d548b0")
 						.setTitle("Session Stats")
@@ -31,7 +38,7 @@ module.exports = {
 							{ name: "Channel Name", value: `<#${global.sessions[i].channel}>` },
 							{ name: "Start Time", value: Util.formatDate(global.sessions[i].start, "verbose") },
 							{ name: "End Time", value: Util.formatDate(global.sessions[i].end, "verbose") },
-							{ name: "Duration", value: Util.formatPeriod(global.sessions[i].end.getTime() - global.sessions[i].start.getTime()) }
+							{ name: "Duration", value: Util.formatPeriod(global.sessions[i].end.getTime() - global.sessions[i].start.getTime(), "verbose") }
 						);
 					clientChannel.send({ embeds: [embed] });
 
