@@ -31,7 +31,7 @@ v16.7.0
 Clone the repository and install the required packages:
 
 ```shell
-$ git clone https://github.com/500-internal-server-error/VCPA.git
+$ git clone https://github.com/binusgdc/VCPA.git
 $ cd ./VCPA
 $ npm install
 ```
