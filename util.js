@@ -15,7 +15,7 @@ function processSessionPart2(session) {
 	let output = "sessionId,id,type,time\n";
 	for (let i = 0; i < session.events.length; i++) {
 		output += "stub-id" + ",";
-		output += session.events[i].uid + ",";
+		output += `<@${session.events[i].uid}>` + ",";
 		output += session.events[i].type + ",";
 		output += module.exports.formatDate(session.events[i].time, "excel") + "\n";
 	}
@@ -45,7 +45,7 @@ function processSessionPart3(session) {
 
 	let output = "id,perc,status,duration\n";
 	attendees.forEach((attendee) => {
-		output += attendee.id + ",";
+		output += `<@${attendee.id}>` + ",";
 		output += (attendee.duration / sessionDuration) + ",";
 		output += (((attendee.duration / sessionDuration) > 0.8) ? "pass" : "fail") + ",";
 		output += attendee.duration + "\n";
