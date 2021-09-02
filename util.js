@@ -1,4 +1,27 @@
 const dateFormat = require("dateformat");
+const sessions = require("./commands/sessions");
+
+function processSessionPart1(session) {
+	let output = "date,owner,start,duration\n";
+	output += module.exports.formatDate(session.start, "date") + ",";
+	output += `<@${session.owner}>` + ",";
+	output += module.exports.formatDate(session.start, "time") + ",";
+	output += module.exports.formatPeriod(session.end.getTime() - session.start.getTime(), "minutes") + "\n";
+
+	return output;
+}
+
+function processSessionPart2(session) {
+	let output = "sessionId,id,type,time\n";
+	for (let i = 0; i < session.events.length; i++) {
+		output += "stub-id" + ",";
+		output += session.events[i].uid + ",";
+		output += session.events[i].type + ",";
+		output += module.exports.formatDate(session.events[i].time, "excel") + "\n";
+	}
+
+	return output;
+}
 
 function processSessionPart3(session) {
 	let uniqueIds = [];
@@ -81,16 +104,10 @@ module.exports = {
 	},
 
 	processSession: (session) => {
-		let output1 = "date,owner,start,duration\n";
-		output1 += module.exports.formatDate(session.start, "date") + ",";
-		output1 += `<@${session.owner}>` + ",";
-		output1 += module.exports.formatDate(session.start, "time") + ",";
-		output1 += module.exports.formatPeriod(session.end.getTime() - session.start.getTime(), "minutes") + "\n";
-
-		let output2 = "tbd\n";
-
-		let output3 = processSessionPart3(session) + "\n";
-
-		return [output1, output2, output3];
+		return [
+			processSessionPart1(session),
+			processSessionPart2(session),
+			processSessionPart3(session)
+		];
 	}
 };

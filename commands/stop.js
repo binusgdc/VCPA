@@ -4,7 +4,7 @@ const Util = require("../util");
 
 module.exports = {
 	signature: /^.stop(?: <@!\d+>)?$/g,
-	exec: (msg) => {
+	exec: async (msg) => {
 		let args = msg.content.split(" ");
 		args.shift();
 
@@ -25,11 +25,39 @@ module.exports = {
 					clientChannel.send(`<@${global.sessions[i].owner}>'s session in <#${global.sessions[i].channel}> was stopped by <@${msg.author.id}>!`);
 
 					let outputs = Util.processSession(global.sessions[i]);
-					let output = "";
-					output += "```\n" + outputs[0] + "```\n";
-					output += "```\n" + outputs[1] + "```\n";
-					output += "```\n" + outputs[2] + "```\n";
-					global.clientChannel.send(output);
+
+					const fnameBase = global.sessions[i].end.toISOString();
+					const fname = [
+						`${fnameBase}-0.csv`,
+						`${fnameBase}-1.csv`,
+						`${fnameBase}-2.csv`
+					];
+
+					fs.writeFileSync(fname[0], outputs[0], (err) => {
+						console.log(">>> Failed to write outputs[0]!");
+						global.clientChannel.send(">>> Failed to write output 1!");
+
+						console.log(err);
+					});
+
+					fs.writeFileSync(fname[1], outputs[1], (err) => {
+						console.log(">>> Failed to write outputs[1]!");
+						global.clientChannel.send(">>> Failed to write output 2!");
+
+						console.log(err);
+					});
+
+					fs.writeFileSync(fname[2], outputs[2], (err) => {
+						console.log(">>> Failed to write outputs[2]!");
+						global.clientChannel.send(">>> Failed to write output 3!");
+
+						console.log(err);
+					});
+
+					await global.clientChannel.send({
+						content: "Session Data:",
+						files: [ fname[0], fname[1], fname[2] ]
+					});
 
 					let embed = new Discord.MessageEmbed()
 						.setColor("#d548b0")
@@ -41,22 +69,6 @@ module.exports = {
 							{ name: "Duration", value: Util.formatPeriod(global.sessions[i].end.getTime() - global.sessions[i].start.getTime(), "verbose") }
 						);
 					clientChannel.send({ embeds: [embed] });
-
-					let str = "uid,type,time\n";
-					for (let j = 0; j < global.sessions[i].events.length; j++) {
-						str += `<@${global.sessions[i].events[j].uid}>,${global.sessions[i].events[j].type},${Util.formatDate(global.sessions[i].events[j].time, "excel")}\n`;
-					}
-
-					let fname = `${new Date().toISOString()}.csv`;
-					fs.writeFile(fname, str, (err) => {
-						if (err) {
-							console.log(">>> Failed to write event log!");
-							console.log(err);
-							return;
-						}
-
-						clientChannel.send({ content: "Session event log:", files: [fname] });
-					});
 
 					global.sessions[i] = undefined;
 
