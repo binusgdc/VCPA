@@ -74,15 +74,7 @@ module.exports = {
 			} break;
 
 			case "excel": {
-				const year = date.getUTCFullYear();
-				const month = date.getUTCMonth();
-				const day = date.getUTCDay();
-				const hour = date.getUTCHours();
-				const mins = date.getUTCMinutes();
-				const secs = date.getUTCSeconds();
-				const msecs = date.getUTCMilliseconds();
-
-				return dateFormat(date, `${year}-${month}-${day} ${hour}:${mins}:${secs}.${msecs}`);
+				return dateFormat(date, "UTC:yyyy-mm-dd HH:MM:ss.l");
 			} break;
 		}
 	},
