@@ -48,47 +48,38 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 	let time = new Date();
 
 	if ((oldChannel === null) && (newChannel !== null)) {
-		//console.log(`uid ${person} joined channel ${newChannel} on ${stamp}`);
-		//clientChannel.send(`uid <@${person}> joined channel <#${newChannel}> on ${stamp}`);
-
 		for (let i = 0; i < global.maxSessionCount; i++) {
 			if (global.sessions[i] !== undefined) {
 				if (global.sessions[i].channel === newChannel) {
-					//if (global.sessions[i].owner !== person) {
+					if (global.sessions[i].owner !== person) {
 						global.sessions[i].log("join", person, time);
-					//}
+					}
 				}
 			}
 		}
 	} else if ((oldChannel !== null) && (newChannel === null)) {
-		//console.log(`uid ${person} left channel ${oldChannel} on ${stamp}`);
-		//clientChannel.send(`uid <@${person}> left channel <#${oldChannel}> on ${stamp}`);
-
 		for (let i = 0; i < global.maxSessionCount; i++) {
 			if (global.sessions[i] !== undefined) {
 				if (global.sessions[i].channel === oldChannel) {
-					//if (global.sessions[i].owner !== person) {
+					if (global.sessions[i].owner !== person) {
 						global.sessions[i].log("leave", person, time);
-					//}
+					}
 				}
 			}
 		}
 	} else if ((oldChannel !== null) && (newChannel !== null)) {
-		//console.log(`uid ${person} moved from ${oldChannel} to ${newChannel} on ${stamp}`);
-		//clientChannel.send(`uid <@${person}> moved from <#${oldChannel}> to <#${newChannel}> on ${stamp}`);
-
 		for (let i = 0; i < global.maxSessionCount; i++) {
 			if (global.sessions[i] !== undefined) {
 				if (global.sessions[i].channel === oldChannel) {
-					//if (global.sessions[i].owner !== person) {
+					if (global.sessions[i].owner !== person) {
 						global.sessions[i].log("leave", person, time);
-					//}
+					}
 				}
 
 				if (global.sessions[i].channel === newChannel) {
-					//if (global.sessions[i].owner !== person) {
+					if (global.sessions[i].owner !== person) {
 						global.sessions[i].log("join", person, time);
-					//}
+					}
 				}
 			}
 		}
