@@ -1,7 +1,7 @@
 const dateFormat = require("dateformat");
 const sessions = require("./commands/sessions");
 
-function processSessionPart1(session) {
+function processSessionInfo(session) {
 	let output = "date,owner,start,duration\n";
 	output += module.exports.formatDate(session.start, "date") + ",";
 	output += `<@${session.owner}>` + ",";
@@ -11,7 +11,7 @@ function processSessionPart1(session) {
 	return output;
 }
 
-function processSessionPart2(session) {
+function processSessionDetail(session) {
 	let output = "sessionId,id,type,time\n";
 	for (let i = 0; i < session.events.length; i++) {
 		output += "stub-id" + ",";
@@ -23,7 +23,7 @@ function processSessionPart2(session) {
 	return output;
 }
 
-function processSessionPart3(session) {
+function processSessionOutput(session) {
 	let uniqueIds = [];
 	session.events.forEach((event) => { if (!uniqueIds.includes(event.uid)) uniqueIds.push(event.uid); });
 
@@ -48,7 +48,7 @@ function processSessionPart3(session) {
 		output += `<@${attendee.id}>` + ",";
 		output += (attendee.duration / sessionDuration) + ",";
 		output += (((attendee.duration / sessionDuration) > 0.8) ? "pass" : "fail") + ",";
-		output += attendee.duration + "\n";
+		output += module.exports.formatPeriod(attendee.duration, "minutes") + "\n";
 	});
 
 	return output;
@@ -97,9 +97,9 @@ module.exports = {
 
 	processSession: (session) => {
 		return [
-			processSessionPart1(session),
-			processSessionPart2(session),
-			processSessionPart3(session)
+			processSessionInfo(session),
+			processSessionDetail(session),
+			processSessionOutput(session)
 		];
 	}
 };

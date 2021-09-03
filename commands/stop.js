@@ -28,28 +28,28 @@ module.exports = {
 
 					const fnameBase = global.sessions[i].end.toISOString();
 					const fname = [
-						`${fnameBase}-0.csv`,
-						`${fnameBase}-1.csv`,
-						`${fnameBase}-2.csv`
+						`${fnameBase}-sesinfo.csv`,
+						`${fnameBase}-attdet.csv`,
+						`${fnameBase}-procdet.csv`
 					];
 
 					fs.writeFileSync(fname[0], outputs[0], (err) => {
-						console.log(">>> Failed to write outputs[0]!");
-						global.clientChannel.send(">>> Failed to write output 1!");
+						console.log(">>> Failed to write session info!");
+						global.clientChannel.send(">>> Failed to write session info!");
 
 						console.log(err);
 					});
 
 					fs.writeFileSync(fname[1], outputs[1], (err) => {
-						console.log(">>> Failed to write outputs[1]!");
-						global.clientChannel.send(">>> Failed to write output 2!");
+						console.log(">>> Failed to write attendance details!");
+						global.clientChannel.send(">>> Failed to write attendance details!");
 
 						console.log(err);
 					});
 
 					fs.writeFileSync(fname[2], outputs[2], (err) => {
-						console.log(">>> Failed to write outputs[2]!");
-						global.clientChannel.send(">>> Failed to write output 3!");
+						console.log(">>> Failed to write processed details!");
+						global.clientChannel.send(">>> Failed to write processed details!");
 
 						console.log(err);
 					});
