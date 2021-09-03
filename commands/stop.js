@@ -19,6 +19,11 @@ module.exports = {
 		for (let i = 0; i < global.maxSessionCount; i++) {
 			if (global.sessions[i] !== undefined) {
 				if (global.sessions[i].owner === target) {
+					const leftovers = global.clientGuild.channels.cache.get(global.sessions[i].channel).members;
+					leftovers.forEach((leftover) => {
+						global.sessions[i].log("leave", leftover.id, new Date());
+					});
+
 					global.sessions[i].end = new Date();
 
 					console.log(`>>> ${global.sessions[i].owner}'s session in ${global.sessions[i].channel} was stopped by ${msg.author.id}!`);

@@ -25,6 +25,12 @@ module.exports = {
 				global.sessions[i] = new Structures.Session(target, msg.guild.members.cache.get(target).voice.channelId);
 				console.log(`>>> ${msg.author.id} started a session for ${msg.guild.members.cache.get(target).id} in ${msg.guild.members.cache.get(target).voice.channelId}!`);
 				clientChannel.send(`<@${msg.author.id}> started a session for <@${msg.guild.members.cache.get(target).id}> in <#${msg.guild.members.cache.get(target).voice.channelId}>!`);
+
+				const members = global.clientGuild.channels.cache.get(global.sessions[i].channel).members;
+				members.forEach((member) => {
+					global.sessions[i].log("join", member.id, new Date());
+				});
+
 				break;
 			} else {
 				if (global.sessions[i].owner === target) {
