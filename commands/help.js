@@ -7,7 +7,7 @@ module.exports = {
 		str += ".start [@user] - Start a session for yourself or someone else\n";
 		str += ".stop [@user] - Stops a session for yourself or someone else\n";
 		str += ".sessions - Lists information about current sessions\n";
-		str += ".setMaxSession {count} - Sets the maximum amount of simulataneous sessions";
+		str += ".setMaxSession {count} - Sets the maximum amount of simulataneous sessions\n";
 		str += ".help - Lists the available commands\n";
 		clientChannel.send(str);
 	}
