@@ -1,4 +1,5 @@
-require("dotenv").config();
+const jsonfile = require("jsonfile");
+global.config = jsonfile.readFileSync("./config.json");
 
 const Discord = require("discord.js");
 const client = new Discord.Client({
@@ -13,9 +14,9 @@ global.clientGuild = undefined;
 global.clientChannel = undefined;
 global.clientCommandAccessRole = undefined;
 
-const clientGuildId = process.env.GUILD_ID;
-const clientChannelId = process.env.CHANNEL_ID;
-const clientCommandAccessRoleId = process.env.COMMAND_ACCESS_ROLE_ID;
+const clientGuildId = global.config.clientGuildId;
+const clientChannelId = global.config.clientChannelId;
+const clientCommandAccessRoleId = global.config.clientCommandAccessRoleId;
 
 global.sessions = [];
 global.maxSessionCount = 3;
@@ -86,4 +87,4 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 	}
 });
 
-client.login(process.env.TOKEN);
+client.login(global.config.token);

@@ -36,17 +36,20 @@ $ cd ./VCPA
 $ npm install
 ```
 
-Create a `.env` file to store secrets and IDs:
+Create a `config.json` file to store secrets and IDs:
 
 ```shell
-$ touch .env
+$ touch config.json
 ```
 
-```
-TOKEN=
-GUILD_ID=
-CHANNEL_ID=
-COMMAND_ACCESS_ROLE_ID=
+```json
+{
+	"token": "",
+	"clientGuildId": "",
+	"clientChannelId": "",
+	"clientCommandAccessRole": ""
+}
+
 ```
 
 The bot is now ready to run:
