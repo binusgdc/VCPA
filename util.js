@@ -1,5 +1,4 @@
 const dateFormat = require("dateformat");
-const sessions = require("./commands/sessions");
 
 function processSessionInfo(session) {
 	let output = "date,owner,start,duration\n";
