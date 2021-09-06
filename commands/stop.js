@@ -12,7 +12,7 @@ module.exports = {
 
 		if (!msg.guild.members.cache.has(target)) {
 			console.log(`>>> Failed to stop session: ${msg.author.id} tried to stop ${target}'s session, who isn't a server member!`);
-			clientChannel.send(`<@${msg.author.id}> tried to stop <@${target}>'s session, who isn't a server member!`);
+			global.clientChannel.send(`<@${msg.author.id}> tried to stop <@${target}>'s session, who isn't a server member!`);
 			return;
 		}
 
@@ -29,7 +29,7 @@ module.exports = {
 					global.sessions[i].end = new Date();
 
 					console.log(`>>> ${global.sessions[i].owner}'s session in ${global.sessions[i].channel} was stopped by ${msg.author.id}!`);
-					clientChannel.send(`<@${global.sessions[i].owner}>'s session in <#${global.sessions[i].channel}> was stopped by <@${msg.author.id}>!`);
+					global.clientChannel.send(`<@${global.sessions[i].owner}>'s session in <#${global.sessions[i].channel}> was stopped by <@${msg.author.id}>!`);
 
 					let outputs = Util.processSession(global.sessions[i]);
 
@@ -75,7 +75,7 @@ module.exports = {
 							{ name: "End Time", value: Util.formatDate(global.sessions[i].end, "verbose") },
 							{ name: "Duration", value: Util.formatPeriod(global.sessions[i].end.getTime() - global.sessions[i].start.getTime(), "verbose") }
 						);
-					clientChannel.send({ embeds: [embed] });
+					global.clientChannel.send({ embeds: [embed] });
 
 					global.sessions[i] = undefined;
 
@@ -85,7 +85,7 @@ module.exports = {
 
 			if (i === (global.maxSessionCount-1)) {
 				console.log(`>>> ${msg.author.id} tried to stop a non-existent session`);
-				clientChannel.send(`<@${msg.author.id}> has no running sessions!`);
+				global.clientChannel.send(`<@${msg.author.id}> has no running sessions!`);
 			}
 		}
 	}

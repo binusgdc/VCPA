@@ -27,7 +27,7 @@ module.exports = {
 				str += "},\n";
 			}
 			str += "]\n";
-			clientChannel.send(str);
+			global.clientChannel.send(str);
 		}
 	}
 };

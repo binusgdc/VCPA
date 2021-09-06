@@ -7,10 +7,10 @@ module.exports = {
 		if (newval >= 0) {
 			global.maxSessionCount = newval;
 			console.log(`>>> ${msg.author.id} set global.maxSessionCount to ${newval} (was previously ${oldval})!`);
-			clientChannel.send(`<@${msg.author.id}> set global.maxSessionCount to ${newval} (was previously ${oldval})!`);
+			global.clientChannel.send(`<@${msg.author.id}> set global.maxSessionCount to ${newval} (was previously ${oldval})!`);
 		} else {
 			console.log(`>>> Failed to set global.maxSessionCount: ${msg.author.id} tried to set global.maxSessionCount to an illegal value of ${newval}!`);
-			clientChannel.send(`Failed to set global.maxSessionCount: <@${msg.author.id}> tried to set global.maxSessionCount to an illegal value of ${newval}!`);
+			global.clientChannel.send(`Failed to set global.maxSessionCount: <@${msg.author.id}> tried to set global.maxSessionCount to an illegal value of ${newval}!`);
 		}
 	}
 };

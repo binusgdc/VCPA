@@ -9,6 +9,6 @@ module.exports = {
 		str += ".sessions - Lists information about current sessions\n";
 		str += ".setMaxSession {count} - Sets the maximum amount of simulataneous sessions\n";
 		str += ".help - Lists the available commands\n";
-		clientChannel.send(str);
+		global.clientChannel.send(str);
 	}
 };
