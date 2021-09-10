@@ -47,7 +47,7 @@ $ touch config.json
 	"token": "",
 	"clientGuildId": "",
 	"clientChannelId": "",
-	"clientCommandAccessRole": ""
+	"clientCommandAccessRoleId": ""
 }
 
 ```
