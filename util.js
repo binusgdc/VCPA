@@ -3,7 +3,7 @@ const dateFormat = require("dateformat");
 function processSessionInfo(session) {
 	let output = "date,owner,start,duration\n";
 	output += module.exports.formatDate(session.start, "date") + ",";
-	output += `<@${session.owner}>` + ",";
+	output += `${session.owner}` + ",";
 	output += module.exports.formatDate(session.start, "time") + ",";
 	output += module.exports.formatPeriod(session.end.getTime() - session.start.getTime(), "minutes") + "\n";
 
@@ -14,7 +14,7 @@ function processSessionDetail(session) {
 	let output = "sessionId,id,type,time\n";
 	for (let i = 0; i < session.events.length; i++) {
 		output += "stub-id" + ",";
-		output += `<@${session.events[i].uid}>` + ",";
+		output += `${session.events[i].uid}` + ",";
 		output += session.events[i].type + ",";
 		output += module.exports.formatDate(session.events[i].time, "excel") + "\n";
 	}
@@ -44,9 +44,9 @@ function processSessionOutput(session) {
 
 	let output = "id,perc,status,duration\n";
 	attendees.forEach((attendee) => {
-		output += `<@${attendee.id}>` + ",";
+		output += `${attendee.id}` + ",";
 		output += (attendee.duration / sessionDuration) + ",";
-		output += (((attendee.duration / sessionDuration) > 0.8) ? "pass" : "fail") + ",";
+		output += (((attendee.duration / sessionDuration) > 0.8) ? "Hadir" : "Absen") + ",";
 		output += module.exports.formatPeriod(attendee.duration, "minutes") + "\n";
 	});
 
