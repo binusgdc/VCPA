@@ -13,7 +13,8 @@
   "dependencies": {
     "dateformat": "^4.5.1",
     "discord.js": "^13.1.0",
-    "jsonfile": "^6.1.0"
+    "jsonfile": "^6.1.0",
+    "luxon": "^2.0.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.12"

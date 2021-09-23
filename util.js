@@ -1,4 +1,5 @@
 const dateFormat = require("dateformat");
+const { DateTime } = require("luxon");
 
 function processSessionInfo(session) {
 	let output = "date,owner,start,duration\n";
@@ -65,15 +66,15 @@ module.exports = {
 			} break;
 
 			case "date": {
-				return dateFormat(date, "UTC:yyyy-mm-dd");
+				return DateTime.fromISO(date.toISOString()).setLocale("id-ID").toFormat("yyyy-MM-dd");
 			} break;
 
 			case "time": {
-				return dateFormat(date, "UTC:HH:MM");
+				return DateTime.fromISO(date.toISOString()).setLocale("id-ID").toFormat("HH:mm");
 			} break;
 
 			case "excel": {
-				return dateFormat(date, "UTC:yyyy-mm-dd HH:MM:ss.l");
+				return DateTime.fromISO(date.toISOString()).setLocale("id-ID").toFormat("yyyy-MM-dd HH:mm:ss.SSS");
 			} break;
 		}
 	},
