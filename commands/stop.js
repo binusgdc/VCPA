@@ -35,9 +35,9 @@ module.exports = {
 
 					const fnameBase = global.sessions[i].end.toISOString();
 					const fname = [
-						`${fnameBase}-sesinfo.csv`,
-						`${fnameBase}-attdet.csv`,
-						`${fnameBase}-procdet.csv`
+						`${fnameBase}-sesinfo.txt`,
+						`${fnameBase}-attdet.txt`,
+						`${fnameBase}-procdet.txt`
 					];
 
 					fs.writeFileSync(fname[0], outputs[0], (err) => {
