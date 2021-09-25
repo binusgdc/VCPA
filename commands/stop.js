@@ -70,10 +70,10 @@ module.exports = {
 						.setColor("#d548b0")
 						.setTitle("Session Stats")
 						.addFields(
-							{ name: "Channel Name", value: `<#${global.sessions[i].channel}>` },
-							{ name: "Start Time", value: Util.formatDate(global.sessions[i].start, "verbose") },
-							{ name: "End Time", value: Util.formatDate(global.sessions[i].end, "verbose") },
-							{ name: "Duration", value: Util.formatPeriod(global.sessions[i].end.getTime() - global.sessions[i].start.getTime(), "verbose") }
+							{ name: "Date", value: Util.formatDate(global.sessions[i].start, "date") },
+							{ name: "Start Time", value: Util.formatDate(global.sessions[i].start, "time") },
+							{ name: "Duration (minutes)", value: Util.formatPeriod(global.sessions[i].end.getTime() - global.sessions[i].start.getTime(), "minutes") },
+							{ name: "Tutor ID", value: `${global.sessions[i].owner}`}
 						);
 					global.clientChannel.send({ embeds: [embed] });
 
