@@ -1,4 +1,3 @@
-const dateFormat = require("dateformat");
 const { DateTime } = require("luxon");
 
 function processSessionInfo(session) {
@@ -58,7 +57,7 @@ module.exports = {
 	formatDate: (date, style) => {
 		switch (style) {
 			case "verbose": {
-				return dateFormat(date, "UTC:d mmmm yyyy HH:MM:ss.l \"UTC\"");
+				return DateTime.fromISO(date.toISOString()).setLocale("id-ID").toFormat("d MMMM yyyy HH:mm:ss.SSS 'UTC'Z");
 			} break;
 
 			case "std": {
