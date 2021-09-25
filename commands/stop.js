@@ -71,9 +71,9 @@ module.exports = {
 						.setTitle("Session Stats")
 						.addFields(
 							{ name: "Date", value: Util.formatDate(global.sessions[i].start, "date") },
+							{ name: "Tutor ID", value: `${global.sessions[i].owner}` },
 							{ name: "Start Time", value: Util.formatDate(global.sessions[i].start, "time") },
-							{ name: "Duration (minutes)", value: Util.formatPeriod(global.sessions[i].end.getTime() - global.sessions[i].start.getTime(), "minutes") },
-							{ name: "Tutor ID", value: `${global.sessions[i].owner}`}
+							{ name: "Duration (minutes)", value: Util.formatPeriod(global.sessions[i].end.getTime() - global.sessions[i].start.getTime(), "minutes") }
 						);
 					global.clientChannel.send({ embeds: [embed] });
 
