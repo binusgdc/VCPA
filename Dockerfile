@@ -3,6 +3,7 @@ FROM alpine:edge
 
 # Using UTC+7 time
 ENV TZ="Asia/Jakarta"
+ENV LC_ALL id_ID.UTF-8
 ENV NODE_ENV production
 WORKDIR /VCPA/
 
