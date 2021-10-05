@@ -52,9 +52,7 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 		for (let i = 0; i < global.maxSessionCount; i++) {
 			if (global.sessions[i] !== undefined) {
 				if (global.sessions[i].channel === newChannel) {
-					if (global.sessions[i].owner !== person) {
-						global.sessions[i].log("join", person, time);
-					}
+					global.sessions[i].log("join", person, time);
 				}
 			}
 		}
@@ -62,9 +60,7 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 		for (let i = 0; i < global.maxSessionCount; i++) {
 			if (global.sessions[i] !== undefined) {
 				if (global.sessions[i].channel === oldChannel) {
-					if (global.sessions[i].owner !== person) {
-						global.sessions[i].log("leave", person, time);
-					}
+					global.sessions[i].log("leave", person, time);
 				}
 			}
 		}
@@ -72,15 +68,11 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 		for (let i = 0; i < global.maxSessionCount; i++) {
 			if (global.sessions[i] !== undefined) {
 				if (global.sessions[i].channel === oldChannel) {
-					if (global.sessions[i].owner !== person) {
-						global.sessions[i].log("leave", person, time);
-					}
+					global.sessions[i].log("leave", person, time);
 				}
 
 				if (global.sessions[i].channel === newChannel) {
-					if (global.sessions[i].owner !== person) {
-						global.sessions[i].log("join", person, time);
-					}
+					global.sessions[i].log("join", person, time);
 				}
 			}
 		}
