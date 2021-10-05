@@ -73,7 +73,8 @@ module.exports = {
 							{ name: "Date", value: Util.formatDate(global.sessions[i].start, "date") },
 							{ name: "Tutor ID", value: `${global.sessions[i].owner}` },
 							{ name: "Start Time", value: Util.formatDate(global.sessions[i].start, "time") },
-							{ name: "Duration (minutes)", value: Util.formatPeriod(global.sessions[i].end.getTime() - global.sessions[i].start.getTime(), "minutes") }
+							{ name: "Duration (minutes)", value: Util.formatPeriod(global.sessions[i].end.getTime() - global.sessions[i].start.getTime(), "minutes") },
+							{ name: "Attendance Form", value: "[Google Form](https://docs.google.com/forms/d/e/1FAIpQLSdGjYqEQS9R4xK95_rwQHT-idPE0SBmbpD6g6ChBX4WFV_dCg/viewform?usp=sf_link)" }
 						);
 					global.clientChannel.send({ embeds: [embed] });
 
