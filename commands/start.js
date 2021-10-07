@@ -28,9 +28,7 @@ module.exports = {
 
 				const members = global.clientGuild.channels.cache.get(global.sessions[i].channel).members;
 				members.forEach((member) => {
-					if (member.id !== global.sessions[i].owner) {
-						global.sessions[i].log("join", member.id, new Date());
-					}
+					global.sessions[i].log("join", member.id, new Date());
 				});
 
 				break;

@@ -21,9 +21,7 @@ module.exports = {
 				if (global.sessions[i].owner === target) {
 					const leftovers = global.clientGuild.channels.cache.get(global.sessions[i].channel).members;
 					leftovers.forEach((leftover) => {
-						if (leftover.id !== global.sessions[i].owner) {
-							global.sessions[i].log("leave", leftover.id, new Date());
-						}
+						global.sessions[i].log("leave", leftover.id, new Date());
 					});
 
 					global.sessions[i].end = new Date();
