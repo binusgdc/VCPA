@@ -1,12 +1,9 @@
 const Structures = require("../structures");
 
 module.exports = {
-	signature: /^.start(?: <@!\d+>)?$/g,
+	signature: /^.start$/g,
 	exec: (msg) => {
-		let args = msg.content.split(" ");
-		args.shift();
-
-		let target = (args[0] === undefined) ? msg.author.id : args[0].match(/\d+/g)[0];
+		const target = msg.author.id;
 
 		if (!msg.guild.members.cache.has(target)) {
 			console.log(`>>> Failed to start session: ${msg.author.id} tried to start a session for ${target}, who isn't a server member!`);
