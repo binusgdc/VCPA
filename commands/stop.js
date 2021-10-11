@@ -7,7 +7,6 @@ module.exports = {
 	exec: async (msg) => {
 		let args = msg.content.split(" ");
 		args.shift();
-
 		let target = (args[0] === undefined) ? msg.author.id : args[0].match(/\d+/g)[0];
 
 		if (!msg.guild.members.cache.has(target)) {
@@ -19,12 +18,16 @@ module.exports = {
 		for (let i = 0; i < global.maxSessionCount; i++) {
 			if (global.sessions[i] !== undefined) {
 				if (global.sessions[i].owner === target) {
+					if(global.sessions[i].timeoutID){
+						clearTimeout(global.sessions[i].timeoutID)
+					}
 					const leftovers = global.clientGuild.channels.cache.get(global.sessions[i].channel).members;
+					const stopTime = new Date()
 					leftovers.forEach((leftover) => {
-						global.sessions[i].log("leave", leftover.id, new Date());
+						global.sessions[i].log("leave", leftover.id, stopTime);
 					});
 
-					global.sessions[i].end = new Date();
+					global.sessions[i].end = stopTime;
 
 					console.log(`>>> ${global.sessions[i].owner}'s session in ${global.sessions[i].channel} was stopped by ${msg.author.id}!`);
 					global.clientChannel.send(`<@${global.sessions[i].owner}>'s session in <#${global.sessions[i].channel}> was stopped by <@${msg.author.id}>!`);

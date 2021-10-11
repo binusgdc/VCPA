@@ -14,6 +14,7 @@ module.exports = {
 			this.start = new Date();
 			this.end = undefined;
 			this.events = [];
+			this.timeoutID = undefined;
 		}
 
 		log(type, uid, time) {
