@@ -26,6 +26,12 @@ export async function exec(interaction : CommandInteraction) {
 		return;
 	}
 
+	if (!target.isVoice()) {
+		console.log(`>>> Failed to start session: ${executor.id} tried to start a session somewhere not a voice channel!`);
+		await interaction.reply(`>>> Failed to start session: <@${executor.id}> tried to start a session somewhere not a voice channel!`);
+		return
+	};
+
 	for (let i = 0; i < global.maxSessionCount; i++) {
 		if (global.sessions[i]?.channel === target.id) {
 			console.log(`>>> Failed to start session: ${executor.id} tried to start a session in ${target.id} but a session is already running there!`);
