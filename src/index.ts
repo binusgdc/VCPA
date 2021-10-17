@@ -30,8 +30,8 @@ client.on("interactionCreate", async (interaction) => {
 
 client.on("voiceStateUpdate", (oldState, newState) => {
 	const person = newState.id;
-	const oldChannel = oldState.channel?.id;
-	const newChannel = newState.channel?.id;
+	const oldChannel = oldState.channelId;
+	const newChannel = newState.channelId;
 
 	if ((oldChannel === null) && (newChannel !== null)) {
 		// User was not in a voice channel, and now joined our voice channel

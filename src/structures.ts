@@ -49,12 +49,7 @@ export class Session {
 	}
 
 	log(type : EventType, uid : Snowflake) {
-		for (let i = 0; i < this.events.length; i++) {
-			if (this.events[i] === undefined) {
-				this.events[i] = new Event(type, uid, Util.dtnow());
-				break;
-			}
-		}
+		this.events[this.events.length] = new Event(type, uid, Util.dtnow());
 	}
 }
 
