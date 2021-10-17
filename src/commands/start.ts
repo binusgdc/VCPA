@@ -44,7 +44,9 @@ export async function exec(interaction : CommandInteraction) {
 
 			const members = target.members;
 			members.forEach((member) => {
-				global.sessions[i].log("JOIN", member.id);
+				// Pretend everyone joined at the same time as the session starts
+
+				global.sessions[i].log("JOIN", member.id, global.sessions[i].startTime);
 			});
 
 			return;

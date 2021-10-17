@@ -48,8 +48,8 @@ export class Session {
 		this.endTime = Util.dtnow();
 	}
 
-	log(type : EventType, uid : Snowflake) {
-		this.events[this.events.length] = new Event(type, uid, Util.dtnow());
+	log(type : EventType, uid : Snowflake, time : DateTime = Util.dtnow()) {
+		this.events[this.events.length] = new Event(type, uid, time);
 	}
 }
 

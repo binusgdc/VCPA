@@ -31,12 +31,14 @@ export async function exec(interaction : CommandInteraction) {
 	for (let i = 0; i < global.maxSessionCount; i++) {
 		if (global.sessions[i] !== undefined) {
 			if (global.sessions[i].channel === target.id) {
+				global.sessions[i].end();
+
 				const leftovers = target.members;
 				leftovers.forEach((leftover) => {
-					global.sessions[i].log("LEAVE", leftover.id);
-				});
+					// Pretend everyone left at the same time as the session ends
 
-				global.sessions[i].end();
+					global.sessions[i].log("LEAVE", leftover.id, global.sessions[i].endTime);
+				});
 
 				const outputs = Util.generateSessionOutput(global.sessions[i]);
 
