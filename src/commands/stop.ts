@@ -24,7 +24,7 @@ export async function exec(interaction : CommandInteraction) {
 
 	if (target === null) {
 		console.log(`>>> Failed to stop session: ${executor.id} tried to stop a session without specifying which!`);
-		await interaction.reply(`>>> Failed to stop session: ${executor.id} tried to stop a session without specifying which!`);
+		await interaction.reply(`>>> Failed to stop session: <@${executor.id}> tried to stop a session without specifying which!`);
 		return;
 	}
 
