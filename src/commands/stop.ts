@@ -63,5 +63,10 @@ export async function exec(interaction : CommandInteraction) {
 				return;
 			}
 		}
+
+		if (i === (global.maxSessionCount-1)) {
+			console.log(`>>> Failed to stop session: ${executor.id} tried to stop a non-existent session!`);
+			await interaction.reply(`>>> Failed to stop session: <@${executor.id}> tried to stop a non-existent session!`);
+		}
 	}
 }
