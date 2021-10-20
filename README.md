@@ -57,3 +57,33 @@ The bot is now ready to run:
 ```shell
 $ node index.js
 ```
+
+# Slash Commands + Typescript Migration
+
+The bot is currently undergoing migration to replace prefix based commands with
+slash commands. Additonally, it is also being rewritten in Typescript, which
+means the source code must be "compiled" prior to running the bot.
+
+As of the writing of this document, all migration work is being done on the
+`mig` branch:
+
+```shell
+$ git switch mig
+```
+
+This project's `package.json` file does not include a Typescript compiler, and
+therefore it must be installed first. Afterwards, compiling is simple thanks to
+the provided `tsconfig.json` file (note: ensure all operations are being done
+from the root of the project!).
+
+```shell
+$ npm install -g typescript
+$ tsc
+```
+
+A new `build/` folder should be created next to the `src` folder. This folder
+contains the final runnables:
+
+```shell
+$ node build/index.js
+```

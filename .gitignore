@@ -1,3 +1,4 @@
 *.csv
-config*.json
+build/
+config.json
 node_modules/
