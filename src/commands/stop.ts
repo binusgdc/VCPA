@@ -28,6 +28,11 @@ export async function exec(interaction : CommandInteraction) {
 		return;
 	}
 
+	if (!target.isVoice()) {
+		console.log(`>>> Failed to stop session: ${executor.id} tried to stop a session somewhere it couldn't be in anyway!`);
+		await interaction.reply(`>>> Failed to stop session: <@${executor.id}> tried to stop a session somewhere it couldn't be in anyway!`);
+	}
+
 	for (let i = 0; i < global.maxSessionCount; i++) {
 		if (global.sessions[i] !== undefined) {
 			if (global.sessions[i].channel === target.id) {
