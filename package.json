@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index",
-    "dev": "nodemon index"
+    "build": "tsc",
+    "start": "node build/index",
+    "dev": "nodemon src/index"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +19,7 @@
   "devDependencies": {
     "@types/jsonfile": "^6.0.1",
     "@types/luxon": "^2.0.5",
-    "nodemon": "^2.0.12"
+    "nodemon": "^2.0.12",
+    "ts-node": "^10.4.0"
   }
 }
