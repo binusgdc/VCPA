@@ -53,7 +53,16 @@ export async function exec(interaction : CommandInteraction) {
 				fs.writeFileSync(`${fileBaseName}-procdet.csv`, outputs.procdet);
 
 				console.log(`>>> ${executor.id} stopped a session in ${target.id}!`);
-				await interaction.reply(`>>> <@${executor.id}> stopped a session in <#${target.id}>!`);
+				if(interaction.commandName === "start"){  // Command passed from timeout handler
+					await interaction.followUp(`>>> Stopping <@${executor.id}> session's in <#${target.id}>!`);
+				} else {
+					if(global.sessions[i].timeoutID){
+						// Clear session timeoutID if still exist (*stoping before duration)
+						clearTimeout(global.sessions[i].timeoutID);
+					}
+					await interaction.reply(`>>> <@${executor.id}> stopped a session in <#${target.id}>!`);
+				}
+
 				await interaction.followUp({
 					embeds: [outputs.embed],
 					files: [

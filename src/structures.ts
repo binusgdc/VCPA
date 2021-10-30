@@ -30,6 +30,7 @@ export class Session {
 	channel: Snowflake;
 	startTime: DateTime | undefined;
 	endTime: DateTime | undefined;
+	timeoutID: ReturnType<typeof setTimeout> | undefined;
 	events: Event[];
 
 	constructor(owner : Snowflake, channel : Snowflake) {
