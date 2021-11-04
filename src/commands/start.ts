@@ -1,6 +1,37 @@
 import { ApplicationCommandData, CommandInteraction, GuildMember, VoiceChannel } from "discord.js";
-import { exec as stop } from "./stop"
+import * as fs from "fs";
+
 import { Session } from "../structures";
+import * as Util from "../util";
+
+
+async function stop(interaction: CommandInteraction, channel: VoiceChannel, session: Session){
+	const executor = interaction.member as GuildMember;
+	session.end();
+	channel.members.forEach((member) => {
+		session.log("LEAVE", member.id, session.endTime);
+	});
+
+	const outputs = Util.generateSessionOutput(session);
+
+	const fileBaseName = Util.formatDate(session.endTime, "STD");
+	fs.writeFileSync(`${fileBaseName}-sesinfo.csv`, outputs.sesinfo);
+	fs.writeFileSync(`${fileBaseName}-attdet.csv`, outputs.attdet);
+	fs.writeFileSync(`${fileBaseName}-procdet.csv`, outputs.procdet);
+	console.log(`>>> stopping a session in ${channel.id}!`);
+
+	await interaction.followUp(`>>> Stopping <@${executor.id}> session's in <#${channel.id}>!`);
+	await interaction.followUp({
+		embeds: [outputs.embed],
+		files: [
+			`${fileBaseName}-sesinfo.csv`,
+			`${fileBaseName}-attdet.csv`,
+			`${fileBaseName}-procdet.csv`
+		]
+	});
+	return;
+}
+
 
 export const signature : ApplicationCommandData = {
 	name: "start",
@@ -71,9 +102,10 @@ export async function exec(interaction : CommandInteraction) {
 			});
 
 			if(duration > 0){
-				global.sessions[i].timeoutID = setTimeout(() => {
-					stop(interaction);
-				}, duration)
+				global.sessions[i].timeoutID = setTimeout(async () => {
+					await stop(interaction, target, global.sessions[i]);
+					global.sessions[i] = undefined;
+				}, duration);
 			}
 
 			return;
