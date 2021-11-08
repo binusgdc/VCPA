@@ -4,11 +4,15 @@ import { DateTime } from "luxon";
 
 import * as Util from "./util";
 
+type ServiceLocation = {
+	guildId: Snowflake;
+	ioChannelId: Snowflake;
+	commandAccessRoleId: Snowflake;
+}
+
 export type ConfigFile = {
 	token: Snowflake;
-	clientGuildId: Snowflake;
-	clientChannelId: Snowflake;
-	clientCommandAccessRoleId : Snowflake;
+	serviceLocationWhiteList: ServiceLocation[];
 }
 
 type EventType = "JOIN" | "LEAVE";
