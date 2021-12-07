@@ -4,11 +4,15 @@ import { DateTime } from "luxon";
 
 import * as Util from "./util";
 
+type ServiceLocation = {
+	guildId: Snowflake;
+	ioChannelId: Snowflake;
+	commandAccessRoleId: Snowflake;
+}
+
 export type ConfigFile = {
 	token: Snowflake;
-	clientGuildId: Snowflake;
-	clientChannelId: Snowflake;
-	clientCommandAccessRoleId : Snowflake;
+	serviceLocationWhiteList: ServiceLocation[];
 }
 
 type EventType = "JOIN" | "LEAVE";
@@ -27,6 +31,7 @@ export class Event {
 
 export class Session {
 	owner: Snowflake;
+	guild: Snowflake;
 	channel: Snowflake;
 	startTime: DateTime | undefined;
 	endTime: DateTime | undefined;
@@ -36,7 +41,7 @@ export class Session {
 	constructor(owner : Snowflake, channel : Snowflake) {
 		this.owner = owner;
 		this.channel = channel;
-		this.startTime = Util.dtnow();
+		this.startTime = undefined;
 		this.endTime = undefined;
 		this.events = [];
 	}

@@ -1,12 +1,12 @@
-import * as jsonfile from "jsonfile";
 import { Client, Intents } from "discord.js";
+import * as jsonfile from "jsonfile";
 
 import * as commandHandler from "./commandHandler";
+import { Session } from "./structures";
 
 global.config = jsonfile.readFileSync("./config.json");
 
-global.sessions = [];
-global.maxSessionCount = 3;
+global.sessions = new Map<string, Session>();
 
 const client = new Client({
 	intents: [
@@ -30,43 +30,29 @@ client.on("interactionCreate", async (interaction) => {
 
 client.on("voiceStateUpdate", (oldState, newState) => {
 	const person = newState.id;
+	const oldGuild = oldState.guild.id;
 	const oldChannel = oldState.channelId;
+	const newGuild = newState.guild.id;
 	const newChannel = newState.channelId;
 
 	if ((oldChannel === null) && (newChannel !== null)) {
 		// User was not in a voice channel, and now joined our voice channel
 
-		for (let i = 0; i < global.maxSessionCount; i++) {
-			if (global.sessions[i] !== undefined) {
-				if (global.sessions[i].channel === newChannel) {
-					global.sessions[i].log("JOIN", person);
-				}
-			}
-		}
+		const session = global.sessions.get(`${newGuild}-${newChannel}`);
+		if (session !== undefined) session.log("JOIN", person);
 	} else if ((oldChannel !== null) && (newChannel === null)) {
 		// User was in our voice channel, and now isn't in a voice channel
 
-		for (let i = 0; i < global.maxSessionCount; i++) {
-			if (global.sessions[i] !== undefined) {
-				if (global.sessions[i].channel === oldChannel) {
-					global.sessions[i].log("LEAVE", person);
-				}
-			}
-		}
+		const session = global.sessions.get(`${oldGuild}-${oldChannel}`);
+		if (session !== undefined) session.log("LEAVE", person);
 	} else if ((oldChannel !== null) && (newChannel !== null)) {
 		// User was in a different voice channel, and now is in our voice channel
 
-		for (let i = 0; i < global.maxSessionCount; i++) {
-			if (global.sessions[i] !== undefined) {
-				if (global.sessions[i].channel === newChannel) {
-					global.sessions[i].log("JOIN", person);
-				}
+		const newSession = global.sessions.get(`${newGuild}-${newChannel}`);
+		if (newSession !== undefined) newSession.log("JOIN", person);
 
-				if (global.sessions[i].channel === oldChannel) {
-					global.sessions[i].log("LEAVE", person);
-				}
-			}
-		}
+		const oldSession = global.sessions.get(`${oldGuild}-${oldChannel}`);
+		if (oldSession !== undefined) oldSession.log("LEAVE", person);
 	}
 })
 

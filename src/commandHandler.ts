@@ -11,12 +11,17 @@ const commands = [
 ];
 
 export async function register(client : Client) {
-	const clientGuild = client.guilds.cache.get(global.config.clientGuildId);
+	global.config.serviceLocationWhiteList.forEach(async (serviceLocation) => {
+		// For every guild we plan to serve
+		const guild = await client.guilds.fetch(serviceLocation.guildId);
 
-	clientGuild.commands.set([]);
+		// Start fresh
+		guild.commands.set([]);
 
-	commands.forEach(async (command) => {
-		await clientGuild.commands.create(command.signature);
+		// Add all the commands
+		commands.forEach(async (command) => {
+			await guild.commands.create(command.signature);
+		});
 	});
 }
 
@@ -24,16 +29,19 @@ export async function handle(interaction : CommandInteraction) {
 	const executor = interaction.member as GuildMember;
 
 	const executorGuild = interaction.guild.id;
-	const requiredGuild = global.config.clientGuildId;
 
-	if (executorGuild !== requiredGuild) {
-		console.log(`>>> ${executor.id} tried to issue commands without being in the appropriate guild!`);
-		await interaction.reply(`<@${executor.id}> tried to issue commands without being in the appropriate guild!`);
+	// Check if the command was issued from a location we service
+	const requiredGuild = global.config.serviceLocationWhiteList.filter((serviceLocation) => serviceLocation.guildId === executorGuild);
+
+	if (requiredGuild.length <= 0) {
+		console.log(`>>> ${executor.id} tried to issue commands from without being in a serviced guild!`);
+		await interaction.reply(`<@${executor.id}> tried to issue commands without being in a serviced guild!`);
 		return;
 	}
 
+	// Check if
 	const executorRoles = executor.roles;
-	const requiredRole = global.config.clientCommandAccessRoleId;
+	const requiredRole = requiredGuild[0].commandAccessRoleId;
 
 	if (!executorRoles.cache.has(requiredRole)) {
 		console.log(`>>> ${executor.id} tried to issue commands without having the appropriate permission!`);
