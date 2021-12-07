@@ -18,49 +18,39 @@ export async function exec(interaction : CommandInteraction) {
 	const executor = interaction.member as GuildMember;
 	const argv = interaction.options;
 
-	const target = (argv.getChannel("channel") ?? executor.voice.channel) as VoiceChannel;
+	const targetGuild = interaction.guildId;
+	const targetChannel = (argv.getChannel("channel") ?? executor.voice.channel) as VoiceChannel;
 
-	if (target === null) {
+	if (targetChannel === null) {
 		console.log(`>>> Failed to start session: ${executor.id} tried to start a session but they're not in a voice channel!`);
 		await interaction.reply(`>>> Failed to start session: <@${executor.id}> tried to start a session but they're not in a voice channel!`);
 		return;
 	}
 
-	if (!target.isVoice()) {
+	if (!targetChannel.isVoice()) {
 		console.log(`>>> Failed to start session: ${executor.id} tried to start a session somewhere not a voice channel!`);
 		await interaction.reply(`>>> Failed to start session: <@${executor.id}> tried to start a session somewhere not a voice channel!`);
 		return
 	};
 
-	for (let i = 0; i < global.maxSessionCount; i++) {
-		if (global.sessions[i]?.channel === target.id) {
-			console.log(`>>> Failed to start session: ${executor.id} tried to start a session in ${target.id} but a session is already running there!`);
-			await interaction.reply(`>>> Failed to start a session: <@${executor.id}> tried to start a session <#${target.id}> but a session is already running there!`);
-			return;
-		}
+	const session = global.sessions.get(`${targetGuild}-${targetChannel}`);
+	if (session !== undefined) {
+		console.log(`>>> Failed to start session: ${executor.id} tried to start a session in ${targetChannel.id} but a session is already running there!`);
+		await interaction.reply(`>>> Failed to start a session: <@${executor.id}> tried to start a session <#${targetChannel.id}> but a session is already running there!`);
+		return;
 	}
 
-	for (let i = 0; i < global.maxSessionCount; i++) {
-		if (global.sessions[i] === undefined) {
-			global.sessions[i] = new Session(executor.id, target.id);
-			global.sessions[i].start();
+	global.sessions.set(`${targetGuild}-${targetChannel}`, new Session(executor.id, targetChannel.id));
+	const s = global.sessions.get(`${targetGuild}-${targetChannel}`);
+	s.start();
 
-			console.log(`>>> ${executor.id} started a session in ${target.id}!`);
-			await interaction.reply(`>>> <@${executor.id}> started a session in <#${target.id}>!`);
+	console.log(`>>> ${executor.id} started a session in ${targetChannel.id}!`);
+	await interaction.reply(`>>> <@${executor.id}> started a session in <#${targetChannel.id}>!`);
 
-			const members = target.members;
-			members.forEach((member) => {
-				// Pretend everyone joined at the same time as the session starts
+	const members = targetChannel.members;
+	members.forEach((member) => {
+		// Pretend everyone joined at the same time as the session starts
 
-				global.sessions[i].log("JOIN", member.id, global.sessions[i].startTime);
-			});
-
-			return;
-		}
-
-		if (i === (global.maxSessionCount-1)) {
-			console.log(`>>> Failed to start a session: ${executor.id} failed to start a session, no free sessions left!`);
-			await interaction.reply(`>>> Failed to start a session: <@${executor.id}> failed to start a session, no free sessions left!`)
-		}
-	}
+		s.log("JOIN", member.id, s.startTime);
+	});
 }

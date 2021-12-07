@@ -20,58 +20,52 @@ export async function exec(interaction : CommandInteraction) {
 	const executor = interaction.member as GuildMember;
 	const argv = interaction.options;
 
-	const target = (argv.getChannel("channel") ?? executor.voice.channel) as VoiceChannel;
+	const targetGuild = interaction.guildId;
+	const targetChannel = (argv.getChannel("channel") ?? executor.voice.channel) as VoiceChannel;
 
-	if (target === null) {
+	if (targetChannel === null) {
 		console.log(`>>> Failed to stop session: ${executor.id} tried to stop a session without specifying which!`);
 		await interaction.reply(`>>> Failed to stop session: <@${executor.id}> tried to stop a session without specifying which!`);
 		return;
 	}
 
-	if (!target.isVoice()) {
+	if (!targetChannel.isVoice()) {
 		console.log(`>>> Failed to stop session: ${executor.id} tried to stop a session somewhere it couldn't be in anyway!`);
 		await interaction.reply(`>>> Failed to stop session: <@${executor.id}> tried to stop a session somewhere it couldn't be in anyway!`);
 	}
 
-	for (let i = 0; i < global.maxSessionCount; i++) {
-		if (global.sessions[i] !== undefined) {
-			if (global.sessions[i].channel === target.id) {
-				global.sessions[i].end();
-
-				const leftovers = target.members;
-				leftovers.forEach((leftover) => {
-					// Pretend everyone left at the same time as the session ends
-
-					global.sessions[i].log("LEAVE", leftover.id, global.sessions[i].endTime);
-				});
-
-				const outputs = Util.generateSessionOutput(global.sessions[i]);
-
-				const fileBaseName = Util.formatDate(global.sessions[i].endTime, "STD");
-				fs.writeFileSync(`${fileBaseName}-sesinfo.csv`, outputs.sesinfo);
-				fs.writeFileSync(`${fileBaseName}-attdet.csv`, outputs.attdet);
-				fs.writeFileSync(`${fileBaseName}-procdet.csv`, outputs.procdet);
-
-				console.log(`>>> ${executor.id} stopped a session in ${target.id}!`);
-				await interaction.reply(`>>> <@${executor.id}> stopped a session in <#${target.id}>!`);
-				await interaction.followUp({
-					embeds: [outputs.embed],
-					files: [
-						`${fileBaseName}-sesinfo.csv`,
-						`${fileBaseName}-attdet.csv`,
-						`${fileBaseName}-procdet.csv`
-					]
-				});
-
-				global.sessions[i] = undefined;
-
-				return;
-			}
-		}
-
-		if (i === (global.maxSessionCount-1)) {
-			console.log(`>>> Failed to stop session: ${executor.id} tried to stop a non-existent session!`);
-			await interaction.reply(`>>> Failed to stop session: <@${executor.id}> tried to stop a non-existent session!`);
-		}
+	const session = global.sessions.get(`${targetGuild}-${targetChannel}`);
+	if (session !== undefined) {
+		console.log(`>>> Failed to stop session: ${executor.id} tried to stop a non-existent session!`);
+		await interaction.reply(`>>> Failed to stop session: <@${executor.id}> tried to stop a non-existent session!`);
+		return;
 	}
+
+	session.end();
+
+	const leftovers = targetChannel.members;
+	leftovers.forEach((leftover) => {
+		// Pretend everyone left at the same time as the session ends
+
+		session.log("LEAVE", leftover.id, session.endTime);
+	});
+
+	const outputs = Util.generateSessionOutput(session);
+	const fileBaseName = Util.formatDate(session.endTime, "STD");
+	fs.writeFileSync(`${fileBaseName}-sesinfo.csv`, outputs.sesinfo);
+	fs.writeFileSync(`${fileBaseName}-attdet.csv`, outputs.attdet);
+	fs.writeFileSync(`${fileBaseName}-procdet.csv`, outputs.procdet);
+
+	console.log(`>>> ${executor.id} stopped a session in ${targetChannel.id}!`);
+	await interaction.reply(`>>> <@${executor.id}> stopped a session in <#${targetChannel.id}>!`);
+	await interaction.followUp({
+		embeds: [outputs.embed],
+		files: [
+			`${fileBaseName}-sesinfo.csv`,
+			`${fileBaseName}-attdet.csv`,
+			`${fileBaseName}-procdet.csv`
+		]
+	});
+
+	global.sessions.delete(`${targetGuild}-${targetChannel}`);
 }
