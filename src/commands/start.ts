@@ -33,15 +33,15 @@ export async function exec(interaction : CommandInteraction) {
 		return
 	};
 
-	const session = global.sessions.get(`${targetGuild}-${targetChannel}`);
+	const session = global.sessions.get(`${targetGuild}-${targetChannel.id}`);
 	if (session !== undefined) {
 		console.log(`>>> Failed to start session: ${executor.id} tried to start a session in ${targetChannel.id} but a session is already running there!`);
 		await interaction.reply(`>>> Failed to start a session: <@${executor.id}> tried to start a session <#${targetChannel.id}> but a session is already running there!`);
 		return;
 	}
 
-	global.sessions.set(`${targetGuild}-${targetChannel}`, new Session(executor.id, targetChannel.id));
-	const s = global.sessions.get(`${targetGuild}-${targetChannel}`);
+	global.sessions.set(`${targetGuild}-${targetChannel.id}`, new Session(executor.id, targetChannel.id));
+	const s = global.sessions.get(`${targetGuild}-${targetChannel.id}`);
 	s.start();
 
 	console.log(`>>> ${executor.id} started a session in ${targetChannel.id}!`);

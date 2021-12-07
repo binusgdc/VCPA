@@ -34,8 +34,8 @@ export async function exec(interaction : CommandInteraction) {
 		await interaction.reply(`>>> Failed to stop session: <@${executor.id}> tried to stop a session somewhere it couldn't be in anyway!`);
 	}
 
-	const session = global.sessions.get(`${targetGuild}-${targetChannel}`);
-	if (session !== undefined) {
+	const session = global.sessions.get(`${targetGuild}-${targetChannel.id}`);
+	if (session === undefined) {
 		console.log(`>>> Failed to stop session: ${executor.id} tried to stop a non-existent session!`);
 		await interaction.reply(`>>> Failed to stop session: <@${executor.id}> tried to stop a non-existent session!`);
 		return;
@@ -67,5 +67,5 @@ export async function exec(interaction : CommandInteraction) {
 		]
 	});
 
-	global.sessions.delete(`${targetGuild}-${targetChannel}`);
+	global.sessions.delete(`${targetGuild}-${targetChannel.id}`);
 }
