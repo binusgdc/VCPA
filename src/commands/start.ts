@@ -7,12 +7,6 @@ export const signature : ApplicationCommandData = {
 	description: "Starts a session",
 	options: [
 		{
-			name: "duration",
-			description: "The duration of the session (in minutes)",
-			type: "NUMBER",
-			required: false
-		},
-		{
 			name: "channel",
 			description: "The voice channel to start the session in",
 			type: "CHANNEL",
