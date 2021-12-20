@@ -28,10 +28,10 @@ export async function register(client : Client) {
 export async function handle(interaction : CommandInteraction) {
 	const executor = interaction.member as GuildMember;
 
-	const executorGuild = interaction.guild.id;
+	const executorGuild = interaction.guild;
 
 	// Check if the command was issued from a location we service
-	const requiredGuild = global.config.serviceLocationWhiteList.filter((serviceLocation) => serviceLocation.guildId === executorGuild);
+	const requiredGuild = global.config.serviceLocationWhiteList.filter((serviceLocation) => serviceLocation.guildId === executorGuild?.id);
 
 	if (requiredGuild.length <= 0) {
 		console.log(`>>> ${executor.id} tried to issue commands from without being in a serviced guild!`);
@@ -39,11 +39,11 @@ export async function handle(interaction : CommandInteraction) {
 		return;
 	}
 
-	// Check if
+	// Check if the command executor has at least one of the roles allowed to use the bot
 	const executorRoles = executor.roles;
-	const requiredRole = requiredGuild[0].commandAccessRoleId;
+	const authorizedRoles = requiredGuild[0].commandAccessRoleIds;
 
-	if (!executorRoles.cache.has(requiredRole)) {
+	if (!executorRoles.cache.hasAny(...authorizedRoles)) {
 		console.log(`>>> ${executor.id} tried to issue commands without having the appropriate permission!`);
 		await interaction.reply(`<@${executor.id}> tried to issue commands without having the appropriate permission!`);
 		return;

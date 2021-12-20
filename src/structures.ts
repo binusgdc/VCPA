@@ -7,7 +7,7 @@ import * as Util from "./util";
 type ServiceLocation = {
 	guildId: Snowflake;
 	ioChannelId: Snowflake;
-	commandAccessRoleId: Snowflake;
+	commandAccessRoleIds: Snowflake[];
 }
 
 export type ConfigFile = {
