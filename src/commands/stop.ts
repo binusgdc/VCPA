@@ -32,6 +32,7 @@ export async function exec(interaction : CommandInteraction) {
 	if (!targetChannel.isVoice()) {
 		console.log(`>>> Failed to stop session: ${executor.id} tried to stop a session somewhere it couldn't be in anyway!`);
 		await interaction.reply(`>>> Failed to stop session: <@${executor.id}> tried to stop a session somewhere it couldn't be in anyway!`);
+		return;
 	}
 
 	const session = global.sessions.get(`${targetGuild}-${targetChannel.id}`);
