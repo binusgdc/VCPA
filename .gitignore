@@ -1,4 +1,5 @@
-*.csv
 build/
 config.json
+gdrivecreds.json
 node_modules/
+run/

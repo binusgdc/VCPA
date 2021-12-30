@@ -13,6 +13,8 @@ type ServiceLocation = {
 export type ConfigFile = {
 	token: Snowflake;
 	serviceLocationWhiteList: ServiceLocation[];
+	attdetCsvGdriveFolderId: string;
+	procdetCsvGdriveFolderId: string;
 }
 
 type EventType = "JOIN" | "LEAVE";
