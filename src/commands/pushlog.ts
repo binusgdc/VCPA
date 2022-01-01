@@ -1,6 +1,99 @@
 import * as gdrive from "@googleapis/drive";
+import * as gsheet from "@googleapis/sheets";
 import { ApplicationCommandData, CommandInteraction, GuildMember } from "discord.js";
 import * as fs from "fs";
+
+import * as Util from "../util";
+
+type PushData = {
+	subject: string
+	topic: string
+	date: string
+	tutor: string
+	time: string
+	duration: string
+	documentator: string
+}
+
+async function pushData(data : PushData) {
+	const auth = new gsheet.auth.GoogleAuth({
+		keyFile: "gcreds.json",
+		scopes: [ "https://www.googleapis.com/auth/spreadsheets" ]
+	});
+
+	const gs = gsheet.sheets({ version: "v4", auth });
+
+	/* Where should we put the data? Find the range based on the subject. */
+
+	const valRangeRes = await gs.spreadsheets.values.get({
+		spreadsheetId: global.config.bgdc.msSessionsSheetId,
+		range: global.config.bgdc.msSessionsSubjectRanges[data.subject],
+		valueRenderOption: "FORMULA"
+	});
+
+	const valRange = valRangeRes.data.values;
+
+	/* Find the row on which to place the data. */
+
+	const ind = valRange.findIndex((val) => val[2] === data.topic);
+
+	/* Fill in the new data */
+
+	let newVals = valRange;
+	newVals[ind][5] = '\'' + data.date;
+	newVals[ind][6] = data.tutor;
+	newVals[ind][7] = '\'' + data.time;
+	newVals[ind][8] = data.duration;
+	newVals[ind][9] = data.documentator;
+
+	/* Push the new data back to the sheet. */
+
+	const valUpdateRes = await gs.spreadsheets.values.update({
+		spreadsheetId: global.config.bgdc.msSessionsSheetId,
+		range: global.config.bgdc.msSessionsSubjectRanges[data.subject],
+		valueInputOption: "USER_ENTERED",
+		requestBody: { values: newVals }
+	});
+
+	return valUpdateRes;
+}
+
+async function pushCsv() {
+	const auth = new gdrive.auth.GoogleAuth({
+		keyFile: "gcreds.json",
+		scopes: [ "https://www.googleapis.com/auth/drive" ]
+	});
+
+	const ds = gdrive.drive({ version:"v3", auth });
+
+	const fileBaseName = Util.formatDate(global.lastSession.endTime, "STD");
+
+	const attdet = await ds.files.create({
+		requestBody: {
+			name: `${fileBaseName}-attdet.csv`,
+			parents: [ global.config.bgdc.attdetCsvGdriveFolderId ]
+		},
+
+		media: {
+			mimeType: "text/csv",
+			body: fs.createReadStream(`./run/${fileBaseName}-attdet.csv`)
+		}
+	});
+
+	const procdet = await ds.files.create({
+		requestBody: {
+			name: `${fileBaseName}-procdet.csv`,
+			parents: [ global.config.bgdc.procdetCsvGdriveFolderId ]
+		},
+
+		media: {
+			mimeType: "text/csv",
+			body: fs.createReadStream(`./run/${fileBaseName}-procdet.csv`)
+		}
+	});
+
+	return [attdet, procdet];
+}
 
 export const signature : ApplicationCommandData = {
 	name: "pushlog",
@@ -19,12 +112,12 @@ export const signature : ApplicationCommandData = {
 			type: "STRING",
 			required: true,
 			choices: [
-				{ name: "Game Programming A", value: "Game Programming A" },
-				{ name: "Game Programming B", value: "Game Programming B" },
-				{ name: "Game Design", value: "Game Design"},
-				{ name: "2D Art", value: "2D Art" },
-				{ name: "3D Art", value: "3D Art" },
-				{ name: "Sound Engineering", value: "Sound Engineering" }
+				{ name: "Game Programming A", value: "PROGA" },
+				{ name: "Game Programming B", value: "PROGB" },
+				{ name: "Game Design", value: "DESG"},
+				{ name: "2D Art", value: "A2D" },
+				{ name: "3D Art", value: "A3D" },
+				{ name: "Sound Engineering", value: "SND" }
 			]
 		},
 
@@ -48,48 +141,33 @@ export async function exec(interaction : CommandInteraction) {
 	await interaction.deferReply();
 
 	const executor = interaction.member as GuildMember;
+	const argv = interaction.options;
 
-	const auth = new gdrive.auth.GoogleAuth({
-		keyFile: "gdrivecreds.json",
-		scopes: [ "https://www.googleapis.com/auth/drive" ]
-	});
+	const data = {
+		subject: argv.getString("subject"),
+		topic: argv.getString("topic"),
+		date: Util.formatDate(global.lastSession.startTime, "DATE"),
+		tutor: global.lastSession.owner,
+		time: Util.formatDate(global.lastSession.startTime, "TME"),
+		duration: Util.formatPeriod(global.lastSession.endTime.toMillis() - global.lastSession.startTime.toMillis(), "MINUTES"),
+		documentator: argv.getString("documentator")
+	}
 
-	const ds = gdrive.drive({version:"v3", auth});
+	const dataPushRes = await pushData(data);
+	const [attdet, procdet] = await pushCsv();
 
-	let reply = `<@${executor.id}> attempted to push last session's logs:\n`;
+	const lastSessionNme = Util.formatDate(global.lastSession.endTime, "STD");
 
-	const attdet = await ds.files.create({
-		requestBody: {
-			name: `${global.lastSession}-attdet.csv`,
-			parents: [ global.config.attdetCsvGdriveFolderId ]
-		},
-
-		media: {
-			mimeType: "text/csv",
-			body: fs.createReadStream(`./run/${global.lastSession}-attdet.csv`)
-		}
-	});
-
-	reply += ((attdet.status === 200) ? "Pushed attdet.csv successfully" : "Failed to push attdet.csv") + '\n';
-
-	const procdet = await ds.files.create({
-		requestBody: {
-			name: `${global.lastSession}-procdet.csv`,
-			parents: [ global.config.procdetCsvGdriveFolderId ]
-		},
-
-		media: {
-			mimeType: "text/csv",
-			body: fs.createReadStream(`./run/${global.lastSession}-procdet.csv`)
-		}
-	});
-
-	reply += ((procdet.status === 200) ? "Pushed procdet.csv successfully" : "Failed to push procdet.csv");
-
-	console.log(`>>> ${executor.id} attempted to push session ${global.lastSession}'s logs:`);
+	console.log(`>>> ${executor.id} attempted to push session ${lastSessionNme}'s logs:`);
+	console.log((dataPushRes.status === 200) ? ">>> data: success" : (">>> data: failed\n" + dataPushRes));
 	console.log((attdet.status === 200) ? ">>> attdet: success" : (">>> attdet: failed\n" + attdet));
 	console.log((procdet.status === 200) ? ">>> procdet: success" : (">>> procdet: failed\n" + procdet));
 	console.log(`>>> Push overall ${(attdet && procdet) ? "successful" : "failed"}`);
+
+	let reply = `<@${executor.id}> attempted to push last session's data:\n`;
+	reply += ((dataPushRes.status === 200) ? "Pushed data successfully" : "Failed to push data") + '\n';
+	reply += ((attdet.status === 200) ? "Pushed attdet.csv successfully" : "Failed to push attdet.csv") + '\n';
+	reply += ((procdet.status === 200) ? "Pushed procdet.csv successfully" : "Failed to push procdet.csv");
 
 	interaction.editReply(reply);
 }

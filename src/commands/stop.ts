@@ -68,8 +68,7 @@ export async function exec(interaction : CommandInteraction) {
 		]
 	});
 
-	global.sessions.delete(`${targetGuild}-${targetChannel.id}`);
+	global.lastSession = session;
 
-	// Record the last session's log files
-	global.lastSession = fileBaseName;
+	global.sessions.delete(`${targetGuild}-${targetChannel.id}`);
 }

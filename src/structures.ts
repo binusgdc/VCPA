@@ -10,11 +10,25 @@ type ServiceLocation = {
 	commandAccessRoleIds: Snowflake[];
 }
 
+type BGDCData = {
+	msSessionsSheetId: string;
+	msSessionsSubjectRanges: {
+		PROGA: string;
+		PROGB: string;
+		DESG: string;
+		A2D: string;
+		A3D: string;
+		SND: string;
+	};
+
+	attdetCsvGdriveFolderId: string;
+	procdetCsvGdriveFolderId: string;
+}
+
 export type ConfigFile = {
 	token: Snowflake;
 	serviceLocationWhiteList: ServiceLocation[];
-	attdetCsvGdriveFolderId: string;
-	procdetCsvGdriveFolderId: string;
+	bgdc: BGDCData;
 }
 
 type EventType = "JOIN" | "LEAVE";

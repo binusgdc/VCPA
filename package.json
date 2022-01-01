@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@googleapis/drive": "^2.1.0",
+    "@googleapis/sheets": "^0.3.0",
     "discord.js": "^13.1.0",
     "jsonfile": "^6.1.0",
     "luxon": "^2.0.2"

@@ -1,5 +1,5 @@
 build/
 config.json
-gdrivecreds.json
+gcreds.json
 node_modules/
 run/
