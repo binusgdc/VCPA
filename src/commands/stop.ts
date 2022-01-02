@@ -53,20 +53,22 @@ export async function exec(interaction : CommandInteraction) {
 
 	const outputs = Util.generateSessionOutput(session);
 	const fileBaseName = Util.formatDate(session.endTime, "STD");
-	fs.writeFileSync(`${fileBaseName}-sesinfo.csv`, outputs.sesinfo);
-	fs.writeFileSync(`${fileBaseName}-attdet.csv`, outputs.attdet);
-	fs.writeFileSync(`${fileBaseName}-procdet.csv`, outputs.procdet);
+	fs.writeFileSync(`./run/${fileBaseName}-sesinfo.csv`, outputs.sesinfo);
+	fs.writeFileSync(`./run/${fileBaseName}-attdet.csv`, outputs.attdet);
+	fs.writeFileSync(`./run/${fileBaseName}-procdet.csv`, outputs.procdet);
 
 	console.log(`>>> ${executor.id} stopped a session in ${targetChannel.id}!`);
 	await interaction.reply(`>>> <@${executor.id}> stopped a session in <#${targetChannel.id}>!`);
 	await interaction.followUp({
 		embeds: [outputs.embed],
 		files: [
-			`${fileBaseName}-sesinfo.csv`,
-			`${fileBaseName}-attdet.csv`,
-			`${fileBaseName}-procdet.csv`
+			`./run/${fileBaseName}-sesinfo.csv`,
+			`./run/${fileBaseName}-attdet.csv`,
+			`./run/${fileBaseName}-procdet.csv`
 		]
 	});
+
+	global.lastSession = session;
 
 	global.sessions.delete(`${targetGuild}-${targetChannel.id}`);
 }
