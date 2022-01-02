@@ -100,13 +100,6 @@ export const signature : ApplicationCommandData = {
 	description: "Pushes the specified session's logs to the archive",
 	options: [
 		{
-			name: "email",
-			description: "Tutor's email",
-			type: "STRING",
-			required: true
-		},
-
-		{
 			name: "subject",
 			description: "Class subject",
 			type: "STRING",
