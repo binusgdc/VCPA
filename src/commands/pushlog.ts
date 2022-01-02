@@ -153,21 +153,37 @@ export async function exec(interaction : CommandInteraction) {
 		documentator: argv.getString("documentator")
 	}
 
-	const dataPushRes = await pushData(data);
-	const [attdet, procdet] = await pushCsv();
+	// TODO: Sort out this mess and properly handle errors individually instead of a blanket catch
+	try {
+		const dataPushRes = await pushData(data);
+		const [attdet, procdet] = await pushCsv();
 
-	const lastSessionNme = Util.formatDate(global.lastSession.endTime, "STD");
+		const lastSessionName = Util.formatDate(global.lastSession.endTime, "STD");
 
-	console.log(`>>> ${executor.id} attempted to push session ${lastSessionNme}'s logs:`);
-	console.log((dataPushRes.status === 200) ? ">>> data: success" : (">>> data: failed\n" + dataPushRes));
-	console.log((attdet.status === 200) ? ">>> attdet: success" : (">>> attdet: failed\n" + attdet));
-	console.log((procdet.status === 200) ? ">>> procdet: success" : (">>> procdet: failed\n" + procdet));
-	console.log(`>>> Push overall ${(attdet && procdet) ? "successful" : "failed"}`);
+		console.log(`>>> ${executor.id} attempted to push session ${lastSessionName}'s logs:`);
+		console.log((dataPushRes.status === 200) ? ">>> data: success" : (">>> data: failed\n" + dataPushRes));
+		console.log((attdet.status === 200) ? ">>> attdet: success" : (">>> attdet: failed\n" + attdet));
+		console.log((procdet.status === 200) ? ">>> procdet: success" : (">>> procdet: failed\n" + procdet));
+		console.log(`>>> Push overall ${(attdet && procdet) ? "successful" : "failed"}`);
 
-	let reply = `<@${executor.id}> attempted to push last session's data:\n`;
-	reply += ((dataPushRes.status === 200) ? "Pushed data successfully" : "Failed to push data") + '\n';
-	reply += ((attdet.status === 200) ? "Pushed attdet.csv successfully" : "Failed to push attdet.csv") + '\n';
-	reply += ((procdet.status === 200) ? "Pushed procdet.csv successfully" : "Failed to push procdet.csv");
+		let reply = `<@${executor.id}> attempted to push last session's data:\n`;
+		reply += ((dataPushRes.status === 200) ? "Pushed data successfully" : "Failed to push data") + '\n';
+		reply += ((attdet.status === 200) ? "Pushed attdet.csv successfully" : "Failed to push attdet.csv") + '\n';
+		reply += ((procdet.status === 200) ? "Pushed procdet.csv successfully" : "Failed to push procdet.csv");
 
-	interaction.editReply(reply);
+		interaction.editReply(reply);
+	} catch (err) {
+		const lastSessionName = Util.formatDate(global.lastSession.endTime, "STD");
+
+		console.log(`>>> ${executor.id} attempted to push session ${lastSessionName}'s logs:`);
+		console.log(">>> Push failed for some reason:");
+		console.log(">>> data:");
+		console.log(data);
+		console.log(">>> Error:");
+		console.log(err);
+
+		let reply = `<@${executor.id}> attempted to push last session's data:\n`;
+		reply += "Push failed for some reason, please submit form manually :(";
+		interaction.editReply(reply);
+	}
 }
