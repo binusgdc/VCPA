@@ -58,7 +58,7 @@ async function pushData(data : PushData) {
 	return valUpdateRes;
 }
 
-async function pushCsv() {
+async function pushCsv(data : PushData) {
 	const auth = new gdrive.auth.GoogleAuth({
 		keyFile: "gcreds.json",
 		scopes: [ "https://www.googleapis.com/auth/drive" ]
@@ -70,7 +70,7 @@ async function pushCsv() {
 
 	const attdet = await ds.files.create({
 		requestBody: {
-			name: `${fileBaseName}-attdet.csv`,
+			name: `${data.subject}-${fileBaseName}-attdet.csv`,
 			parents: [ global.config.bgdc.attdetCsvGdriveFolderId ]
 		},
 
@@ -82,7 +82,7 @@ async function pushCsv() {
 
 	const procdet = await ds.files.create({
 		requestBody: {
-			name: `${fileBaseName}-procdet.csv`,
+			name: `${data.subject}-${fileBaseName}-procdet.csv`,
 			parents: [ global.config.bgdc.procdetCsvGdriveFolderId ]
 		},
 
@@ -149,7 +149,7 @@ export async function exec(interaction : CommandInteraction) {
 	// TODO: Sort out this mess and properly handle errors individually instead of a blanket catch
 	try {
 		const dataPushRes = await pushData(data);
-		const [attdet, procdet] = await pushCsv();
+		const [attdet, procdet] = await pushCsv(data);
 
 		const lastSessionName = Util.formatDate(global.lastSession.endTime, "STD");
 
