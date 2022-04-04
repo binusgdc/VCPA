@@ -107,6 +107,7 @@ export const signature : ApplicationCommandData = {
 			choices: [
 				{ name: "Game Programming A", value: "PROGA" },
 				{ name: "Game Programming B", value: "PROGB" },
+				{ name: "Game Programming C", value: "PROGC" },
 				{ name: "Game Design", value: "DESG"},
 				{ name: "2D Art", value: "A2D" },
 				{ name: "3D Art", value: "A3D" },
