@@ -123,6 +123,13 @@ export const signature : ApplicationCommandData = {
 		},
 
 		{
+			name: "tutor",
+			description: "Tutor Discord ID(s) (e.g.: \"@tutor1,@tutor2\")",
+			type: "STRING",
+			required: true
+		},
+
+		{
 			name: "documentator",
 			description: "Class documentator's IRL name",
 			type: "STRING",
@@ -141,7 +148,7 @@ export async function exec(interaction : CommandInteraction) {
 		subject: argv.getString("subject"),
 		topic: argv.getString("topic"),
 		date: Util.formatDate(global.lastSession.startTime, "DATE"),
-		tutor: global.lastSession.owner,
+		tutor: argv.getString("tutor"),
 		time: Util.formatDate(global.lastSession.startTime, "TME"),
 		duration: Util.formatPeriod(global.lastSession.endTime.toMillis() - global.lastSession.startTime.toMillis(), "MINUTES"),
 		documentator: argv.getString("documentator")
