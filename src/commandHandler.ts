@@ -4,12 +4,16 @@ import * as command_pushlog from "./commands/pushlog";
 import * as command_start from "./commands/start";
 import * as command_status from "./commands/status";
 import * as command_stop from "./commands/stop";
+import * as command_raisehand from "./commands/raisehand";
+import * as command_lowerhand from "./commands/lowerhand";
 
 const commands = [
 	command_start,
 	command_status,
 	command_stop,
-	command_pushlog
+	command_pushlog,
+	command_raisehand,
+	command_lowerhand
 ];
 
 export async function register(client : Client) {
