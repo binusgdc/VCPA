@@ -42,3 +42,17 @@ test('generateSessionOutput produces expected attendance info format', () => {
         expect(headerColumns[index]).toBe(expectedHeaderColumns[index])
     }
 })
+
+test('generateSessionOutput produces expected procdet format', () => {
+    const expectedHeaderColumns = ['id', 'perc', 'status', 'duration']
+    const owner = SnowflakeUtil.generate(0)
+    const channel = SnowflakeUtil.generate(1)
+    const session = new Session(owner, channel)
+    session.start()
+    session.end()
+    const report = util.generateSessionOutput(session)
+    const headerColumns = report.procdet.split('\n')[0].split(',')
+    for (let index = 0; index < expectedHeaderColumns.length; index++) {
+        expect(headerColumns[index]).toBe(expectedHeaderColumns[index])
+    }
+})
