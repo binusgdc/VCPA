@@ -4,3 +4,4 @@ gcreds.json
 node_modules/
 run/
 coverage/
+.vscode/
