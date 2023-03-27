@@ -3,3 +3,4 @@ config.json
 gcreds.json
 node_modules/
 run/
+coverage/
