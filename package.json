@@ -15,9 +15,12 @@
   "dependencies": {
     "@googleapis/drive": "^2.1.0",
     "@googleapis/sheets": "^0.3.0",
+    "@types/sqlite3": "^3.1.8",
     "discord.js": "^13.1.0",
     "jsonfile": "^6.1.0",
-    "luxon": "^2.0.2"
+    "luxon": "^2.0.2",
+    "sqlite": "^4.1.2",
+    "sqlite3": "^5.1.6"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",
