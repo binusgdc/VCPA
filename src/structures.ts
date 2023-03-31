@@ -1,5 +1,4 @@
-import { Snowflake } from "discord-api-types";
-import { MessageEmbed } from "discord.js";
+import { Snowflake, MessageEmbed } from "discord.js";
 import { DateTime } from "luxon";
 
 import * as Util from "./util";
