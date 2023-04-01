@@ -19,5 +19,5 @@ create table `event` (
     `event_code` varchar(10) not null,
     `user_id` varchar(19) not null, 
     primary key (`count`, `session_guild_id`, `session_channel_id`),
-    foreign key (`session_guild_id`, `session_channel_id`) references `session`(`guild_id`, `session_channel_id`)
+    foreign key (`session_guild_id`, `session_channel_id`) references `session`(`guild_id`, `channel_id`)
 );
