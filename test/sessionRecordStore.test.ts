@@ -126,58 +126,32 @@ test("Generated session record's events are properly ordered for a single user",
     }
 })
 
-test('Storing session with no events should return appropriate id', async () => {
-    const expected: SessionRecord = {
-        ownerId: SnowflakeUtil.generate(),
-        guildId: SnowflakeUtil.generate(),
-        channelId: SnowflakeUtil.generate(),
-        startTime: DateTime.now(),
-        endTime: DateTime.now().plus({
-            minutes: 10
-        }),
-        events: []
-    }
+test('Storing session should return appropriate id', async () => {
+    const expected = generateSessionRecord();
     const id = await sut.store(expected);
     expect(id).toEqual<SessionRecordId>({ guildId: expected.guildId, channelId: expected.channelId });
 });
 
-test('Inserted session with no events should be retrievable', async () => {
-    const expected = generateSessionRecordWithoutEvents();
+test('Inserted session should be retrievable', async () => {
+    const expected = generateSessionRecord();
     const id = await sut.store(expected);
     const actual = await sut.retrieve(id as SessionRecordId);
     expect(actual).toEqual<SessionRecord>(expected);
 });
 
-test('Trying to store the same session with no events twice should return undefined', async () => {
-    const expected = generateSessionRecordWithoutEvents();
+test('Trying to store the same session twice should return undefined', async () => {
+    const expected = generateSessionRecord();
     await sut.store(expected);
     const secondTry = await sut.store(expected);
     expect(secondTry).toBeUndefined();
 });
 
 test('Trying to retrieve a session after deleting it should return undefined', async () => {
-    const expected = generateSessionRecordWithoutEvents();
+    const expected = generateSessionRecord();
     const id = (await sut.store(expected)) as SessionRecordId;
     await sut.delete(id);
     const attempt = await sut.retrieve(id);
     expect(attempt).toBeUndefined();
-});
-
-test('Retrieving all sessions without events returns all inserted sessions', async () => {
-    const expected = [...Array(10).keys()]
-        .map(_ => generateSessionRecordWithoutEvents())
-        .reduce((dict, next) => dict.set(next.guildId + "-" + next.channelId, next), new Map<string, SessionRecord>());
-
-    for (const session of expected.values()) {
-        await sut.store(session);
-    }
-
-    const actual = ((await sut.retrieveAll()) as SessionRecord[])
-        .reduce((dict, next) => dict.set(next.guildId + "-" + next.channelId, next), new Map<string, SessionRecord>());
-
-    for (const id of expected.keys()) {
-        expect(actual.get(id)).toEqual(expected.get(id))
-    }
 });
 
 test('Retrieving all sessions with events returns all inserted sessions', async () => {
