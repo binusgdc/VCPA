@@ -45,7 +45,7 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
         this.connectionProvider = connectionProvider;
     }
 
-    public async store(sessionRecord: SessionRecord): Promise<SessionRecordId> {
+    public async store(sessionRecord: SessionRecord): Promise<SessionRecordId | undefined> {
         const id: SessionRecordId = {
             guildId: sessionRecord.guildId,
             channelId: sessionRecord.channelId
@@ -76,7 +76,7 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
             return undefined;
         }
     }
-    public async retrieve(id: SessionRecordId): Promise<SessionRecord> {
+    public async retrieve(id: SessionRecordId): Promise<SessionRecord | undefined> {
         try {
             const db = await this.connectionProvider.getConnection();
             const sessionResult = await db.get(
@@ -102,7 +102,7 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
             return undefined;
         }
     }
-    public async retrieveAll(): Promise<SessionRecord[]> {
+    public async retrieveAll(): Promise<SessionRecord[] | undefined> {
         try {
             const db = await this.connectionProvider.getConnection();
             const sessionsResult = await db.all(
@@ -115,8 +115,8 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
                     FROM `event`\
                     WHERE `session_guild_id` = :guild_id\
                     AND `session_channel_id` = :channel_id", {
-                    'guild_id': sessionResult['guild_id'],
-                    'channel_id': sessionResult['channel_id']
+                    ':guild_id': sessionResult['guild_id'],
+                    ':channel_id': sessionResult['channel_id']
                 }
                 );
                 sessions.push(this.convertResultToSession(sessionResult, eventsResult.map(this.convertResultToEvent)))
