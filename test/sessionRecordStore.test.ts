@@ -54,7 +54,7 @@ function generateSessionRecord(lengthOfSessionMinutes: number = 10, numberOfUser
         channelId: SnowflakeUtil.generate(),
         startTime: startTime,
         endTime: endTime,
-        // not sorted by time
+        // sorted by user then time
         events: [...Array(numberOfUsers).keys()]
             .map(_ => SnowflakeUtil.generate())
             .flatMap(userId => generateEventsForUserId(userId, startTime, endTime, getRandomInteger(0, maxIntermediateEventsPerUser)))
