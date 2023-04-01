@@ -43,7 +43,6 @@ function generateSessionRecord(lengthOfSessionMinutes: number = 10, numberOfUser
     numberOfUsers = Math.max(0, numberOfUsers);
     maxIntermediateEventsPerUser = Math.max(0, maxIntermediateEventsPerUser);
     
-    const events = [...Array(numberOfUsers).keys()].map(_ => SnowflakeUtil.generate());
     const startTime = DateTime.now();
     const endTime = startTime.plus({
         minutes: lengthOfSessionMinutes
