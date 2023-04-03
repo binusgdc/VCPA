@@ -6,8 +6,8 @@ create table `session` (
     `owner_id` varchar(19) not null,
     `guild_id` varchar(19) not null,
     `channel_id` varchar(19) not null,
-    `start_time` datetime not null,
-    `end_time` datetime not null,
+    `time_started` datetime not null,
+    `time_ended` datetime not null,
     `time_stored` date not null,
     primary key (`guild_id`, `channel_id`)
 );

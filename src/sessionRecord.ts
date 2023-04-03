@@ -12,21 +12,21 @@ export type SessionEvent = JoinedChannelEvent | LeftChannelEvent
 export interface JoinedChannelEvent {
     type: "Join";
     userId: Snowflake;
-    time: DateTime;
+    timeOccurred: DateTime;
 }
 
 export interface LeftChannelEvent {
     type: "Leave";
     userId: Snowflake;
-    time: DateTime;
+    timeOccurred: DateTime;
 }
 
 export interface CompletedSession {
     ownerId: Snowflake;
     guildId: Snowflake;
     channelId: Snowflake;
-    startTime: DateTime;
-    endTime: DateTime;
+    timeStarted: DateTime;
+    timeEnded: DateTime;
     events: SessionEvent[];
 }
 
@@ -57,12 +57,12 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
         const db = await this.connectionProvider.getConnection();
         try {
             await db.run(
-                "INSERT INTO `session`(`owner_id`, `guild_id`, `channel_id`, `start_time`, `end_time`, `time_stored`) VALUES (:owner_id, :guild_id, :channel_id, :start_time, :end_time, :time_stored)", {
+                "INSERT INTO `session`(`owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored`) VALUES (:owner_id, :guild_id, :channel_id, :time_started, :time_ended, :time_stored)", {
                 ':owner_id': completedSession.ownerId.toString(),
                 ':guild_id': id.guildId.toString(),
                 ':channel_id': id.channelId.toString(),
-                ':start_time': completedSession.startTime.toISO(),
-                ':end_time': completedSession.endTime.toISO(),
+                ':time_started': completedSession.timeStarted.toISO(),
+                ':time_ended': completedSession.timeEnded.toISO(),
                 ':time_stored': DateTime.now().toISO()
             });
             for (let index = 0; index < completedSession.events.length; index++) {
@@ -71,7 +71,7 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
                     ':count': index + 1,
                     ':session_guild_id': id.guildId.toString(),
                     ':session_channel_id': id.channelId.toString(),
-                    ':time_occurred': sessionEvent.time.toISO(),
+                    ':time_occurred': sessionEvent.timeOccurred.toISO(),
                     ':event_code': sessionEvent.type.toUpperCase(),
                     ':user_id': sessionEvent.userId
                 });
@@ -87,7 +87,7 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
         const db = await this.connectionProvider.getConnection();
         try {
             const sessionResult = await db.get(
-                "SELECT `owner_id`, `guild_id`, `channel_id`, `start_time`, `end_time` \
+                "SELECT `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended` \
                 FROM `session` \
                 WHERE `guild_id`=:guild_id \
                 AND `channel_id`=:channel_id", {
@@ -115,7 +115,7 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
         const db = await this.connectionProvider.getConnection();
         try {
             const sessionsResult = await db.all(
-                "SELECT `owner_id`, `guild_id`, `channel_id`, `start_time`, `end_time` \
+                "SELECT `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended` \
                 FROM `session`");
             const sessions: SessionRecord[] = []
             for (const sessionResult of sessionsResult) {
@@ -169,8 +169,8 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
             ownerId: obj['owner_id'] as string,
             guildId: obj['guild_id'] as string,
             channelId: obj['channel_id'] as string,
-            startTime: DateTime.fromISO(obj['start_time'] as string) as DateTime,
-            endTime: DateTime.fromISO(obj['end_time'] as string) as DateTime,
+            timeStarted: DateTime.fromISO(obj['time_started'] as string) as DateTime,
+            timeEnded: DateTime.fromISO(obj['time_ended'] as string) as DateTime,
             events: events,
             timeStored: DateTime.fromISO(obj['date_stored']) as DateTime
         };
@@ -182,13 +182,13 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
                 return {
                     type: "Join",
                     userId: obj['user_id'] as string,
-                    time: DateTime.fromISO(obj['time_occurred'] as string) as DateTime
+                    timeOccurred: DateTime.fromISO(obj['time_occurred'] as string) as DateTime
                 };
             default:
                 return {
                     type: "Leave",
                     userId: obj['user_id'] as string,
-                    time: DateTime.fromISO(obj['time_occurred'] as string) as DateTime
+                    timeOccurred: DateTime.fromISO(obj['time_occurred'] as string) as DateTime
                 };
         }
     }

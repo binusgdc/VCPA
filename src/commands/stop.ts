@@ -73,13 +73,13 @@ export async function exec(interaction: CommandInteraction) {
 		ownerId: session.owner,
 		guildId: targetGuildId,
 		channelId: session.channel,
-		startTime: session.startTime,
-		endTime: session.endTime,
+		timeStarted: session.startTime,
+		timeEnded: session.endTime,
 		events: session.events.map<SessionEvent>(e => {
 			return {
 				type: e.type == "JOIN" ? "Join" : "Leave",
 				userId: e.uid,
-				time: e.time
+				timeOccurred: e.time
 			}
 		})
 	})

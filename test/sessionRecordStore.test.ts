@@ -39,8 +39,8 @@ function generateCompletedSession(lengthOfSessionMinutes: number = 10, numberOfU
         ownerId: SnowflakeUtil.generate(),
         guildId: SnowflakeUtil.generate(),
         channelId: SnowflakeUtil.generate(),
-        startTime: startTime,
-        endTime: endTime,
+        timeStarted: startTime,
+        timeEnded: endTime,
         // sorted by user then time
         events: [...Array(numberOfUsers).keys()]
             .map(_ => SnowflakeUtil.generate())
@@ -69,25 +69,25 @@ function generateEventsForUserId(userId: Snowflake, startTime: DateTime, endTime
             ? {
                 type: "Leave",
                 userId: userId,
-                time: startTime.plus(timeStampMilliseconds)
+                timeOccurred: startTime.plus(timeStampMilliseconds)
             }
             : {
                 type: "Join",
                 userId: userId,
-                time: startTime.plus(timeStampMilliseconds)
+                timeOccurred: startTime.plus(timeStampMilliseconds)
             }
         });
 
     const startEvent: JoinedChannelEvent = {
         type: "Join",
         userId: userId,
-        time: startTime
+        timeOccurred: startTime
     };
 
     const endEvent: LeftChannelEvent = {
         type: "Leave",
         userId: userId,
-        time: endTime
+        timeOccurred: endTime
     };
 
     return [startEvent, ...intermediateEvents, endEvent];
@@ -103,7 +103,7 @@ test("Generated session record's events are properly ordered for a single user",
         for (let iEvent = 0; iEvent < record.events.length - 1; iEvent++) {
             const event = record.events[iEvent];
             const next = record.events[iEvent + 1];
-            expect(event.time.toMillis()).toBeLessThan(next.time.toMillis());
+            expect(event.timeOccurred.toMillis()).toBeLessThan(next.timeOccurred.toMillis());
             if (event.type == "Join")
                 expect(next.type).toEqual("Leave");
             else 
@@ -163,8 +163,8 @@ function expectSessionsToEqual(actual: CompletedSession, expected: CompletedSess
     expect(actual.channelId).toEqual(expected.channelId);
     expect(actual.guildId).toEqual(expected.guildId);
     expect(actual.ownerId).toEqual(expected.ownerId);
-    expect(actual.startTime).toEqual(expected.startTime);
-    expect(actual.endTime).toEqual(expected.endTime);
+    expect(actual.timeStarted).toEqual(expected.timeStarted);
+    expect(actual.timeEnded).toEqual(expected.timeEnded);
     const actualEvents = [...actual!.events].sort()
     const expectedEvents = [...expected.events].sort()
     for (let index = 0; index < actualEvents.length; index++) {
