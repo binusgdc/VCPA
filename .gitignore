@@ -5,3 +5,4 @@ node_modules/
 run/
 coverage/
 .vscode/
+data/session-records.db
