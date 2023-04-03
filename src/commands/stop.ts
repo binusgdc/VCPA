@@ -1,9 +1,10 @@
 import { ApplicationCommandData, CommandInteraction, GuildMember, VoiceChannel } from "discord.js";
 import * as fs from "fs";
+import { SessionEvent } from "../sessionRecord";
 
 import * as Util from "../util";
 
-export const signature : ApplicationCommandData = {
+export const signature: ApplicationCommandData = {
 	name: "stop",
 	description: "Stops a session",
 	options: [
@@ -16,11 +17,11 @@ export const signature : ApplicationCommandData = {
 	]
 };
 
-export async function exec(interaction : CommandInteraction) {
+export async function exec(interaction: CommandInteraction) {
 	const executor = interaction.member as GuildMember;
 	const argv = interaction.options;
 
-	const targetGuild = interaction.guildId;
+	const targetGuildId = interaction.guildId;
 	const targetChannel = (argv.getChannel("channel") ?? executor.voice.channel) as VoiceChannel;
 
 	if (targetChannel === null) {
@@ -35,7 +36,7 @@ export async function exec(interaction : CommandInteraction) {
 		return;
 	}
 
-	const session = global.ongoingSessions.get(`${targetGuild}-${targetChannel.id}`);
+	const session = global.ongoingSessions.get(`${targetGuildId}-${targetChannel.id}`);
 	if (session === undefined) {
 		console.log(`>>> Failed to stop session: ${executor.id} tried to stop a non-existent session!`);
 		await interaction.reply(`>>> Failed to stop session: <@${executor.id}> tried to stop a non-existent session!`);
@@ -68,7 +69,22 @@ export async function exec(interaction : CommandInteraction) {
 		]
 	});
 
+	await global.sessionRecordStore.store({
+		ownerId: session.owner,
+		guildId: targetGuildId,
+		channelId: session.channel,
+		startTime: session.startTime,
+		endTime: session.endTime,
+		events: session.events.map<SessionEvent>(e => {
+			return {
+				type: e.type == "JOIN" ? "Join" : "Leave",
+				userId: e.uid,
+				time: e.time
+			}
+		})
+	})
+
 	global.lastSession = session;
 
-	global.ongoingSessions.delete(`${targetGuild}-${targetChannel.id}`);
+	global.ongoingSessions.delete(`${targetGuildId}-${targetChannel.id}`);
 }

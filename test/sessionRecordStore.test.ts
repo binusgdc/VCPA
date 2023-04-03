@@ -3,7 +3,7 @@ import * as fs from "fs";
 import { DateTime } from "luxon";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { SqliteSessionRecordStore, SingleConnectionProvider, SessionRecord, SessionRecordId, SessionRecordStore, SessionEvent, JoinedChannelEvent, LeftChannelEvent } from "../src/sessionRecord"
+import { SqliteSessionRecordStore, LazyConnectionProvider, SessionRecord, SessionRecordId, SessionRecordStore, SessionEvent, JoinedChannelEvent, LeftChannelEvent } from "../src/sessionRecord"
 import { getRandomInteger } from "../src/util";
 
 const dbName = "sessions-test.db";
@@ -17,7 +17,7 @@ async function setupDatabase() {
         migrationsPath: "./data"
     });
     connection.close();
-    sut = new SqliteSessionRecordStore(new SingleConnectionProvider(dbConfig));
+    sut = new SqliteSessionRecordStore(new LazyConnectionProvider(dbConfig));
 }
 
 function deleteDatabase() {

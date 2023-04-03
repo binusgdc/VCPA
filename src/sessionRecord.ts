@@ -74,11 +74,13 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
             return id;  
         } catch (error) {
             return undefined;
+        } finally {
+            db.close();
         }
     }
     public async retrieve(id: SessionRecordId): Promise<SessionRecord | undefined> {
+        const db = await this.connectionProvider.getConnection();
         try {
-            const db = await this.connectionProvider.getConnection();
             const sessionResult = await db.get(
                 "SELECT `owner_id`, `guild_id`, `channel_id`, `start_time`, `end_time` \
                 FROM `session` \
@@ -100,11 +102,13 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
             return this.convertResultToSession(sessionResult, eventsResult.map(this.convertResultToEvent));
         } catch (error) {
             return undefined;
+        } finally {
+            db.close();
         }
     }
     public async retrieveAll(): Promise<SessionRecord[] | undefined> {
+        const db = await this.connectionProvider.getConnection();
         try {
-            const db = await this.connectionProvider.getConnection();
             const sessionsResult = await db.all(
                 "SELECT `owner_id`, `guild_id`, `channel_id`, `start_time`, `end_time` \
                 FROM `session`");
@@ -124,11 +128,13 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
             return sessions;
         } catch (error) {
             return undefined;
+        } finally {
+            db.close();
         }
     }
     public async delete(id: SessionRecordId): Promise<void> {
+        const db = await this.connectionProvider.getConnection();
         try {
-            const db = await this.connectionProvider.getConnection();
             await db.run(
                 "DELETE \
                 FROM `event` \
@@ -148,6 +154,8 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
             });
         } catch (error) {
             return;
+        } finally {
+            db.close();
         }
     }
 
@@ -184,20 +192,16 @@ export interface SqliteDbConnectionProvider {
     getConnection(): Promise<Database<sqlite3.Database, sqlite3.Statement>>;
 }
 
-export class SingleConnectionProvider implements SqliteDbConnectionProvider {
+export class LazyConnectionProvider implements SqliteDbConnectionProvider {
 
     private readonly config: ISqlite.Config;
-    private connection: Database<sqlite3.Database, sqlite3.Statement> | undefined
 
     constructor(config: ISqlite.Config) {
         this.config = config;
     }
 
     async getConnection(): Promise<Database<sqlite3.Database, sqlite3.Statement>> {
-        if (this.connection == undefined) {
-            this.connection = await open(this.config);
-        }
-        return this.connection;
+        return await open(this.config);
     }
 
 }
