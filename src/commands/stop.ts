@@ -69,7 +69,7 @@ export async function exec(interaction: CommandInteraction) {
 		]
 	});
 
-	await global.sessionRecordStore.store({
+	const recordId = await global.sessionRecordStore.store({
 		ownerId: session.owner,
 		guildId: targetGuildId,
 		channelId: session.channel,
@@ -83,6 +83,13 @@ export async function exec(interaction: CommandInteraction) {
 			}
 		})
 	})
+
+	if (recordId == undefined) {
+		console.log(`>>> FAILED to store the session record!`);
+	}
+	else { 
+		console.log(`>>> Session record stored!`); 
+	}
 
 	global.lastSession = session;
 
