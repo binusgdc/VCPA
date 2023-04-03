@@ -3,7 +3,7 @@ import * as fs from "fs";
 import { DateTime } from "luxon";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { SqliteSessionRecordStore, LazyConnectionProvider, SessionRecord, SessionRecordId, SessionRecordStore, SessionEvent, JoinedChannelEvent, LeftChannelEvent } from "../src/sessionRecord"
+import { SqliteSessionRecordStore, LazyConnectionProvider, SessionRecord, SessionRecordId, SessionRecordStore, SessionEvent, JoinedChannelEvent, LeftChannelEvent, CompletedSession } from "../src/sessionRecord"
 import { getRandomInteger } from "../src/util";
 
 const dbName = "sessions-test.db";
@@ -24,20 +24,7 @@ function deleteDatabase() {
     if (fs.existsSync(dbName)) fs.rmSync(dbName);
 }
 
-function generateSessionRecordWithoutEvents(lengthOfSessionMinutes: number = 10): SessionRecord {
-    return {
-        ownerId: SnowflakeUtil.generate(),
-        guildId: SnowflakeUtil.generate(),
-        channelId: SnowflakeUtil.generate(),
-        startTime: DateTime.now(),
-        endTime: DateTime.now().plus({
-            minutes: lengthOfSessionMinutes
-        }),
-        events: []
-    }
-}
-
-function generateSessionRecord(lengthOfSessionMinutes: number = 10, numberOfUsers: number = 1, maxIntermediateEventsPerUser: number = 0): SessionRecord {
+function generateCompletedSession(lengthOfSessionMinutes: number = 10, numberOfUsers: number = 1, maxIntermediateEventsPerUser: number = 0): CompletedSession {
     
     lengthOfSessionMinutes = Math.max(10, lengthOfSessionMinutes);
     numberOfUsers = Math.max(0, numberOfUsers);
@@ -112,7 +99,7 @@ afterEach(() => { deleteDatabase(); });
 test("Generated session record's events are properly ordered for a single user", () => {
     const tries = 50;
     for (let iTry = 0; iTry < tries; iTry++) {
-        const record = generateSessionRecord(30, 1, 10);
+        const record = generateCompletedSession(30, 1, 10);
         for (let iEvent = 0; iEvent < record.events.length - 1; iEvent++) {
             const event = record.events[iEvent];
             const next = record.events[iEvent + 1];
@@ -126,27 +113,28 @@ test("Generated session record's events are properly ordered for a single user",
 })
 
 test('Storing session should return appropriate id', async () => {
-    const expected = generateSessionRecord();
+    const expected = generateCompletedSession();
     const id = await sut.store(expected);
     expect(id).toEqual<SessionRecordId>({ guildId: expected.guildId, channelId: expected.channelId });
 });
 
 test('Inserted session should be retrievable', async () => {
-    const expected = generateSessionRecord();
+    const expected = generateCompletedSession();
     const id = await sut.store(expected);
     const actual = await sut.retrieve(id as SessionRecordId);
-    expect(actual).toEqual<SessionRecord>(expected);
+
+    expectSessionsToEqual(actual!, expected);
 });
 
 test('Trying to store the same session twice should return undefined', async () => {
-    const expected = generateSessionRecord();
+    const expected = generateCompletedSession();
     await sut.store(expected);
     const secondTry = await sut.store(expected);
     expect(secondTry).toBeUndefined();
 });
 
 test('Trying to retrieve a session after deleting it should return undefined', async () => {
-    const expected = generateSessionRecord();
+    const expected = generateCompletedSession();
     const id = (await sut.store(expected)) as SessionRecordId;
     await sut.delete(id);
     const attempt = await sut.retrieve(id);
@@ -155,8 +143,8 @@ test('Trying to retrieve a session after deleting it should return undefined', a
 
 test('Retrieving all sessions with events returns all inserted sessions', async () => {
     const expected = [...Array(10).keys()]
-        .map(_ => generateSessionRecord(10, 3, 6))
-        .reduce((dict, next) => dict.set(next.guildId + "-" + next.channelId, next), new Map<string, SessionRecord>());
+        .map(_ => generateCompletedSession(10, 3, 6))
+        .reduce((dict, next) => dict.set(next.guildId + "-" + next.channelId, next), new Map<string, CompletedSession>());
 
     for (const session of expected.values()) {
         await sut.store(session);
@@ -166,6 +154,20 @@ test('Retrieving all sessions with events returns all inserted sessions', async 
         .reduce((dict, next) => dict.set(next.guildId + "-" + next.channelId, next), new Map<string, SessionRecord>());
 
     for (const id of expected.keys()) {
-        expect(actual.get(id)).toEqual(expected.get(id))
+        expectSessionsToEqual(actual.get(id)!, expected.get(id)!)
     }
 });
+
+function expectSessionsToEqual(actual: CompletedSession, expected: CompletedSession) {
+    expect(actual).toBeDefined();
+    expect(actual.channelId).toEqual(expected.channelId);
+    expect(actual.guildId).toEqual(expected.guildId);
+    expect(actual.ownerId).toEqual(expected.ownerId);
+    expect(actual.startTime).toEqual(expected.startTime);
+    expect(actual.endTime).toEqual(expected.endTime);
+    const actualEvents = [...actual!.events].sort()
+    const expectedEvents = [...expected.events].sort()
+    for (let index = 0; index < actualEvents.length; index++) {
+        expect(actualEvents[index]).toEqual(expectedEvents[index])
+    }
+}

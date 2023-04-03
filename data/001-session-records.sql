@@ -8,6 +8,7 @@ create table `session` (
     `channel_id` varchar(19) not null,
     `start_time` datetime not null,
     `end_time` datetime not null,
+    `time_stored` date not null,
     primary key (`guild_id`, `channel_id`)
 );
 

@@ -21,7 +21,7 @@ export interface LeftChannelEvent {
     time: DateTime;
 }
 
-export interface SessionRecord {
+export interface CompletedSession {
     ownerId: Snowflake;
     guildId: Snowflake;
     channelId: Snowflake;
@@ -30,8 +30,12 @@ export interface SessionRecord {
     events: SessionEvent[];
 }
 
+export interface SessionRecord extends CompletedSession {
+    timeStored: DateTime
+}
+
 export interface SessionRecordStore {
-    store(sessionRecord: SessionRecord): Promise<SessionRecordId | undefined>;
+    store(completedSession: CompletedSession): Promise<SessionRecordId | undefined>;
     retrieve(id: SessionRecordId): Promise<SessionRecord | undefined>;
     retrieveAll(): Promise<SessionRecord[] | undefined>;
     delete(id: SessionRecordId): Promise<void>;
@@ -45,23 +49,24 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
         this.connectionProvider = connectionProvider;
     }
 
-    public async store(sessionRecord: SessionRecord): Promise<SessionRecordId | undefined> {
+    public async store(completedSession: CompletedSession): Promise<SessionRecordId | undefined> {
         const id: SessionRecordId = {
-            guildId: sessionRecord.guildId,
-            channelId: sessionRecord.channelId
+            guildId: completedSession.guildId,
+            channelId: completedSession.channelId
         }
         const db = await this.connectionProvider.getConnection();
         try {
             await db.run(
-                "INSERT INTO `session`(`owner_id`, `guild_id`, `channel_id`, `start_time`, `end_time`) VALUES (:owner_id, :guild_id, :channel_id, :start_time, :end_time)", {
-                ':owner_id': sessionRecord.ownerId.toString(),
+                "INSERT INTO `session`(`owner_id`, `guild_id`, `channel_id`, `start_time`, `end_time`, `time_stored`) VALUES (:owner_id, :guild_id, :channel_id, :start_time, :end_time, :time_stored)", {
+                ':owner_id': completedSession.ownerId.toString(),
                 ':guild_id': id.guildId.toString(),
                 ':channel_id': id.channelId.toString(),
-                ':start_time': sessionRecord.startTime.toISO(),
-                ':end_time': sessionRecord.endTime.toISO()
+                ':start_time': completedSession.startTime.toISO(),
+                ':end_time': completedSession.endTime.toISO(),
+                ':time_stored': DateTime.now().toISO()
             });
-            for (let index = 0; index < sessionRecord.events.length; index++) {
-                const sessionEvent = sessionRecord.events[index];
+            for (let index = 0; index < completedSession.events.length; index++) {
+                const sessionEvent = completedSession.events[index];
                 await db.run("INSERT INTO `event`(`count`, `session_guild_id`, `session_channel_id`, `time_occurred`, `event_code`, `user_id`) VALUES (:count, :session_guild_id, :session_channel_id, :time_occurred, :event_code, :user_id)", {
                     ':count': index + 1,
                     ':session_guild_id': id.guildId.toString(),
@@ -166,7 +171,8 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
             channelId: obj['channel_id'] as string,
             startTime: DateTime.fromISO(obj['start_time'] as string) as DateTime,
             endTime: DateTime.fromISO(obj['end_time'] as string) as DateTime,
-            events: events
+            events: events,
+            timeStored: DateTime.fromISO(obj['date_stored']) as DateTime
         };
     }
 
