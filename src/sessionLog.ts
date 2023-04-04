@@ -4,7 +4,7 @@ import { Database, ISqlite, open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { DateTimeProvider } from "./util";
 
-export type SessionRecordId = {
+export type SessionLogId = {
     guildId: Snowflake;
     channelId: Snowflake;
 }
@@ -31,18 +31,18 @@ export interface CompletedSession {
     events: SessionEvent[];
 }
 
-export interface SessionRecord extends CompletedSession {
+export interface SessionLog extends CompletedSession {
     timeStored: DateTime
 }
 
-export interface SessionRecordStore {
-    store(completedSession: CompletedSession): Promise<SessionRecordId | undefined>;
-    retrieve(id: SessionRecordId): Promise<SessionRecord | undefined>;
-    retrieveAll(): Promise<SessionRecord[] | undefined>;
-    delete(id: SessionRecordId): Promise<void>;
+export interface SessionLogStore {
+    store(completedSession: CompletedSession): Promise<SessionLogId | undefined>;
+    retrieve(id: SessionLogId): Promise<SessionLog | undefined>;
+    retrieveAll(): Promise<SessionLog[] | undefined>;
+    delete(id: SessionLogId): Promise<void>;
 }
 
-export class SqliteSessionRecordStore implements SessionRecordStore {
+export class SqliteSessionLogStore implements SessionLogStore {
 
     private readonly connectionProvider: SqliteDbConnectionProvider;
     private readonly dateTimeProvider: DateTimeProvider;
@@ -56,8 +56,8 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
         };
     }
 
-    public async store(completedSession: CompletedSession): Promise<SessionRecordId | undefined> {
-        const id: SessionRecordId = {
+    public async store(completedSession: CompletedSession): Promise<SessionLogId | undefined> {
+        const id: SessionLogId = {
             guildId: completedSession.guildId,
             channelId: completedSession.channelId
         }
@@ -90,7 +90,7 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
             db.close();
         }
     }
-    public async retrieve(id: SessionRecordId): Promise<SessionRecord | undefined> {
+    public async retrieve(id: SessionLogId): Promise<SessionLog | undefined> {
         const db = await this.connectionProvider.getConnection();
         try {
             const sessionResult = await db.get(
@@ -118,13 +118,13 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
             db.close();
         }
     }
-    public async retrieveAll(): Promise<SessionRecord[] | undefined> {
+    public async retrieveAll(): Promise<SessionLog[] | undefined> {
         const db = await this.connectionProvider.getConnection();
         try {
             const sessionsResult = await db.all(
                 "SELECT `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended` \
                 FROM `session`");
-            const sessions: SessionRecord[] = []
+            const sessions: SessionLog[] = []
             for (const sessionResult of sessionsResult) {
                 const eventsResult = await db.all(
                     "SELECT `session_guild_id`, `session_channel_id`, `time_occurred`, `event_code`, `user_id`\
@@ -144,7 +144,7 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
             db.close();
         }
     }
-    public async delete(id: SessionRecordId): Promise<void> {
+    public async delete(id: SessionLogId): Promise<void> {
         const db = await this.connectionProvider.getConnection();
         try {
             await db.run(
@@ -171,7 +171,7 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
         }
     }
 
-    private convertResultToSession(obj: Object, events: SessionEvent[]): SessionRecord {
+    private convertResultToSession(obj: Object, events: SessionEvent[]): SessionLog {
         return {
             ownerId: obj['owner_id'] as string,
             guildId: obj['guild_id'] as string,

@@ -3,12 +3,12 @@ import * as fs from "fs";
 import { DateTime } from "luxon";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { SqliteSessionRecordStore, LazyConnectionProvider, SessionRecord, SessionRecordId, SessionRecordStore, SessionEvent, JoinedChannelEvent, LeftChannelEvent, CompletedSession } from "../src/sessionRecord"
+import { SqliteSessionLogStore, LazyConnectionProvider, SessionLog, SessionLogId, SessionLogStore, SessionEvent, JoinedChannelEvent, LeftChannelEvent, CompletedSession } from "../src/sessionLog"
 import { DateTimeProvider, getRandomInteger } from "../src/util";
 
 const dbName = "sessions-test.db";
 const dbConfig = { filename: dbName, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE }
-let sut: SessionRecordStore;
+let sut: SessionLogStore;
 const dateTimeProviderMock: DateTimeProvider = {
     now: jest.fn().mockReturnValue(DateTime.now())
 }
@@ -20,7 +20,7 @@ async function setupDatabase() {
         migrationsPath: "./data"
     });
     connection.close();
-    sut = new SqliteSessionRecordStore(new LazyConnectionProvider(dbConfig), dateTimeProviderMock);
+    sut = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig), dateTimeProviderMock);
 }
 
 function deleteDatabase() {
@@ -99,13 +99,13 @@ function generateEventsForUserId(userId: Snowflake, startTime: DateTime, endTime
 beforeEach(() => { return setupDatabase(); });
 afterEach(() => { deleteDatabase(); });
 
-test("Generated session record's events are properly ordered for a single user", () => {
+test("Generated session log's events are properly ordered for a single user", () => {
     const tries = 50;
     for (let iTry = 0; iTry < tries; iTry++) {
-        const record = generateCompletedSession(30, 1, 10);
-        for (let iEvent = 0; iEvent < record.events.length - 1; iEvent++) {
-            const event = record.events[iEvent];
-            const next = record.events[iEvent + 1];
+        const log = generateCompletedSession(30, 1, 10);
+        for (let iEvent = 0; iEvent < log.events.length - 1; iEvent++) {
+            const event = log.events[iEvent];
+            const next = log.events[iEvent + 1];
             expect(event.timeOccurred.toMillis()).toBeLessThan(next.timeOccurred.toMillis());
             if (event.type == "Join")
                 expect(next.type).toEqual("Leave");
@@ -118,13 +118,13 @@ test("Generated session record's events are properly ordered for a single user",
 test('Storing session should return appropriate id', async () => {
     const expected = generateCompletedSession();
     const id = await sut.store(expected);
-    expect(id).toEqual<SessionRecordId>({ guildId: expected.guildId, channelId: expected.channelId });
+    expect(id).toEqual<SessionLogId>({ guildId: expected.guildId, channelId: expected.channelId });
 });
 
 test('Inserted session should be retrievable', async () => {
     const expected = generateCompletedSession();
     const id = await sut.store(expected);
-    const actual = await sut.retrieve(id as SessionRecordId);
+    const actual = await sut.retrieve(id as SessionLogId);
 
     expectSessionsToEqual(actual!, expected);
 });
@@ -138,7 +138,7 @@ test('Trying to store the same session twice should return undefined', async () 
 
 test('Trying to retrieve a session after deleting it should return undefined', async () => {
     const expected = generateCompletedSession();
-    const id = (await sut.store(expected)) as SessionRecordId;
+    const id = (await sut.store(expected)) as SessionLogId;
     await sut.delete(id);
     const attempt = await sut.retrieve(id);
     expect(attempt).toBeUndefined();
@@ -153,18 +153,18 @@ test('Retrieving all sessions with events returns all inserted sessions', async 
         await sut.store(session);
     }
 
-    const actual = ((await sut.retrieveAll()) as SessionRecord[])
-        .reduce((dict, next) => dict.set(next.guildId + "-" + next.channelId, next), new Map<string, SessionRecord>());
+    const actual = ((await sut.retrieveAll()) as SessionLog[])
+        .reduce((dict, next) => dict.set(next.guildId + "-" + next.channelId, next), new Map<string, SessionLog>());
 
     for (const id of expected.keys()) {
         expectSessionsToEqual(actual.get(id)!, expected.get(id)!)
     }
 });
 
-test('Storing session creates a record with the current time', async () => {
+test('Storing session creates a log with the current time', async () => {
     const expected = generateCompletedSession();
     const id = await sut.store(expected);
-    const actual = await sut.retrieve(id as SessionRecordId);
+    const actual = await sut.retrieve(id as SessionLogId);
     expect(actual!.timeStored).toEqual(dateTimeProviderMock.now());
 });
 

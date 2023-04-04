@@ -1,6 +1,6 @@
 import { ApplicationCommandData, CommandInteraction, GuildMember, VoiceChannel } from "discord.js";
 import * as fs from "fs";
-import { SessionEvent } from "../sessionRecord";
+import { SessionEvent } from "../sessionLog";
 
 import * as Util from "../util";
 
@@ -69,7 +69,7 @@ export async function exec(interaction: CommandInteraction) {
 		]
 	});
 
-	const recordId = await global.sessionRecordStore.store({
+	const storedLogId = await global.sessionLogStore.store({
 		ownerId: session.owner,
 		guildId: targetGuildId,
 		channelId: session.channel,
@@ -84,11 +84,11 @@ export async function exec(interaction: CommandInteraction) {
 		})
 	})
 
-	if (recordId == undefined) {
-		console.log(`>>> FAILED to store the session record!`);
+	if (storedLogId == undefined) {
+		console.log(`>>> FAILED to store the session log!`);
 	}
 	else { 
-		console.log(`>>> Session record stored!`); 
+		console.log(`>>> Session log stored!`); 
 	}
 
 	global.lastSession = session;

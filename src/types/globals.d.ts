@@ -1,11 +1,11 @@
-import { SessionRecordStore } from "../sessionRecord";
+import { SessionLogStore } from "../sessionLog";
 import { ConfigFile, Session } from "../structures"
 
 declare global {
 	var config: ConfigFile;
 
 	var ongoingSessions: Map<string, Session>;
-	var sessionRecordStore: SessionRecordStore;
+	var sessionLogStore: SessionLogStore;
 	var lastSession: Session;
 
 	var BASE_DIR: string;

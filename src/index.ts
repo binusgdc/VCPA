@@ -2,14 +2,14 @@ import { Client, Intents } from "discord.js";
 import * as jsonfile from "jsonfile";
 
 import * as commandHandler from "./commandHandler";
-import { LazyConnectionProvider, SqliteSessionRecordStore } from "./sessionRecord";
+import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLog";
 import { Session } from "./structures";
 import sqlite3 from "sqlite3";
 import { ISqlite, open } from "sqlite";
 import * as fs from "fs";
 
 global.config = jsonfile.readFileSync("./config.json");
-const dbFile = "data/session-records.db";
+const dbFile = "data/session-logs.db";
 const dbConfig = { filename: dbFile, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE }
 
 global.ongoingSessions = new Map<string, Session>();
@@ -27,7 +27,7 @@ client.on("ready", async () => {
 		await performMigrations(dbConfig, "./data");
 	}
 	await commandHandler.register(client);
-	global.sessionRecordStore = new SqliteSessionRecordStore(new LazyConnectionProvider(dbConfig));
+	global.sessionLogStore = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig));
 	console.log(`>>> Logged in as ${client.user.tag}`);
 	console.log(`>>> Bonjour!`);
 });
