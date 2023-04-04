@@ -24,6 +24,7 @@ const client = new Client({
 
 client.on("ready", async () => {
 	if (!fs.existsSync(dbFile)) {
+		fs.writeFileSync(dbFile, "");
 		await performMigrations(dbConfig, "./data");
 	}
 	await commandHandler.register(client);
