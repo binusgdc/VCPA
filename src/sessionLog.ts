@@ -1,13 +1,10 @@
-import { Snowflake } from "discord.js";
+import { Snowflake, SnowflakeUtil } from "discord.js";
 import { DateTime } from "luxon";
 import { Database, ISqlite, open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { DateTimeProvider } from "./util";
 
-export type SessionLogId = {
-    guildId: Snowflake;
-    channelId: Snowflake;
-}
+export type SessionLogId = Snowflake
 export type SessionEvent = JoinedChannelEvent | LeftChannelEvent
 
 export interface JoinedChannelEvent {
@@ -32,6 +29,7 @@ export interface CompletedSession {
 }
 
 export interface SessionLog extends CompletedSession {
+    id: SessionLogId
     timeStored: DateTime
 }
 
@@ -57,33 +55,30 @@ export class SqliteSessionLogStore implements SessionLogStore {
     }
 
     public async store(completedSession: CompletedSession): Promise<SessionLogId | undefined> {
-        const id: SessionLogId = {
-            guildId: completedSession.guildId,
-            channelId: completedSession.channelId
-        }
         const db = await this.connectionProvider.getConnection();
+        const nextId: SessionLogId = SnowflakeUtil.generate();
         try {
             await db.run(
-                "INSERT INTO `session`(`owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored`) VALUES (:owner_id, :guild_id, :channel_id, :time_started, :time_ended, :time_stored)", {
+                "INSERT INTO `session`(`id`, `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored`) VALUES (:id, :owner_id, :guild_id, :channel_id, :time_started, :time_ended, :time_stored)", {
+                ':id': nextId.toString(),
                 ':owner_id': completedSession.ownerId.toString(),
-                ':guild_id': id.guildId.toString(),
-                ':channel_id': id.channelId.toString(),
+                ':guild_id': completedSession.guildId.toString(),
+                ':channel_id': completedSession.channelId.toString(),
                 ':time_started': completedSession.timeStarted.toISO(),
                 ':time_ended': completedSession.timeEnded.toISO(),
                 ':time_stored': this.dateTimeProvider.now().toISO()
             });
             for (let index = 0; index < completedSession.events.length; index++) {
                 const sessionEvent = completedSession.events[index];
-                await db.run("INSERT INTO `event`(`count`, `session_guild_id`, `session_channel_id`, `time_occurred`, `event_code`, `user_id`) VALUES (:count, :session_guild_id, :session_channel_id, :time_occurred, :event_code, :user_id)", {
+                await db.run("INSERT INTO `event`(`count`, `session_id`, `time_occurred`, `event_code`, `user_id`) VALUES (:count, :session_id, :time_occurred, :event_code, :user_id)", {
                     ':count': index + 1,
-                    ':session_guild_id': id.guildId.toString(),
-                    ':session_channel_id': id.channelId.toString(),
+                    ':session_id': nextId.toString(),
                     ':time_occurred': sessionEvent.timeOccurred.toISO(),
                     ':event_code': sessionEvent.type.toUpperCase(),
                     ':user_id': sessionEvent.userId
                 });
             }
-            return id;  
+            return nextId;
         } catch (error) {
             return undefined;
         } finally {
@@ -94,22 +89,18 @@ export class SqliteSessionLogStore implements SessionLogStore {
         const db = await this.connectionProvider.getConnection();
         try {
             const sessionResult = await db.get(
-                "SELECT `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored` \
+                "SELECT `id`, `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored` \
                 FROM `session` \
-                WHERE `guild_id`=:guild_id \
-                AND `channel_id`=:channel_id", {
-                ':guild_id': id.guildId,
-                ':channel_id': id.channelId
+                WHERE `id`=:id", {
+                ':id': id.toString()
             });
             if (sessionResult == undefined) return undefined;
             const eventsResult: [] = await db.all(
-                "SELECT `session_guild_id`, `session_channel_id`, `time_occurred`, `event_code`, `user_id` \
+                "SELECT `time_occurred`, `event_code`, `user_id` \
                 FROM `event` \
-                WHERE `session_guild_id`=:guild_id \
-                AND `session_channel_id`=:channel_id \
+                WHERE `session_id`=:session_id \
                 ORDER BY count", {
-                ':guild_id': id.guildId,
-                ':channel_id': id.channelId
+                ':session_id': id.toString()
             })
             return this.convertResultToSession(sessionResult, eventsResult.map(this.convertResultToEvent));
         } catch (error) {
@@ -122,17 +113,15 @@ export class SqliteSessionLogStore implements SessionLogStore {
         const db = await this.connectionProvider.getConnection();
         try {
             const sessionsResult = await db.all(
-                "SELECT `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended` \
+                "SELECT `id`, `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored` \
                 FROM `session`");
             const sessions: SessionLog[] = []
             for (const sessionResult of sessionsResult) {
                 const eventsResult = await db.all(
-                    "SELECT `session_guild_id`, `session_channel_id`, `time_occurred`, `event_code`, `user_id`\
-                    FROM `event`\
-                    WHERE `session_guild_id` = :guild_id\
-                    AND `session_channel_id` = :channel_id", {
-                    ':guild_id': sessionResult['guild_id'],
-                    ':channel_id': sessionResult['channel_id']
+                    "SELECT `time_occurred`, `event_code`, `user_id` \
+                    FROM `event` \
+                    WHERE `session_id` = :session_id", {
+                    ':session_id': sessionResult['id']
                 }
                 );
                 sessions.push(this.convertResultToSession(sessionResult, eventsResult.map(this.convertResultToEvent)))
@@ -150,19 +139,15 @@ export class SqliteSessionLogStore implements SessionLogStore {
             await db.run(
                 "DELETE \
                 FROM `event` \
-                WHERE `session_guild_id`=:guild_id \
-                AND `session_channel_id`=:channel_id", {
-                ':guild_id': id.guildId,
-                ':channel_id': id.channelId
-            }  
+                WHERE `session_id`=:session_id", {
+                ':session_id': id.toString()
+            }
             );
             await db.run(
                 "DELETE \
                 FROM `session` \
-                WHERE `guild_id`=:guild_id \
-                AND `channel_id`=:channel_id", {
-                ':guild_id': id.guildId,
-                ':channel_id': id.channelId
+                WHERE `id`=:id", {
+                ':id': id.toString()
             });
         } catch (error) {
             return;
@@ -173,6 +158,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 
     private convertResultToSession(obj: Object, events: SessionEvent[]): SessionLog {
         return {
+            id: obj['id'] as string,
             ownerId: obj['owner_id'] as string,
             guildId: obj['guild_id'] as string,
             channelId: obj['channel_id'] as string,

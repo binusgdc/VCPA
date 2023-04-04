@@ -115,12 +115,6 @@ test("Generated session log's events are properly ordered for a single user", ()
     }
 })
 
-test('Storing session should return appropriate id', async () => {
-    const expected = generateCompletedSession();
-    const id = await sut.store(expected);
-    expect(id).toEqual<SessionLogId>({ guildId: expected.guildId, channelId: expected.channelId });
-});
-
 test('Inserted session should be retrievable', async () => {
     const expected = generateCompletedSession();
     const id = await sut.store(expected);
