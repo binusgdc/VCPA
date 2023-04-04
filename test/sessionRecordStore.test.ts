@@ -4,11 +4,14 @@ import { DateTime } from "luxon";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { SqliteSessionRecordStore, LazyConnectionProvider, SessionRecord, SessionRecordId, SessionRecordStore, SessionEvent, JoinedChannelEvent, LeftChannelEvent, CompletedSession } from "../src/sessionRecord"
-import { getRandomInteger } from "../src/util";
+import { DateTimeProvider, getRandomInteger } from "../src/util";
 
 const dbName = "sessions-test.db";
 const dbConfig = { filename: dbName, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE }
 let sut: SessionRecordStore;
+const dateTimeProviderMock: DateTimeProvider = {
+    now: jest.fn().mockReturnValue(DateTime.now())
+}
 
 async function setupDatabase() {
     fs.writeFileSync(dbName, "");
@@ -17,7 +20,7 @@ async function setupDatabase() {
         migrationsPath: "./data"
     });
     connection.close();
-    sut = new SqliteSessionRecordStore(new LazyConnectionProvider(dbConfig));
+    sut = new SqliteSessionRecordStore(new LazyConnectionProvider(dbConfig), dateTimeProviderMock);
 }
 
 function deleteDatabase() {
@@ -156,6 +159,13 @@ test('Retrieving all sessions with events returns all inserted sessions', async 
     for (const id of expected.keys()) {
         expectSessionsToEqual(actual.get(id)!, expected.get(id)!)
     }
+});
+
+test('Storing session creates a record with the current time', async () => {
+    const expected = generateCompletedSession();
+    const id = await sut.store(expected);
+    const actual = await sut.retrieve(id as SessionRecordId);
+    expect(actual!.timeStored).toEqual(dateTimeProviderMock.now());
 });
 
 function expectSessionsToEqual(actual: CompletedSession, expected: CompletedSession) {

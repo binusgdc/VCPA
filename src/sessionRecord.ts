@@ -2,6 +2,7 @@ import { Snowflake } from "discord.js";
 import { DateTime } from "luxon";
 import { Database, ISqlite, open } from "sqlite";
 import sqlite3 from "sqlite3";
+import { DateTimeProvider } from "./util";
 
 export type SessionRecordId = {
     guildId: Snowflake;
@@ -43,10 +44,16 @@ export interface SessionRecordStore {
 
 export class SqliteSessionRecordStore implements SessionRecordStore {
 
-    private connectionProvider: SqliteDbConnectionProvider;
+    private readonly connectionProvider: SqliteDbConnectionProvider;
+    private readonly dateTimeProvider: DateTimeProvider;
 
-    constructor(connectionProvider: SqliteDbConnectionProvider) {
+    constructor(connectionProvider: SqliteDbConnectionProvider, dateTimeProvider: DateTimeProvider | undefined = undefined) {
         this.connectionProvider = connectionProvider;
+        this.dateTimeProvider = dateTimeProvider ?? {
+            now() {
+                return DateTime.now();
+            },
+        };
     }
 
     public async store(completedSession: CompletedSession): Promise<SessionRecordId | undefined> {
@@ -63,7 +70,7 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
                 ':channel_id': id.channelId.toString(),
                 ':time_started': completedSession.timeStarted.toISO(),
                 ':time_ended': completedSession.timeEnded.toISO(),
-                ':time_stored': DateTime.now().toISO()
+                ':time_stored': this.dateTimeProvider.now().toISO()
             });
             for (let index = 0; index < completedSession.events.length; index++) {
                 const sessionEvent = completedSession.events[index];
@@ -87,7 +94,7 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
         const db = await this.connectionProvider.getConnection();
         try {
             const sessionResult = await db.get(
-                "SELECT `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended` \
+                "SELECT `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored` \
                 FROM `session` \
                 WHERE `guild_id`=:guild_id \
                 AND `channel_id`=:channel_id", {
@@ -172,7 +179,7 @@ export class SqliteSessionRecordStore implements SessionRecordStore {
             timeStarted: DateTime.fromISO(obj['time_started'] as string) as DateTime,
             timeEnded: DateTime.fromISO(obj['time_ended'] as string) as DateTime,
             events: events,
-            timeStored: DateTime.fromISO(obj['date_stored']) as DateTime
+            timeStored: DateTime.fromISO(obj['time_stored']) as DateTime
         };
     }
 
