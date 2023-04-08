@@ -2,7 +2,7 @@ import { Snowflake, SnowflakeUtil } from "discord.js";
 import { DateTime } from "luxon";
 import { Database, ISqlite, open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { DateTimeProvider } from "./util";
+import { DateTimeProvider, dtnow } from "./util";
 
 export type SessionLogId = Snowflake
 export type SessionEvent = JoinedChannelEvent | LeftChannelEvent
@@ -49,7 +49,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
         this.connectionProvider = connectionProvider;
         this.dateTimeProvider = dateTimeProvider ?? {
             now() {
-                return DateTime.now();
+                return dtnow();
             },
         };
     }
