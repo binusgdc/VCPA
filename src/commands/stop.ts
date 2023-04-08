@@ -59,16 +59,6 @@ export async function exec(interaction: CommandInteraction) {
 	fs.writeFileSync(`./run/${fileBaseName}-procdet.csv`, outputs.procdet);
 
 	console.log(`>>> ${executor.id} stopped a session in ${targetChannel.id}!`);
-	await interaction.reply(`>>> <@${executor.id}> stopped a session in <#${targetChannel.id}>!`);
-	await interaction.followUp({
-		embeds: [outputs.embed],
-		files: [
-			`./run/${fileBaseName}-sesinfo.csv`,
-			`./run/${fileBaseName}-attdet.csv`,
-			`./run/${fileBaseName}-procdet.csv`
-		]
-	});
-
 	const storedLogId = await global.sessionLogStore.store({
 		ownerId: session.owner,
 		guildId: targetGuildId,
@@ -83,14 +73,23 @@ export async function exec(interaction: CommandInteraction) {
 			}
 		})
 	})
+	
+	const responseMessage = storedLogId == undefined
+		? `FAILED to store the session log! Please push data before the next session.`
+		: `<@${executor.id}> stopped a session in <#${targetChannel.id}>! Session Log stored as: ${storedLogId}`
 
-	if (storedLogId == undefined) {
-		console.log(`>>> FAILED to store the session log!`);
-	}
-	else { 
-		console.log(`>>> Session log stored!`); 
-	}
+	console.log(`>>> ` + responseMessage);
 
+	await interaction.reply(`>>> ` + responseMessage);
+	await interaction.followUp({
+		embeds: [outputs.embed],
+		files: [
+			`./run/${fileBaseName}-sesinfo.csv`,
+			`./run/${fileBaseName}-attdet.csv`,
+			`./run/${fileBaseName}-procdet.csv`
+		]
+	});
+	
 	global.lastSession = session;
 
 	global.ongoingSessions.delete(`${targetGuildId}-${targetChannel.id}`);
