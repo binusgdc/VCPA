@@ -7,12 +7,17 @@ import { Session } from "./structures";
 import sqlite3 from "sqlite3";
 import { ISqlite, open } from "sqlite";
 import * as fs from "fs";
+import { PushLogHttp } from "./pushlogTarget";
 
 global.config = jsonfile.readFileSync("./config.json");
 const dbFile = "data/session-logs.db";
 const dbConfig = { filename: dbFile, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE }
 
 global.ongoingSessions = new Map<string, Session>();
+
+if (global.config.pushLogTarget.type === "http-json") {
+	global.pushlogTarget = new PushLogHttp(global.config.pushLogTarget.endpoint);
+}
 
 const client = new Client({
 	intents: [

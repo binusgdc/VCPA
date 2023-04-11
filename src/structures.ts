@@ -24,10 +24,18 @@ type BGDCData = {
 	procdetCsvGdriveFolderId: string;
 }
 
+export type PushLogTargetConfig = PushLogTargetHttpJson
+
+export interface PushLogTargetHttpJson {
+	type: "http-json"
+	endpoint: string;
+}
+
 export type ConfigFile = {
 	token: Snowflake;
 	serviceLocationWhiteList: ServiceLocation[];
 	bgdc: BGDCData;
+	pushLogTarget: PushLogTargetConfig;
 }
 
 type EventType = "JOIN" | "LEAVE";
