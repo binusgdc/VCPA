@@ -38,6 +38,7 @@ export interface SessionLogStore {
     retrieve(id: SessionLogId): Promise<SessionLog | undefined>;
     retrieveAll(): Promise<SessionLog[] | undefined>;
     delete(id: SessionLogId): Promise<void>;
+    latest(): Promise<SessionLog | undefined>;
 }
 
 export class SqliteSessionLogStore implements SessionLogStore {
@@ -52,6 +53,31 @@ export class SqliteSessionLogStore implements SessionLogStore {
                 return dtnow();
             },
         };
+    }
+    public async latest(): Promise<SessionLog> {
+        const db = await this.connectionProvider.getConnection();
+        try {
+            const sessionResult = await db.get(
+                "SELECT `id`, `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored` \
+                FROM `session` \
+                ORDER BY `time_stored` DESC \
+                LIMIT 1");
+            if (sessionResult == undefined) return undefined;
+            const sessionId = sessionResult["id"];
+            const eventsResult: [] = await db.all(
+                "SELECT `time_occurred`, `event_code`, `user_id` \
+                FROM `event` \
+                WHERE `session_id`=:session_id \
+                ORDER BY count", {
+                ':session_id': sessionId.toString()
+            });
+            return this.convertResultToSession(sessionResult, eventsResult.map(this.convertResultToEvent));
+        } catch (error) {
+            return undefined;
+        }
+        finally {
+            db.close();
+        }
     }
 
     public async store(completedSession: CompletedSession): Promise<SessionLogId | undefined> {

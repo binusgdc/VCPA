@@ -123,6 +123,23 @@ test('Inserted session should be retrievable', async () => {
     expectSessionsToEqual(actual!, expected);
 });
 
+test('Latest returns the most recent by time stored', async () => {
+    
+    const sut = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig), {
+        now: DateTime.now
+    });
+    
+    const previousSessions = [...Array(10).keys()].map(_ => generateCompletedSession());
+    for (const completedSession of previousSessions) {
+        await sut.store(completedSession);
+    }
+    const expectedLater = generateCompletedSession();
+    await sut.store(expectedLater);
+    const actual = await sut.latest();
+
+    expectSessionsToEqual(actual!, expectedLater);
+});
+
 test('Trying to store the same session twice should return undefined', async () => {
     const expected = generateCompletedSession();
     await sut.store(expected);
@@ -131,8 +148,8 @@ test('Trying to store the same session twice should return undefined', async () 
 });
 
 test('Trying to retrieve a session after deleting it should return undefined', async () => {
-    const expected = generateCompletedSession();
-    const id = (await sut.store(expected)) as SessionLogId;
+    const expectedFirst = generateCompletedSession();
+    const id = (await sut.store(expectedFirst)) as SessionLogId;
     await sut.delete(id);
     const attempt = await sut.retrieve(id);
     expect(attempt).toBeUndefined();
