@@ -78,5 +78,5 @@ async function performMigrations(config: ISqlite.Config, migrationsPath: string)
 	await connection.migrate({
 		migrationsPath: migrationsPath
 	});
-	connection.close();
+	await connection.close();
 }
