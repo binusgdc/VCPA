@@ -6,7 +6,7 @@ import * as command_status from "./commands/status";
 import * as command_stop from "./commands/stop";
 import * as command_raisehand from "./commands/raisehand";
 import * as command_lowerhand from "./commands/lowerhand";
-import * as command_pushlogv2 from "./commands/pushlogtarget";
+import * as command_pushlogv2 from "./commands/pushlogv2";
 
 const commands = [
 	command_start,

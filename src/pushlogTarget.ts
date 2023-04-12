@@ -10,6 +10,10 @@ export type PushLogData = {
     durationISO: string,
     recorderName: string,
     mentorDiscordUserIds: Array<Snowflake>
+    attendees: Array<{
+        discordUserId: Snowflake,
+        attendanceDurationISO: string
+    }>
 }
 
 export interface PushlogTarget {
