@@ -39,7 +39,7 @@ export interface SessionLogStore {
     retrieve(id: SessionLogId): Promise<SessionLog | undefined>;
     retrieveAll(): Promise<SessionLog[] | undefined>;
     delete(id: SessionLogId): Promise<void>;
-    latest(): Promise<SessionLog | undefined>;
+    latestUnpushed(): Promise<SessionLog | undefined>;
     setLogPushed(id: SessionLogId): Promise<void>;
 }
 
@@ -57,12 +57,13 @@ export class SqliteSessionLogStore implements SessionLogStore {
         };
     }
     
-    public async latest(): Promise<SessionLog> {
+    public async latestUnpushed(): Promise<SessionLog> {
         const db = await this.connectionProvider.getConnection();
         try {
             const sessionResult = await db.get(
                 "SELECT `id`, `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored`, `time_pushed` \
                 FROM `session` \
+                WHERE `time_pushed` IS NULL \
                 ORDER BY `time_stored` DESC \
                 LIMIT 1");
             if (sessionResult == undefined) return undefined;

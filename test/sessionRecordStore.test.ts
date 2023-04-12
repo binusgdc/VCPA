@@ -157,7 +157,7 @@ test('Latest returns the most recent by time stored', async () => {
     }
     const expectedLater = generateCompletedSession();
     await sut.store(expectedLater);
-    const actual = await sut.latest();
+    const actual = await sut.latestUnpushed();
 
     expectSessionsToEqual(actual!, expectedLater);
 });

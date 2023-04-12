@@ -49,7 +49,7 @@ export async function exec(interaction: CommandInteraction) {
 	const sessionIdToPush = argv.getString("session-id");
 
 	const logToPush = sessionIdToPush == undefined
-		? await global.sessionLogStore.latest()
+		? await global.sessionLogStore.latestUnpushed()
 		: await global.sessionLogStore.retrieve(sessionIdToPush);
 
 	if (logToPush == undefined) {
