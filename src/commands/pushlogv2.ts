@@ -69,11 +69,11 @@ export async function exec(interaction: CommandInteraction) {
 function toPushData(sessionLog: SessionLog, topicId: string, recorderName: string, mentorDiscordUserIdsInput: string): PushlogData {
 	return {
 		topicId: topicId,
-		sessionDateISO: sessionLog.timeStarted.toUTC().toISO(),
+		sessionDateISO: sessionLog.timeStarted.toUTC().toISODate(),
 		sessionTimeISO: sessionLog.timeStarted.toUTC().toISOTime(),
 		durationISO: DateTime.fromMillis(sessionLog.timeEnded.toMillis() - sessionLog.timeStarted.toMillis()).toUTC().toISOTime(),
 		recorderName: recorderName,
-		mentorDiscordUserIds: mentorDiscordUserIdsInput.split(" ").map(id => id.replace("<@!", "").replace(">", "")),
+		mentorDiscordUserIds: mentorDiscordUserIdsInput.split(" ").map(id => id.replace("<@", "").replace(">", "")),
 		attendees: Array.from(arrayGroupBy(sessionLog.events, (event) => event.userId).entries()).map(([userId, events]) => {
 			return {
 				discordUserId: userId,
