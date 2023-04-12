@@ -60,6 +60,9 @@ export async function exec(interaction: CommandInteraction) {
 	const data = toPushData(logToPush, argv.getString("topic-id")!, argv.getString("documentator")!, argv.getString("mentors")!);
 
 	const pushResult = await global.pushlogTarget.push(data);
+	if (pushResult === "SUCCESS") {
+		await global.sessionLogStore.setLogPushed(logToPush.id);
+	}
 	await interaction.editReply(`>>> Attempted to push to archive. Result: ${pushResult}`);
 }
 

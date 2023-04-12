@@ -40,7 +40,7 @@ export interface SessionLogStore {
     retrieveAll(): Promise<SessionLog[] | undefined>;
     delete(id: SessionLogId): Promise<void>;
     latest(): Promise<SessionLog | undefined>;
-    setLogPushed(id: SessionLogId, date: DateTime | undefined): Promise<void>;
+    setLogPushed(id: SessionLogId): Promise<void>;
 }
 
 export class SqliteSessionLogStore implements SessionLogStore {
