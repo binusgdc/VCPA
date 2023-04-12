@@ -3,7 +3,7 @@ import axios from "axios";
 
 export type PushlogResponse = "SUCCESS" | "FAILURE"
 
-export type PushLogData = {
+export type PushlogData = {
     topicId: string,
     sessionDateISO: string,
     sessionTimeISO: string,
@@ -17,10 +17,10 @@ export type PushLogData = {
 }
 
 export interface PushlogTarget {
-    push(logData: PushLogData): Promise<PushlogResponse>;
+    push(logData: PushlogData): Promise<PushlogResponse>;
 }
 
-export class PushLogHttp implements PushlogTarget {
+export class PushlogHttp implements PushlogTarget {
 
     private readonly endpoint: string;
 
@@ -28,7 +28,7 @@ export class PushLogHttp implements PushlogTarget {
         this.endpoint = endpoint;
     }
 
-    public async push(logData: PushLogData): Promise<PushlogResponse> {
+    public async push(logData: PushlogData): Promise<PushlogResponse> {
         const payload = JSON.stringify(logData);
         try {
             const response = await axios.post(this.endpoint, payload);

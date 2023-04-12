@@ -1,7 +1,7 @@
 import { ApplicationCommandData, CommandInteraction } from "discord.js";
 
 import { SessionEvent, SessionLog } from "../sessionLog";
-import { PushLogData } from "../pushlogTarget";
+import { PushlogData } from "../pushlogTarget";
 import { DateTime } from "luxon";
 
 export const signature: ApplicationCommandData = {
@@ -63,7 +63,7 @@ export async function exec(interaction: CommandInteraction) {
 	await interaction.editReply(`>>> Attempted to push to archive. Result: ${pushResult}`);
 }
 
-function toPushData(sessionLog: SessionLog, topicId: string, recorderName: string, mentorDiscordUserIdsInput: string): PushLogData {
+function toPushData(sessionLog: SessionLog, topicId: string, recorderName: string, mentorDiscordUserIdsInput: string): PushlogData {
 	return {
 		topicId: topicId,
 		sessionDateISO: sessionLog.timeStarted.toUTC().toISO(),
