@@ -123,6 +123,28 @@ test('Inserted session should be retrievable', async () => {
     expectSessionsToEqual(actual!, expected);
 });
 
+test('Session just inserted should have undefined time pushed', async () => {
+    const expected = generateCompletedSession();
+    const id = await sut.store(expected);
+    const actual = await sut.retrieve(id as SessionLogId);
+
+    expect(actual?.timePushed).toBeUndefined();
+});
+
+test('Session set to pushed should have expected date pushed', async () => {
+    const now = DateTime.now();
+    const sut = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig), {
+        now: () => now
+    });
+
+    const expected = generateCompletedSession();
+    const id = await sut.store(expected);
+    await sut.setLogPushed(id as SessionLogId);
+    const actual = await sut.retrieve(id as SessionLogId);
+
+    expect(actual?.timePushed?.toISODate()).toEqual(now.toISODate());
+});
+
 test('Latest returns the most recent by time stored', async () => {
     
     const sut = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig), {

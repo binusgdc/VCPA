@@ -29,8 +29,9 @@ export interface CompletedSession {
 }
 
 export interface SessionLog extends CompletedSession {
-    id: SessionLogId
-    timeStored: DateTime
+    id: SessionLogId;
+    timeStored: DateTime;
+    timePushed: DateTime | undefined;
 }
 
 export interface SessionLogStore {
@@ -39,6 +40,7 @@ export interface SessionLogStore {
     retrieveAll(): Promise<SessionLog[] | undefined>;
     delete(id: SessionLogId): Promise<void>;
     latest(): Promise<SessionLog | undefined>;
+    setLogPushed(id: SessionLogId, date: DateTime | undefined): Promise<void>;
 }
 
 export class SqliteSessionLogStore implements SessionLogStore {
@@ -54,11 +56,12 @@ export class SqliteSessionLogStore implements SessionLogStore {
             },
         };
     }
+    
     public async latest(): Promise<SessionLog> {
         const db = await this.connectionProvider.getConnection();
         try {
             const sessionResult = await db.get(
-                "SELECT `id`, `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored` \
+                "SELECT `id`, `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored`, `time_pushed` \
                 FROM `session` \
                 ORDER BY `time_stored` DESC \
                 LIMIT 1");
@@ -115,7 +118,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
         const db = await this.connectionProvider.getConnection();
         try {
             const sessionResult = await db.get(
-                "SELECT `id`, `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored` \
+                "SELECT `id`, `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored`, `time_pushed` \
                 FROM `session` \
                 WHERE `id`=:id", {
                 ':id': id.toString()
@@ -139,7 +142,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
         const db = await this.connectionProvider.getConnection();
         try {
             const sessionsResult = await db.all(
-                "SELECT `id`, `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored` \
+                "SELECT `id`, `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored`, `time_pushed` \
                 FROM `session`");
             const sessions: SessionLog[] = []
             for (const sessionResult of sessionsResult) {
@@ -182,6 +185,22 @@ export class SqliteSessionLogStore implements SessionLogStore {
         }
     }
 
+    public async setLogPushed(id: string): Promise<void> {
+        const db = await this.connectionProvider.getConnection();
+        try {
+            await db.run(
+                "UPDATE `session` \
+                SET `time_pushed`=:time_pushed \
+                WHERE `id`=:id", {
+                ':id': id,
+                ':time_pushed': this.dateTimeProvider.now().toISODate()
+            });
+        } 
+        finally {
+            db.close();
+        }
+    }
+
     private convertResultToSession(obj: Object, events: SessionEvent[]): SessionLog {
         return {
             id: obj['id'] as string,
@@ -191,7 +210,8 @@ export class SqliteSessionLogStore implements SessionLogStore {
             timeStarted: DateTime.fromISO(obj['time_started'] as string) as DateTime,
             timeEnded: DateTime.fromISO(obj['time_ended'] as string) as DateTime,
             events: events,
-            timeStored: DateTime.fromISO(obj['time_stored']) as DateTime
+            timeStored: DateTime.fromISO(obj['time_stored']) as DateTime,
+            timePushed: obj["time_pushed"]? DateTime.fromISO(obj["time_pushed"]) as DateTime : undefined
         };
     }
 
