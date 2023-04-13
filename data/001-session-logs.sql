@@ -10,6 +10,7 @@ create table `session` (
     `time_started` datetime not null,
     `time_ended` datetime not null,
     `time_stored` date not null,
+    `time_pushed` date null default null,
     primary key (`id`),
     unique(`guild_id`, `channel_id`, `time_started`)
 );
