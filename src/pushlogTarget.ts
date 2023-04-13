@@ -32,7 +32,7 @@ export class PushlogHttp implements PushlogTarget {
         const payload = JSON.stringify(logData);
         try {
             const response = await axios.post(this.endpoint, payload);
-            return response.status === 200 ? "SUCCESS" : "FAILURE";    
+            return response.status === 200 ? "SUCCESS" : "FAILURE";
         } catch (error) {
             return "FAILURE";
         }

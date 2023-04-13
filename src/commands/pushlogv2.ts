@@ -80,8 +80,8 @@ function toPushData(sessionLog: SessionLog, topicId: string, recorderName: strin
 				attendanceDurationISO: DateTime.fromMillis(
 					events.reduce(
 						(duration, event) => duration + ((event.timeOccurred.toMillis() - sessionLog.timeStarted.toMillis()) * (event.type === "Join" ? -1 : 1)), 0))
-						.toUTC()
-						.toISOTime()
+					.toUTC()
+					.toISOTime()
 			}
 		})
 	}
