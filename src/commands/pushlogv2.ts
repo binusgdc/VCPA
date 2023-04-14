@@ -42,6 +42,12 @@ export const signature: ApplicationCommandData = {
 };
 
 export async function exec(interaction: CommandInteraction) {
+	
+	if (global.pushlogTarget == undefined) {
+		await interaction.reply("Error: push target is not configured.");
+		return;
+	}
+
 	await interaction.deferReply();
 
 	const argv = interaction.options;
@@ -59,7 +65,7 @@ export async function exec(interaction: CommandInteraction) {
 
 	const data = toPushData(logToPush, argv.getString("topic-id")!, argv.getString("documentator")!, argv.getString("mentors")!);
 
-	const pushResult = await global.pushlogTarget.push(data);
+	const pushResult = await global.pushlogTarget?.push(data);
 	if (pushResult === "SUCCESS") {
 		await global.sessionLogStore.setLogPushed(logToPush.id);
 	}

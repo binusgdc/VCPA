@@ -9,5 +9,5 @@ declare global {
 	var lastSession: Session;
 
 	var BASE_DIR: string;
-	var pushlogTarget: PushlogTarget;
+	var pushlogTarget: PushlogTarget | undefined;
 }

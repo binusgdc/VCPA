@@ -17,7 +17,7 @@ global.ongoingSessions = new Map<string, Session>();
 
 if (global.config.pushLogTarget.type === "http-json") {
 	global.pushlogTarget = new PushlogHttp(global.config.pushLogTarget.endpoint);
-}
+} else global.pushlogTarget = undefined;
 
 const client = new Client({
 	intents: [

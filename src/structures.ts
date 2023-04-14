@@ -35,7 +35,7 @@ export type ConfigFile = {
 	token: Snowflake;
 	serviceLocationWhiteList: ServiceLocation[];
 	bgdc: BGDCData;
-	pushLogTarget: PushLogTargetConfig;
+	pushLogTarget: PushLogTargetConfig | undefined;
 }
 
 type EventType = "JOIN" | "LEAVE";
