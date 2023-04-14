@@ -1,5 +1,4 @@
-import { Snowflake } from "discord-api-types";
-import { MessageEmbed } from "discord.js";
+import { Snowflake, MessageEmbed } from "discord.js";
 import { DateTime } from "luxon";
 
 import * as Util from "./util";
@@ -25,10 +24,18 @@ type BGDCData = {
 	procdetCsvGdriveFolderId: string;
 }
 
+export type PushLogTargetConfig = PushLogTargetHttpJson
+
+export interface PushLogTargetHttpJson {
+	type: "http-json"
+	endpoint: string;
+}
+
 export type ConfigFile = {
 	token: Snowflake;
 	serviceLocationWhiteList: ServiceLocation[];
 	bgdc: BGDCData;
+	pushLogTarget: PushLogTargetConfig | undefined;
 }
 
 type EventType = "JOIN" | "LEAVE";

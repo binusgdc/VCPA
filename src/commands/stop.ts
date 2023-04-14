@@ -1,9 +1,10 @@
 import { ApplicationCommandData, CommandInteraction, GuildMember, VoiceChannel } from "discord.js";
 import * as fs from "fs";
+import { SessionEvent } from "../sessionLog";
 
 import * as Util from "../util";
 
-export const signature : ApplicationCommandData = {
+export const signature: ApplicationCommandData = {
 	name: "stop",
 	description: "Stops a session",
 	options: [
@@ -16,11 +17,11 @@ export const signature : ApplicationCommandData = {
 	]
 };
 
-export async function exec(interaction : CommandInteraction) {
+export async function exec(interaction: CommandInteraction) {
 	const executor = interaction.member as GuildMember;
 	const argv = interaction.options;
 
-	const targetGuild = interaction.guildId;
+	const targetGuildId = interaction.guildId;
 	const targetChannel = (argv.getChannel("channel") ?? executor.voice.channel) as VoiceChannel;
 
 	if (targetChannel === null) {
@@ -35,7 +36,7 @@ export async function exec(interaction : CommandInteraction) {
 		return;
 	}
 
-	const session = global.sessions.get(`${targetGuild}-${targetChannel.id}`);
+	const session = global.ongoingSessions.get(`${targetGuildId}-${targetChannel.id}`);
 	if (session === undefined) {
 		console.log(`>>> Failed to stop session: ${executor.id} tried to stop a non-existent session!`);
 		await interaction.reply(`>>> Failed to stop session: <@${executor.id}> tried to stop a non-existent session!`);
@@ -58,7 +59,28 @@ export async function exec(interaction : CommandInteraction) {
 	fs.writeFileSync(`./run/${fileBaseName}-procdet.csv`, outputs.procdet);
 
 	console.log(`>>> ${executor.id} stopped a session in ${targetChannel.id}!`);
-	await interaction.reply(`>>> <@${executor.id}> stopped a session in <#${targetChannel.id}>!`);
+	const storedLogId = await global.sessionLogStore.store({
+		ownerId: session.owner,
+		guildId: targetGuildId,
+		channelId: session.channel,
+		timeStarted: session.startTime,
+		timeEnded: session.endTime,
+		events: session.events.map<SessionEvent>(e => {
+			return {
+				type: e.type == "JOIN" ? "Join" : "Leave",
+				userId: e.uid,
+				timeOccurred: e.time
+			}
+		})
+	})
+	
+	const responseMessage = storedLogId == undefined
+		? `FAILED to store the session log! Please push data before the next session.`
+		: `<@${executor.id}> stopped a session in <#${targetChannel.id}>! Session Log stored as: ${storedLogId}`
+
+	console.log(`>>> ` + responseMessage);
+
+	await interaction.reply(`>>> ` + responseMessage);
 	await interaction.followUp({
 		embeds: [outputs.embed],
 		files: [
@@ -67,8 +89,8 @@ export async function exec(interaction : CommandInteraction) {
 			`./run/${fileBaseName}-procdet.csv`
 		]
 	});
-
+	
 	global.lastSession = session;
 
-	global.sessions.delete(`${targetGuild}-${targetChannel.id}`);
+	global.ongoingSessions.delete(`${targetGuildId}-${targetChannel.id}`);
 }

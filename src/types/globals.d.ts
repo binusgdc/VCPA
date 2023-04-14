@@ -1,10 +1,13 @@
+import { SessionLogStore } from "../sessionLog";
 import { ConfigFile, Session } from "../structures"
 
 declare global {
 	var config: ConfigFile;
 
-	var sessions: Map<string, Session>;
+	var ongoingSessions: Map<string, Session>;
+	var sessionLogStore: SessionLogStore;
 	var lastSession: Session;
 
 	var BASE_DIR: string;
+	var pushlogTarget: PushlogTarget | undefined;
 }

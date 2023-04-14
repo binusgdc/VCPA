@@ -2,11 +2,22 @@ import { Client, Intents } from "discord.js";
 import * as jsonfile from "jsonfile";
 
 import * as commandHandler from "./commandHandler";
+import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLog";
 import { Session } from "./structures";
+import sqlite3 from "sqlite3";
+import { ISqlite, open } from "sqlite";
+import * as fs from "fs";
+import { PushlogHttp } from "./pushlogTarget";
 
 global.config = jsonfile.readFileSync("./config.json");
+const dbFile = "data/session-logs.db";
+const dbConfig = { filename: dbFile, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE }
 
-global.sessions = new Map<string, Session>();
+global.ongoingSessions = new Map<string, Session>();
+
+if (global.config.pushLogTarget.type === "http-json") {
+	global.pushlogTarget = new PushlogHttp(global.config.pushLogTarget.endpoint);
+} else global.pushlogTarget = undefined;
 
 const client = new Client({
 	intents: [
@@ -17,8 +28,12 @@ const client = new Client({
 });
 
 client.on("ready", async () => {
+	if (!fs.existsSync(dbFile)) {
+		fs.writeFileSync(dbFile, "");
+		await performMigrations(dbConfig, "./data");
+	}
 	await commandHandler.register(client);
-
+	global.sessionLogStore = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig));
 	console.log(`>>> Logged in as ${client.user.tag}`);
 	console.log(`>>> Bonjour!`);
 });
@@ -38,22 +53,30 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 	if ((oldChannel === null) && (newChannel !== null)) {
 		// User was not in a voice channel, and now joined our voice channel
 
-		const session = global.sessions.get(`${newGuild}-${newChannel}`);
+		const session = global.ongoingSessions.get(`${newGuild}-${newChannel}`);
 		if (session !== undefined) session.log("JOIN", person);
 	} else if ((oldChannel !== null) && (newChannel === null)) {
 		// User was in our voice channel, and now isn't in a voice channel
 
-		const session = global.sessions.get(`${oldGuild}-${oldChannel}`);
+		const session = global.ongoingSessions.get(`${oldGuild}-${oldChannel}`);
 		if (session !== undefined) session.log("LEAVE", person);
 	} else if ((oldChannel !== null) && (newChannel !== null)) {
 		// User was in a different voice channel, and now is in our voice channel
 
-		const newSession = global.sessions.get(`${newGuild}-${newChannel}`);
+		const newSession = global.ongoingSessions.get(`${newGuild}-${newChannel}`);
 		if (newSession !== undefined) newSession.log("JOIN", person);
 
-		const oldSession = global.sessions.get(`${oldGuild}-${oldChannel}`);
+		const oldSession = global.ongoingSessions.get(`${oldGuild}-${oldChannel}`);
 		if (oldSession !== undefined) oldSession.log("LEAVE", person);
 	}
 })
 
 client.login(global.config.token);
+
+async function performMigrations(config: ISqlite.Config, migrationsPath: string) {
+	const connection = await open(config);
+	await connection.migrate({
+		migrationsPath: migrationsPath
+	});
+	await connection.close();
+}
