@@ -6,7 +6,7 @@ import { DateTime } from "luxon";
 
 export const signature: ApplicationCommandData = {
 	name: "pushlogv2",
-	description: "Pushes the specified session's logs to an external archive",
+	description: "[EXPERIMENTAL] Pushes the specified session's logs to an external archive",
 	options: [
 
 		{
