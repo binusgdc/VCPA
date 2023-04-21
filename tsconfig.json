@@ -16,6 +16,6 @@
 	"include": [
 		"src/*.ts",
 		"src/commands/*.ts",
-		"src/types/*.ts"
-	]
+		"src/types/*.ts", 
+		"src/util/*.ts"	]
 }

@@ -8,8 +8,13 @@ import sqlite3 from "sqlite3";
 import { ISqlite, open } from "sqlite";
 import * as fs from "fs";
 import { PushlogHttp } from "./pushlogTarget";
+import { loadEnv } from "./util/env";
 
 global.config = jsonfile.readFileSync("./config.json");
+global.env = loadEnv()
+if (global.env == undefined) {
+	throw Error("❌ invalid environment variables")
+}
 const dbFile = "data/session-logs.db";
 const dbConfig = { filename: dbFile, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE }
 
@@ -71,7 +76,7 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 	}
 })
 
-client.login(global.config.token);
+client.login(global.env.BOT_TOKEN);
 
 async function performMigrations(config: ISqlite.Config, migrationsPath: string) {
 	const connection = await open(config);
