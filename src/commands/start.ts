@@ -42,7 +42,7 @@ export async function exec(interaction : CommandInteraction) {
 	}
 
 	global.ongoingSessions.set(`${targetGuild}-${targetChannel.id}`, new Session(executor.id, targetChannel.id));
-	const s = global.ongoingSessions.get(`${targetGuild}-${targetChannel.id}`);
+	const s = global.ongoingSessions.get(`${targetGuild}-${targetChannel.id}`)!;
 	s.start();
 
 	console.log(`>>> ${executor.id} started a session in ${targetChannel.id}!`);

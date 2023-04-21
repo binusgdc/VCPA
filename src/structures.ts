@@ -1,7 +1,15 @@
 import { Snowflake, MessageEmbed } from "discord.js";
 import { DateTime } from "luxon";
-
 import * as Util from "./util";
+
+const msSessionsSubjects = [
+	"PROGA",
+	"PROGB",
+	"DESG",
+	"A2D",
+	"A3D",
+	"SND"
+] as const;
 
 type ServiceLocation = {
 	guildId: Snowflake;
@@ -9,17 +17,11 @@ type ServiceLocation = {
 	commandAccessRoleIds: Snowflake[];
 }
 
-type BGDCData = {
-	msSessionsSheetId: string;
-	msSessionsSubjectRanges: {
-		PROGA: string;
-		PROGB: string;
-		DESG: string;
-		A2D: string;
-		A3D: string;
-		SND: string;
-	};
+export type SessionSubject = typeof msSessionsSubjects[number]
 
+export type BGDCData = {
+	msSessionsSheetId: string;
+	msSessionsSubjectRanges: { [K in SessionSubject]: string }
 	attdetCsvGdriveFolderId: string;
 	procdetCsvGdriveFolderId: string;
 }
@@ -44,7 +46,7 @@ export class Event {
 	uid: Snowflake;
 	time: DateTime;
 
-	constructor(type : EventType, uid: Snowflake, time: DateTime) {
+	constructor(type: EventType, uid: Snowflake, time: DateTime) {
 		this.type = type;
 		this.uid = uid;
 		this.time = time;
@@ -53,14 +55,13 @@ export class Event {
 
 export class Session {
 	owner: Snowflake;
-	guild: Snowflake;
 	channel: Snowflake;
 	startTime: DateTime | undefined;
 	endTime: DateTime | undefined;
 	timeoutID: ReturnType<typeof setTimeout> | undefined;
 	events: Event[];
 
-	constructor(owner : Snowflake, channel : Snowflake) {
+	constructor(owner: Snowflake, channel: Snowflake) {
 		this.owner = owner;
 		this.channel = channel;
 		this.startTime = undefined;
@@ -76,7 +77,7 @@ export class Session {
 		this.endTime = Util.dtnow();
 	}
 
-	log(type : EventType, uid : Snowflake, time : DateTime = Util.dtnow()) {
+	log(type: EventType, uid: Snowflake, time: DateTime = Util.dtnow()) {
 		this.events[this.events.length] = new Event(type, uid, time);
 	}
 }

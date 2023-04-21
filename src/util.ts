@@ -54,7 +54,7 @@ export function formatPeriod(msecs : number, style : FormatPeriodStyle) {
 	}
 }
 
-export function generateSessionOutput(session : Session) : SessionOutput {
+export function generateSessionOutput(session: Session) : SessionOutput {
 	/* Don't handle unfinished sessions */
 
 	if (session.startTime === undefined) throw new Error("Session unconcluded");
@@ -89,12 +89,12 @@ export function generateSessionOutput(session : Session) : SessionOutput {
 
 	session.events.forEach((event) => {
 		let attendee = attendees.find((attendee) => { return attendee.id === event.uid; });
-		attendee.events.push(event);
+		attendee?.events.push(event);
 	});
 
 	attendees.forEach((attendee) => {
 		attendee.events.forEach((event) => {
-			attendee.duration += (event.time.toMillis() - session.startTime.toMillis()) * ((event.type === "JOIN") ? -1 : 1);
+			attendee.duration += (event.time.toMillis() - session.startTime!.toMillis()) * ((event.type === "JOIN") ? -1 : 1);
 		});
 	});
 

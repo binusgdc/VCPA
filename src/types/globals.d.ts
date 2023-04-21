@@ -8,7 +8,7 @@ declare global {
 
 	var ongoingSessions: Map<string, Session>;
 	var sessionLogStore: SessionLogStore;
-	var lastSession: Session;
+	var lastSession: Session | undefined;
 
 	var BASE_DIR: string;
 	var pushlogTarget: PushlogTarget | undefined;

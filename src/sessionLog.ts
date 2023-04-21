@@ -3,6 +3,7 @@ import { DateTime } from "luxon";
 import { Database, ISqlite, open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { DateTimeProvider, dtnow } from "./util";
+import { z } from "zod";
 
 export type SessionLogId = Snowflake
 export type SessionEvent = JoinedChannelEvent | LeftChannelEvent
@@ -19,13 +20,16 @@ export interface LeftChannelEvent {
 	timeOccurred: DateTime;
 }
 
-export interface CompletedSession {
+export interface OngoingSession {
 	ownerId: Snowflake;
 	guildId: Snowflake;
 	channelId: Snowflake;
 	timeStarted: DateTime;
-	timeEnded: DateTime;
 	events: SessionEvent[];
+}
+
+export interface CompletedSession extends OngoingSession {
+	timeEnded: DateTime;
 }
 
 export interface SessionLog extends CompletedSession {
@@ -43,6 +47,34 @@ export interface SessionLogStore {
 	setLogPushed(id: SessionLogId): Promise<void>;
 }
 
+export const sessionEventSchemaSqlite = z.object({
+	event_code: z.literal("JOIN").or(z.literal("LEAVE")),
+	user_id: z.string(),
+	time_occurred: z.string().datetime({
+		offset: true
+	})
+})
+
+export const sessionLogSchemaSqlite = z.object(
+	{
+		id: z.string(),
+		owner_id: z.string(),
+		guild_id: z.string(),
+		channel_id: z.string(),
+		time_started: z.string().datetime({
+			offset: true
+		}),
+		time_ended: z.string().datetime({
+			offset: true
+		}),
+		events: sessionEventSchemaSqlite.array(),
+		time_stored: z.string().datetime({
+			offset: true
+		}),
+		time_pushed: z.union([z.string(), z.undefined(), z.null()])
+	}
+)
+
 export class SqliteSessionLogStore implements SessionLogStore {
 
 	private readonly connectionProvider: SqliteDbConnectionProvider;
@@ -57,7 +89,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 		};
 	}
 
-	public async latestUnpushed(): Promise<SessionLog> {
+	public async latestUnpushed(): Promise<SessionLog | undefined> {
 		const db = await this.connectionProvider.getConnection();
 		try {
 			const sessionResult = await db.get(
@@ -75,7 +107,10 @@ export class SqliteSessionLogStore implements SessionLogStore {
                 ORDER BY count", {
 				':session_id': sessionId.toString()
 			});
-			return this.convertResultToSession(sessionResult, eventsResult.map(this.convertResultToEvent));
+			return this.mapSessionLog(sessionLogSchemaSqlite.parse({
+				...sessionResult,
+				events: eventsResult
+			}));
 		} catch (error) {
 			return undefined;
 		}
@@ -132,7 +167,11 @@ export class SqliteSessionLogStore implements SessionLogStore {
                 ORDER BY count", {
 				':session_id': id.toString()
 			})
-			return this.convertResultToSession(sessionResult, eventsResult.map(this.convertResultToEvent));
+			const parsed = sessionLogSchemaSqlite.parse({
+				...sessionResult,
+				events: eventsResult
+			});
+			return this.mapSessionLog(parsed)
 		} catch (error) {
 			return undefined;
 		} finally {
@@ -154,7 +193,10 @@ export class SqliteSessionLogStore implements SessionLogStore {
 					':session_id': sessionResult['id']
 				}
 				);
-				sessions.push(this.convertResultToSession(sessionResult, eventsResult.map(this.convertResultToEvent)))
+				sessions.push(this.mapSessionLog(sessionLogSchemaSqlite.parse({
+					...sessionResult,
+					events: eventsResult
+				})))
 			}
 			return sessions;
 		} catch (error) {
@@ -202,34 +244,36 @@ export class SqliteSessionLogStore implements SessionLogStore {
 		}
 	}
 
-	private convertResultToSession(obj: Object, events: SessionEvent[]): SessionLog {
-		return {
-			id: obj['id'] as string,
-			ownerId: obj['owner_id'] as string,
-			guildId: obj['guild_id'] as string,
-			channelId: obj['channel_id'] as string,
-			timeStarted: DateTime.fromISO(obj['time_started'] as string) as DateTime,
-			timeEnded: DateTime.fromISO(obj['time_ended'] as string) as DateTime,
-			events: events,
-			timeStored: DateTime.fromISO(obj['time_stored']) as DateTime,
-			timePushed: obj["time_pushed"] ? DateTime.fromISO(obj["time_pushed"]) as DateTime : undefined
-		};
-	}
+	/** @throws Errors */
+	private mapSessionLog(parsed: z.infer<typeof sessionLogSchemaSqlite>): SessionLog {
 
-	private convertResultToEvent(obj: Object): SessionEvent {
-		switch (obj['event_code']) {
-			case "JOIN":
-				return {
-					type: "Join",
-					userId: obj['user_id'] as string,
-					timeOccurred: DateTime.fromISO(obj['time_occurred'] as string) as DateTime
-				};
-			default:
-				return {
-					type: "Leave",
-					userId: obj['user_id'] as string,
-					timeOccurred: DateTime.fromISO(obj['time_occurred'] as string) as DateTime
-				};
+		function mapEvent(eventParsed: z.infer<typeof sessionEventSchemaSqlite>): SessionEvent {
+			let type: "Join" | "Leave" | undefined = undefined;
+			switch (eventParsed.event_code) {
+				case "JOIN":
+					type = "Join";
+					break;
+				case "LEAVE":
+					type = "Leave";
+					break;
+			}
+			return {
+				type: type,
+				userId: eventParsed.user_id,
+				timeOccurred: DateTime.fromISO(eventParsed.time_occurred)
+			}
+		}
+
+		return {
+			id: parsed.id,
+			ownerId: parsed.owner_id,
+			guildId: parsed.guild_id,
+			channelId: parsed.channel_id,
+			timeStarted: DateTime.fromISO(parsed.time_started),
+			events: parsed.events.map(mapEvent),
+			timeStored: DateTime.fromISO(parsed.time_stored),
+			timePushed: parsed.time_pushed != null && parsed.time_pushed != undefined ? DateTime.fromISO(parsed.time_pushed) : undefined,
+			timeEnded: DateTime.fromISO(parsed.time_ended)
 		}
 	}
 }

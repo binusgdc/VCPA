@@ -53,7 +53,7 @@ export async function exec(interaction: CommandInteraction) {
 	});
 
 	const outputs = Util.generateSessionOutput(session);
-	const fileBaseName = Util.formatDate(session.endTime, "STD");
+	const fileBaseName = Util.formatDate(session.endTime!, "STD");
 	fs.writeFileSync(`./run/${fileBaseName}-sesinfo.csv`, outputs.sesinfo);
 	fs.writeFileSync(`./run/${fileBaseName}-attdet.csv`, outputs.attdet);
 	fs.writeFileSync(`./run/${fileBaseName}-procdet.csv`, outputs.procdet);
@@ -61,10 +61,10 @@ export async function exec(interaction: CommandInteraction) {
 	console.log(`>>> ${executor.id} stopped a session in ${targetChannel.id}!`);
 	const storedLogId = await global.sessionLogStore.store({
 		ownerId: session.owner,
-		guildId: targetGuildId,
+		guildId: targetGuildId!,
 		channelId: session.channel,
-		timeStarted: session.startTime,
-		timeEnded: session.endTime,
+		timeStarted: session.startTime!,
+		timeEnded: session.endTime!,
 		events: session.events.map<SessionEvent>(e => {
 			return {
 				type: e.type == "JOIN" ? "Join" : "Leave",

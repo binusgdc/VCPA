@@ -34,6 +34,11 @@ export async function register(client : Client) {
 }
 
 export async function handle(interaction : CommandInteraction) {
+
+	if (interaction.command == null) {
+		return;
+	}
+
 	const executor = interaction.member as GuildMember;
 
 	const executorGuild = interaction.guild;

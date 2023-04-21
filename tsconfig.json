@@ -5,7 +5,7 @@
 		"module": "commonjs",
 		"esModuleInterop": true,
 
-		"strict": false, // TODO: get everything clean with strict mode someday
+		"strict": true,
 		"forceConsistentCasingInFileNames": true,
 
 		"outDir": "build/",

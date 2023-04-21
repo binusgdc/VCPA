@@ -10,17 +10,18 @@ import * as fs from "fs";
 import { PushlogHttp } from "./pushlogTarget";
 import { loadEnv } from "./util/env";
 
-global.config = jsonfile.readFileSync("./config.json");
-global.env = loadEnv()
-if (global.env == undefined) {
-	throw Error("❌ invalid environment variables")
-}
 const dbFile = "data/session-logs.db";
 const dbConfig = { filename: dbFile, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE }
 
+const envLoaded = loadEnv()
+if (envLoaded == undefined) {
+	throw Error("❌ invalid environment variables")
+}
+global.env = envLoaded
+global.config = jsonfile.readFileSync("./config.json");
 global.ongoingSessions = new Map<string, Session>();
 
-if (global.config.pushLogTarget.type === "http-json") {
+if (global.config.pushLogTarget?.type === "http-json") {
 	global.pushlogTarget = new PushlogHttp(global.config.pushLogTarget.endpoint);
 } else global.pushlogTarget = undefined;
 
@@ -39,7 +40,7 @@ client.on("ready", async () => {
 	}
 	await commandHandler.register(client);
 	global.sessionLogStore = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig));
-	console.log(`>>> Logged in as ${client.user.tag}`);
+	console.log(`>>> Logged in as ${client.user!.tag}`);
 	console.log(`>>> Bonjour!`);
 });
 

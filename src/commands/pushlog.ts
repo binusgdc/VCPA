@@ -4,9 +4,12 @@ import { ApplicationCommandData, CommandInteraction, GuildMember } from "discord
 import * as fs from "fs";
 
 import * as Util from "../util";
+import { ConfigFile, SessionSubject } from "../structures";
+
+type Subject = keyof ConfigFile['bgdc']['msSessionsSubjectRanges']
 
 type PushData = {
-	subject: string
+	subject: Subject
 	topic: string
 	date: string
 	tutor: string
@@ -35,16 +38,16 @@ async function pushData(data : PushData) {
 
 	/* Find the row on which to place the data. */
 
-	const ind = valRange.findIndex((val) => val[2] === data.topic);
+	const ind = valRange!.findIndex((val) => val[2] === data.topic);
 
 	/* Fill in the new data */
 
 	let newVals = valRange;
-	newVals[ind][5] = '\'' + data.date;
-	newVals[ind][6] = data.tutor;
-	newVals[ind][7] = '\'' + data.time;
-	newVals[ind][8] = data.duration;
-	newVals[ind][9] = data.documentator;
+	newVals![ind][5] = '\'' + data.date;
+	newVals![ind][6] = data.tutor;
+	newVals![ind][7] = '\'' + data.time;
+	newVals![ind][8] = data.duration;
+	newVals![ind][9] = data.documentator;
 
 	/* Push the new data back to the sheet. */
 
@@ -66,7 +69,7 @@ async function pushCsv(data : PushData) {
 
 	const ds = gdrive.drive({ version:"v3", auth });
 
-	const fileBaseName = Util.formatDate(global.lastSession.endTime, "STD");
+	const fileBaseName = Util.formatDate(global.lastSession!.endTime!, "STD");
 
 	const attdet = await ds.files.create({
 		requestBody: {
@@ -139,19 +142,24 @@ export const signature : ApplicationCommandData = {
 };
 
 export async function exec(interaction : CommandInteraction) {
+
+	if (global.lastSession == undefined) {
+		return;
+	}
+
 	await interaction.deferReply();
 
 	const executor = interaction.member as GuildMember;
 	const argv = interaction.options;
 
 	const data = {
-		subject: argv.getString("subject"),
-		topic: argv.getString("topic"),
-		date: Util.formatDate(global.lastSession.startTime, "DATE"),
-		tutor: argv.getString("tutor"),
-		time: Util.formatDate(global.lastSession.startTime, "TME"),
-		duration: Util.formatPeriod(global.lastSession.endTime.toMillis() - global.lastSession.startTime.toMillis(), "MINUTES"),
-		documentator: argv.getString("documentator")
+		subject: argv.getString("subject")! as SessionSubject,
+		topic: argv.getString("topic")!,
+		date: Util.formatDate(global.lastSession.startTime!, "DATE")!,
+		tutor: argv.getString("tutor")!,
+		time: Util.formatDate(global.lastSession.startTime!, "TME")!,
+		duration: Util.formatPeriod(global.lastSession.endTime!.toMillis() - global.lastSession.startTime!.toMillis(), "MINUTES")!,
+		documentator: argv.getString("documentator")!
 	}
 
 	// TODO: Sort out this mess and properly handle errors individually instead of a blanket catch
@@ -159,7 +167,7 @@ export async function exec(interaction : CommandInteraction) {
 		const dataPushRes = await pushData(data);
 		const [attdet, procdet] = await pushCsv(data);
 
-		const lastSessionName = Util.formatDate(global.lastSession.endTime, "STD");
+		const lastSessionName = Util.formatDate(global.lastSession.endTime!, "STD");
 
 		console.log(`>>> ${executor.id} attempted to push session ${lastSessionName}'s logs:`);
 		console.log((dataPushRes.status === 200) ? ">>> data: success" : (">>> data: failed\n" + dataPushRes));
@@ -174,7 +182,7 @@ export async function exec(interaction : CommandInteraction) {
 
 		interaction.editReply(reply);
 	} catch (err) {
-		const lastSessionName = Util.formatDate(global.lastSession.endTime, "STD");
+		const lastSessionName = Util.formatDate(global.lastSession.endTime!, "STD");
 
 		console.log(`>>> ${executor.id} attempted to push session ${lastSessionName}'s logs:`);
 		console.log(">>> Push failed for some reason:");
