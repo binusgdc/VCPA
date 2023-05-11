@@ -23,7 +23,11 @@ global.ongoingSessions = new Map<string, Session>();
 
 if (global.config.pushLogTarget?.type === "http-json") {
 	global.pushlogTarget = new PushlogHttp(global.config.pushLogTarget.endpoint);
-} else global.pushlogTarget = undefined;
+}
+
+if (global.pushlogTarget == undefined) {
+	console.error("⚠️ WARNING: Push log target is not configured in config.json");
+}
 
 const client = new Client({
 	intents: [
