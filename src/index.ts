@@ -29,6 +29,10 @@ if (global.pushlogTarget == undefined) {
 	console.error("⚠️ WARNING: Push log target is not configured in config.json");
 }
 
+if (!fs.existsSync(`./run`)) {
+	fs.mkdirSync(`./run/`)
+}
+
 const client = new Client({
 	intents: [
 		Intents.FLAGS.GUILDS,
