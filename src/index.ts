@@ -30,9 +30,8 @@ else if (global.config.pushLogTarget?.type === "airtable") {
 		throw Error("❌ push log target is set to airtable, but AIRTABLE_KEY is not set")
 	global.pushlogTarget = new PushlogAirtable(
 		new Airtable({ apiKey: global.env.AIRTABLE_KEY }).base(global.config.pushLogTarget.baseId),
-		global.config.pushLogTarget.topicsTableId,
-		global.config.pushLogTarget.sessionsTableId,
-		global.config.pushLogTarget.attendanceTableId)
+		{ ...global.config.pushLogTarget }
+		)
 }
 
 if (global.pushlogTarget == undefined) {
