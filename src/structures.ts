@@ -39,6 +39,7 @@ export interface PushLogTargetAirtable {
 	topicsTableId: string;
 	sessionsTableId: string;
 	attendanceTableId: string;
+	membersTableId: string;
 }
 
 export type ConfigFile = {
