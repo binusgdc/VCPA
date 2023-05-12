@@ -24,6 +24,10 @@ global.ongoingSessions = new Map<string, Session>();
 if (global.config.pushLogTarget?.type === "http-json") {
 	global.pushlogTarget = new PushlogHttp(global.config.pushLogTarget.endpoint);
 }
+else if (global.config.pushLogTarget?.type === "airtable") {
+	if (global.env.AIRTABLE_KEY == undefined)
+		throw Error("❌ push log target is set to airtable, but AIRTABLE_KEY is not set")
+}
 
 if (global.pushlogTarget == undefined) {
 	console.error("⚠️ WARNING: Push log target is not configured in config.json");

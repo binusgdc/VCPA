@@ -2,7 +2,7 @@ import { ApplicationCommandData, CommandInteraction } from "discord.js";
 
 import { SessionEvent, SessionLog } from "../sessionLog";
 import { PushlogData } from "../pushlogTarget";
-import { DateTime } from "luxon";
+import { DateTime, Duration } from "luxon";
 
 export const signature: ApplicationCommandData = {
 	name: "pushlogv2",
@@ -75,19 +75,17 @@ export async function exec(interaction: CommandInteraction) {
 function toPushData(sessionLog: SessionLog, topicId: string, recorderName: string, mentorDiscordUserIdsInput: string): PushlogData {
 	return {
 		topicId: topicId,
-		sessionDateISO: sessionLog.timeStarted.toUTC().toISODate(),
-		sessionTimeISO: sessionLog.timeStarted.toUTC().toISOTime(),
+		sessionDateTimeISO: sessionLog.timeStarted.toUTC().toISO(),
 		durationISO: DateTime.fromMillis(sessionLog.timeEnded.toMillis() - sessionLog.timeStarted.toMillis()).toUTC().toISOTime(),
 		recorderName: recorderName,
 		mentorDiscordUserIds: mentorDiscordUserIdsInput.split(" ").map(id => id.replace("<@", "").replace(">", "")),
 		attendees: Array.from(arrayGroupBy(sessionLog.events, (event) => event.userId).entries()).map(([userId, events]) => {
 			return {
 				discordUserId: userId,
-				attendanceDurationISO: DateTime.fromMillis(
+				attendanceDurationISO: Duration.fromMillis(
 					events.reduce(
 						(duration, event) => duration + ((event.timeOccurred.toMillis() - sessionLog.timeStarted.toMillis()) * (event.type === "Join" ? -1 : 1)), 0))
-					.toUTC()
-					.toISOTime()
+					.toISO()
 			}
 		})
 	}
