@@ -7,13 +7,13 @@ export type PushlogResponse = "SUCCESS" | "FAILURE"
 
 export type AttendanceDetail = {
     discordUserId: Snowflake,
-    attendanceDurationISO: string
+    attendanceDuration: Duration
 }
 
 export type PushlogData = {
     topicId: string,
-    sessionDateTimeISO: string,
-    durationISO: string,
+    sessionDateTime: DateTime,
+    sessionDuration: Duration,
     recorderName: string,
     mentorDiscordUserIds: Array<Snowflake>
     attendees: Array<AttendanceDetail>
@@ -32,7 +32,15 @@ export class PushlogHttp implements PushlogTarget {
     }
 
     public async push(logData: PushlogData): Promise<PushlogResponse> {
-        const payload = JSON.stringify(logData);
+        const payload = JSON.stringify({
+            ...logData,
+            sessionDateTime: logData.sessionDateTime.toUTC().toISO(),
+            sessionDuration: logData.sessionDuration.toISO(),
+            attendees: logData.attendees.map((attendee) => ({
+                ...attendee,
+                attendanceDuration: attendee.attendanceDuration.toISO()
+            }))
+        });
         try {
             const response = await axios.post(this.endpoint, payload);
             return response.status === 200 ? "SUCCESS" : "FAILURE";
@@ -83,8 +91,8 @@ export class PushlogAirtable implements PushlogTarget {
                 {
                     "fields": {
                         "Topic ID": [topicRecordId],
-                        "Session Date": logData.sessionDateTimeISO,
-                        "Session Duration": Math.trunc(Duration.fromISO(logData.durationISO).as('seconds')),
+                        "Session Date": logData.sessionDateTime.toISO(),
+                        "Session Duration": Math.max(Math.trunc(logData.sessionDuration.as('seconds')), 60),
                         "Recorder (Name String)": logData.recorderName,
                         "Mentor (Discord UID)": logData.mentorDiscordUserIds[0] ?? ""
                     }
@@ -116,7 +124,7 @@ export class PushlogAirtable implements PushlogTarget {
                         "fields": {
                             "Session ID": [sessionRecordId],
                             "Student (Discord UID)": [memberRecordId],
-                            "Attend Duration": Math.trunc(Duration.fromISO(attendance.attendanceDurationISO).as('seconds')) 
+                            "Attend Duration": Math.max(Math.trunc(attendance.attendanceDuration.as('seconds')), 60)  
                         }
                     });
                 }
