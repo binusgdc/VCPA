@@ -97,14 +97,14 @@ export class PushlogAirtable implements PushlogTarget {
 
             for (let i = 0; i < logData.attendees.length; i += this.createChunkSize) {
                 const chunk = logData.attendees.slice(i, i + this.createChunkSize)
-                const memberRecordsResults = (await Promise.allSettled(chunk.map(async (attendance: AttendanceDetail): Promise<[AttendanceDetail, string]> => {
+                const memberRecordsResults = await Promise.allSettled(chunk.map(async (attendance: AttendanceDetail): Promise<[AttendanceDetail, string]> => {
                     const memberResult = await this.base(this.membersTableId).select({
                         filterByFormula: `{Discord UID} = ${attendance.discordUserId}`,
                         maxRecords: 1
                     }).all();
                     if (memberResult.length != 1) throw new Error(`Discord ID ${attendance.discordUserId} not found in members`);
                     return [attendance, memberResult[0].id];
-                })))
+                }));
 
                 const payloadArr = []
                 for (const finishedResult of memberRecordsResults) {
@@ -119,7 +119,7 @@ export class PushlogAirtable implements PushlogTarget {
                     });
                 }
 
-                await this.base(this.attendanceTableId).create(payloadArr)
+                await this.base(this.attendanceTableId).create(payloadArr);
             }
             return "SUCCESS";
         } catch (error) {
