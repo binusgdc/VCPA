@@ -84,7 +84,9 @@ export class PushlogAirtable implements PushlogTarget {
                     "fields": {
                         "Topic ID": [topicRecordId],
                         "Session Date": logData.sessionDateTimeISO,
-                        "Session Duration": Duration.fromISO(logData.durationISO).as('seconds')
+                        "Session Duration": Math.trunc(Duration.fromISO(logData.durationISO).as('seconds')),
+                        "Recorder (Name String)": logData.recorderName,
+                        "Mentor (Discord UID)": logData.mentorDiscordUserIds[0] ?? ""
                     }
                 }
             ]);
@@ -114,7 +116,7 @@ export class PushlogAirtable implements PushlogTarget {
                         "fields": {
                             "Session ID": [sessionRecordId],
                             "Student (Discord UID)": [memberRecordId],
-                            "Attend Duration": Duration.fromISO(attendance.attendanceDurationISO).as('seconds')
+                            "Attend Duration": Math.trunc(Duration.fromISO(attendance.attendanceDurationISO).as('seconds')) 
                         }
                     });
                 }
