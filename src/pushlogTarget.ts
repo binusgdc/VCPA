@@ -41,7 +41,7 @@ export class PushlogHttp implements PushlogTarget {
 
 }
 
-export class Airtable implements PushlogTarget {
+export class PushlogAirtable implements PushlogTarget {
     private readonly createChunkSize: number = 10; 
     private readonly base: AirtableBase;
     private readonly topicsTableId: string;
