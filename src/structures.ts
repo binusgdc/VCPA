@@ -35,6 +35,10 @@ export interface PushLogTargetHttpJson {
 
 export interface PushLogTargetAirtable {
 	type: "airtable";
+	baseId: string;
+	topicsTableId: string;
+	sessionsTableId: string;
+	attendanceTableId: string;
 }
 
 export type ConfigFile = {

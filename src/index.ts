@@ -7,8 +7,9 @@ import { Session } from "./structures";
 import sqlite3 from "sqlite3";
 import { ISqlite, open } from "sqlite";
 import * as fs from "fs";
-import { PushlogHttp } from "./pushlogTarget";
+import { PushlogAirtable, PushlogHttp } from "./pushlogTarget";
 import { loadEnv } from "./util/env";
+import Airtable from "airtable";
 
 const dbFile = "data/session-logs.db";
 const dbConfig = { filename: dbFile, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE }
@@ -27,6 +28,11 @@ if (global.config.pushLogTarget?.type === "http-json") {
 else if (global.config.pushLogTarget?.type === "airtable") {
 	if (global.env.AIRTABLE_KEY == undefined)
 		throw Error("❌ push log target is set to airtable, but AIRTABLE_KEY is not set")
+	global.pushlogTarget = new PushlogAirtable(
+		new Airtable({ apiKey: global.env.AIRTABLE_KEY }).base(global.config.pushLogTarget.baseId),
+		global.config.pushLogTarget.topicsTableId,
+		global.config.pushLogTarget.sessionsTableId,
+		global.config.pushLogTarget.attendanceTableId)
 }
 
 if (global.pushlogTarget == undefined) {
