@@ -26,11 +26,15 @@ export type BGDCData = {
 	procdetCsvGdriveFolderId: string;
 }
 
-export type PushLogTargetConfig = PushLogTargetHttpJson
+export type PushLogTargetConfig = PushLogTargetHttpJson | PushLogTargetAirtable
 
 export interface PushLogTargetHttpJson {
-	type: "http-json"
+	type: "http-json";
 	endpoint: string;
+}
+
+export interface PushLogTargetAirtable {
+	type: "airtable";
 }
 
 export type ConfigFile = {
