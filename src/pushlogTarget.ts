@@ -5,16 +5,18 @@ import { DateTime, Duration } from "luxon";
 
 export type PushlogResponse = "SUCCESS" | "FAILURE"
 
+export type AttendanceDetail = {
+    discordUserId: Snowflake,
+    attendanceDurationISO: string
+}
+
 export type PushlogData = {
     topicId: string,
     sessionDateTimeISO: string,
     durationISO: string,
     recorderName: string,
     mentorDiscordUserIds: Array<Snowflake>
-    attendees: Array<{
-        discordUserId: Snowflake,
-        attendanceDurationISO: string
-    }>
+    attendees: Array<AttendanceDetail>
 }
 
 export interface PushlogTarget {
@@ -41,18 +43,27 @@ export class PushlogHttp implements PushlogTarget {
 
 }
 
+export type AirtableRoutes = {
+    topicsTableId: string;
+    sessionsTableId: string;
+    attendanceTableId: string;
+    membersTableId: string;
+}
+
 export class PushlogAirtable implements PushlogTarget {
-    private readonly createChunkSize: number = 10; 
+    private readonly createChunkSize: number = 10;
     private readonly base: AirtableBase;
     private readonly topicsTableId: string;
     private readonly sessionsTableId: string;
     private readonly attendanceTableId: string;
+    private readonly membersTableId: string;
 
-    constructor(base: AirtableBase, topicsTableId: string, sessionsTableId: string, attendanceTableId: string) {
+    constructor(base: AirtableBase, config: AirtableRoutes) {
         this.base = base;
-        this.topicsTableId = topicsTableId;
-        this.sessionsTableId = sessionsTableId;
-        this.attendanceTableId = attendanceTableId;
+        this.topicsTableId = config.topicsTableId;
+        this.sessionsTableId = config.sessionsTableId;
+        this.attendanceTableId = config.attendanceTableId;
+        this.membersTableId = config.membersTableId;
     }
 
     public async push(logData: PushlogData): Promise<PushlogResponse> {
@@ -61,13 +72,13 @@ export class PushlogAirtable implements PushlogTarget {
                 filterByFormula: `{Topic ID} = '${logData.topicId}'`,
                 maxRecords: 1,
             }).all();
-    
+
             if (topicRecordResult.length != 1) {
                 return "FAILURE";
             }
-    
+
             const topicRecordId = topicRecordResult[0].id;
-    
+
             const sessionRecordResult = await this.base(this.sessionsTableId).create([
                 {
                     "fields": {
@@ -77,24 +88,39 @@ export class PushlogAirtable implements PushlogTarget {
                     }
                 }
             ]);
-    
+
             if (sessionRecordResult.length != 1) {
                 return "FAILURE";
             }
-    
+
             const sessionRecordId = sessionRecordResult[0].id;
-    
+
             for (let i = 0; i < logData.attendees.length; i += this.createChunkSize) {
-                const query = logData.attendees.slice(i, i + this.createChunkSize).map((attendee) => ({
-                    "fields": {
-                        "Session ID": [sessionRecordId],
-                        "Student (Discord UID)": attendee.discordUserId,
-                        "Attend Duration": Duration.fromISO(attendee.attendanceDurationISO).as('seconds')  
-                    }
-                }));
-                await this.base(this.attendanceTableId).create(query);
+                const chunk = logData.attendees.slice(i, i + this.createChunkSize)
+                const memberRecordsResults = (await Promise.allSettled(chunk.map(async (attendance: AttendanceDetail): Promise<[AttendanceDetail, string]> => {
+                    const memberResult = await this.base(this.membersTableId).select({
+                        filterByFormula: `{Discord UID} = ${attendance.discordUserId}`,
+                        maxRecords: 1
+                    }).all();
+                    if (memberResult.length != 1) throw new Error(`Discord ID ${attendance.discordUserId} not found in members`);
+                    return [attendance, memberResult[0].id];
+                })))
+
+                const payloadArr = []
+                for (const finishedResult of memberRecordsResults) {
+                    if (finishedResult.status == "rejected") continue;
+                    const [attendance, memberRecordId] = finishedResult.value;
+                    payloadArr.push({
+                        "fields": {
+                            "Session ID": [sessionRecordId],
+                            "Student (Discord UID)": [memberRecordId],
+                            "Attend Duration": Duration.fromISO(attendance.attendanceDurationISO).as('seconds')
+                        }
+                    });
+                }
+
+                await this.base(this.attendanceTableId).create(payloadArr)
             }
-    
             return "SUCCESS";
         } catch (error) {
             return "FAILURE";
