@@ -13,8 +13,8 @@ export function noOp(): Logger {
 	return new NoOpLogger();
 }
 
-export function composeLoggers(loggers: Logger[]) {
-	return new ComposeLogger(loggers);
+export function composite(loggers: Logger[]) {
+	return new CompositeLogger(loggers);
 }
 
 class NoOpLogger implements Logger {
@@ -25,7 +25,7 @@ class NoOpLogger implements Logger {
 	public async fatal(message: string): Promise<void> {}
 }
 
-class ComposeLogger implements Logger {
+class CompositeLogger implements Logger {
 	
 	private readonly loggers: Logger[]
 	
