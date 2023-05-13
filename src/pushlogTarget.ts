@@ -100,7 +100,9 @@ export class PushlogAirtable implements PushlogTarget {
                         "Session Date": logData.sessionDateTime.toISO(),
                         "Session Duration": Math.max(Math.trunc(logData.sessionDuration.as('seconds')), 60),
                         "Recorder (Name String)": logData.recorderName,
-                        "Mentor (Discord UID)": logData.mentorDiscordUserIds[0] ?? ""
+                        "Mentor (Discord UID)": logData.mentorDiscordUserIds.length != 0 
+                            ? logData.mentorDiscordUserIds.reduce((prev, next) => `${prev}, ${next}`) 
+                            : ""
                     }
                 }
             ]);
