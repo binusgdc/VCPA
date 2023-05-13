@@ -153,6 +153,7 @@ export class PushlogAirtable implements PushlogTarget {
                     this.logger.error(`Completed batch insertion with ${batch.length - payloadArr.length} failed entries.`)
                 }
             }
+            this.logger.info("Push finished");
             return "SUCCESS";
         } catch (error) {
             this.logger.fatal("A fatal error occurred");
