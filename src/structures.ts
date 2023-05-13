@@ -42,10 +42,18 @@ export interface PushLogTargetAirtable {
 	membersTableId: string;
 }
 
+export interface LoggerDiscordChannel {
+	type: "discordChannel";
+	channelId: string;
+}
+
+export type LoggerConfig = LoggerDiscordChannel
+
 export type ConfigFile = {
 	serviceLocationWhiteList: ServiceLocation[];
 	bgdc: BGDCData;
 	pushLogTarget: PushLogTargetConfig | undefined;
+	loggers: LoggerConfig[] | undefined
 }
 
 type EventType = "JOIN" | "LEAVE";
