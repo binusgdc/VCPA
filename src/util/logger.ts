@@ -13,7 +13,7 @@ export function noOp(): Logger {
 	return new NoOpLogger();
 }
 
-export function composite(loggers: Logger[]) {
+export function composite(loggers: Logger[]): Logger {
 	return new CompositeLogger(loggers);
 }
 
