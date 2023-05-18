@@ -1,6 +1,5 @@
 import { Client, CommandInteraction, GuildMember } from "discord.js";
 
-import * as command_pushlog from "./commands/pushlog";
 import * as command_start from "./commands/start";
 import * as command_status from "./commands/status";
 import * as command_stop from "./commands/stop";
@@ -12,7 +11,6 @@ const commands = [
 	command_start,
 	command_status,
 	command_stop,
-	command_pushlog,
 	command_raisehand,
 	command_lowerhand,
 	command_pushlogv2
