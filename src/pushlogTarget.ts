@@ -142,7 +142,7 @@ export class PushlogAirtable implements PushlogTarget {
                     payloadArr.push({
                         "fields": {
                             "Session ID": [sessionRecordId],
-                            "Student (Discord UID)": [memberRecordId],
+                            "Student ID": [memberRecordId],
                             "Attend Duration": Math.max(Math.trunc(attendance.attendanceDuration.as('seconds')), 60)  
                         }
                     });
