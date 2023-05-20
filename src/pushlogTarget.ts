@@ -127,7 +127,7 @@ export class PushlogAirtable implements PushlogTarget {
                         filterByFormula: `{Discord UID} = ${attendance.discordUserId}`,
                         maxRecords: 1
                     }).all();
-                    if (memberResult.length != 1) throw new Error(`Discord ID ${attendance.discordUserId} not found in members`);
+                    if (memberResult.length != 1) throw new Error(`Discord ID <@${attendance.discordUserId}> not found in members`);
                     this.logger.info(`Retrieved member: ${memberResult[0].get('Name')} ${memberResult[0].get('NIM')}`)
                     return [attendance, memberResult[0].id];
                 }));
