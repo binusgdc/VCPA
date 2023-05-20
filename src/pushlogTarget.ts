@@ -135,7 +135,7 @@ export class PushlogAirtable implements PushlogTarget {
                 const payloadArr = []
                 for (const finishedResult of memberRecordsResults) {
                     if (finishedResult.status == "rejected") {
-                        this.logger.error(`Error retrieving member: ${finishedResult.reason}. Continuing.`);
+                        this.logger.error(`Could not retrieve member: ${finishedResult.reason}. Continuing.`);
                         continue;
                     }
                     const [attendance, memberRecordId] = finishedResult.value;
