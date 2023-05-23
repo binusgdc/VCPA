@@ -79,6 +79,9 @@ export class PushlogAirtable implements PushlogTarget {
 
     public async push(logData: PushlogData): Promise<PushlogResponse> {
         try {
+
+            this.logger.debug(`Retrieving topic: ${logData.topicId} from base...`)
+
             const topicRecordResult = await this.base(this.topicsTableId).select({
                 filterByFormula: `{Topic ID} = '${logData.topicId}'`,
                 maxRecords: 1,
@@ -93,19 +96,21 @@ export class PushlogAirtable implements PushlogTarget {
 
             this.logger.info(`Retrieved Topic: ${logData.topicId}`)
 
-            const sessionRecordResult = await this.base(this.sessionsTableId).create([
-                {
-                    "fields": {
-                        "Topic ID": [topicRecordId],
-                        "Session Date": logData.sessionDateTime.toISO(),
-                        "Session Duration": Math.max(Math.trunc(logData.sessionDuration.as('seconds')), 60),
-                        "Recorder (Name String)": logData.recorderName,
-                        "Mentor (Discord UID)": logData.mentorDiscordUserIds.length != 0 
-                            ? logData.mentorDiscordUserIds.reduce((prev, next) => `${prev}, ${next}`) 
-                            : ""
-                    }
+            const sessionRecordPayload = [{
+                "fields": {
+                    "Topic ID": [topicRecordId],
+                    "Session Date": logData.sessionDateTime.toISO(),
+                    "Session Duration": Math.max(Math.trunc(logData.sessionDuration.as('seconds')), 60),
+                    "Recorder (Name String)": logData.recorderName,
+                    "Mentor (Discord UID)": logData.mentorDiscordUserIds.length != 0
+                        ? logData.mentorDiscordUserIds.reduce((prev, next) => `${prev}, ${next}`)
+                        : ""
                 }
-            ]);
+            }]
+
+            this.logger.debug(`Creating session record in base, payload: ${sessionRecordPayload}`)
+
+            const sessionRecordResult = await this.base(this.sessionsTableId).create(sessionRecordPayload);
 
             if (sessionRecordResult.length != 1) {
                 this.logger.fatal(`Couldn't create the session! Cancelling push.`);
@@ -115,6 +120,8 @@ export class PushlogAirtable implements PushlogTarget {
             const sessionRecordId = sessionRecordResult[0].id;
 
             this.logger.info(`Created session record in airtable base with ID: ${sessionRecordId}`);
+
+            this.logger.debug(`Starting attendance record processing. Batch size: ${this.createBatchSize}. Batches: ${Math.ceil(logData.attendees.length / this.createBatchSize)}`)
 
             for (let i = 0; i < logData.attendees.length; i += this.createBatchSize) {
 
@@ -132,27 +139,29 @@ export class PushlogAirtable implements PushlogTarget {
                     return [attendance, memberResult[0].id];
                 }));
 
-                const payloadArr = []
+                const attendanceBatchPayload = []
                 for (const finishedResult of memberRecordsResults) {
                     if (finishedResult.status == "rejected") {
                         this.logger.error(`Could not retrieve member: ${finishedResult.reason}. Continuing.`);
                         continue;
                     }
                     const [attendance, memberRecordId] = finishedResult.value;
-                    payloadArr.push({
+                    attendanceBatchPayload.push({
                         "fields": {
                             "Session ID": [sessionRecordId],
                             "Student ID": [memberRecordId],
-                            "Attend Duration": Math.max(Math.trunc(attendance.attendanceDuration.as('seconds')), 60)  
+                            "Attend Duration": Math.max(Math.trunc(attendance.attendanceDuration.as('seconds')), 60)
                         }
                     });
                 }
 
-                await this.base(this.attendanceTableId).create(payloadArr);
-                if (batch.length - payloadArr.length == 0)
+                this.logger.debug(`Creating attendance records, payload: ${attendanceBatchPayload}`)
+
+                await this.base(this.attendanceTableId).create(attendanceBatchPayload);
+                if (batch.length - attendanceBatchPayload.length == 0)
                     this.logger.info(`Completed batch successfully`);
                 else {
-                    this.logger.warn(`Completed batch insertion with ${batch.length - payloadArr.length} failed entries.`)
+                    this.logger.warn(`Completed batch insertion with ${batch.length - attendanceBatchPayload.length} failed entries.`)
                 }
             }
             this.logger.info("Push finished");
