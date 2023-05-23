@@ -49,34 +49,41 @@ class CompositeLogger implements Logger {
 	}
 }
 
-export type LoggingLevel = "DEBUG" | "INFO" | "WARN" | "ERROR" | "FATAL" | "NONE"
+export enum LoggingLevel {
+	Debug = 0,
+	Info = 1,
+	Warn = 2,
+	Error = 3,
+	Fatal = 4,
+	None = 5
+}
 
 abstract class AbstractLogger implements Logger {
 
 	protected level: LoggingLevel
 
 	constructor(level?: LoggingLevel | undefined) {
-		this.level = level ?? "DEBUG"
+		this.level = level ?? LoggingLevel.Debug
 	}
 
 	async debug(message: string): Promise<void> {
-		if (this.level != "DEBUG") return;
+		if (this.level > LoggingLevel.Debug) return;
 		await this._debug(message);
 	}
 	async info(message: string): Promise<void> {
-		if (this.level != "DEBUG" && this.level != "INFO") return;
+		if (this.level > LoggingLevel.Info) return;
 		await this._info(message);
 	}
 	async warn(message: string): Promise<void> {
-		if (this.level != "DEBUG" && this.level != "INFO" && this.level != "WARN") return;
+		if (this.level > LoggingLevel.Warn) return;
 		await this._warn(message);
 	}
 	async error(message: string): Promise<void> {
-		if (this.level != "DEBUG" && this.level != "INFO" && this.level != "WARN" && this.level != "ERROR") return;
+		if (this.level > LoggingLevel.Error) return;
 		await this._error(message);
 	}
 	async fatal(message: string): Promise<void> {
-		if (this.level != "DEBUG" && this.level != "INFO"  && this.level != "WARN" && this.level != "ERROR" && this.level != "FATAL") return;
+		if (this.level > LoggingLevel.Fatal) return;
 		await this._fatal(message);
 	}
 
@@ -91,7 +98,7 @@ abstract class AbstractLogger implements Logger {
 export class ConsoleLogger extends AbstractLogger {
 
 	constructor(level?: LoggingLevel) {
-		super(level ?? "DEBUG")
+		super(level ?? LoggingLevel.Debug)
 	}
 
 	override async _debug(message: string): Promise<void> {
@@ -117,7 +124,7 @@ export class DiscordChannelLogger extends AbstractLogger {
 	private readonly channelId: string
 
 	constructor(client: REST, channelId: string, level?: LoggingLevel | undefined) {
-		super(level ?? "INFO")
+		super(level ?? LoggingLevel.Info)
 		this.client = client;
 		this.channelId = channelId;
 	}
