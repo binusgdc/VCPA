@@ -9,11 +9,11 @@ export interface Logger {
 	fatal(message: string): Promise<void>;
 }
 
-export function noOp(): Logger {
+export function noOpLogger(): Logger {
 	return new NoOpLogger();
 }
 
-export function composite(loggers: Logger[]): Logger {
+export function composeLoggers(loggers: Logger[]): Logger {
 	return new CompositeLogger(loggers);
 }
 

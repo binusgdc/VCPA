@@ -10,7 +10,7 @@ import * as fs from "fs";
 import { PushlogAirtable, PushlogHttp } from "./pushlogTarget";
 import { loadEnv } from "./util/env";
 import Airtable from "airtable";
-import { ConsoleLogger, DiscordChannelLogger, Logger, composite, noOp } from "./util/logger";
+import { ConsoleLogger, DiscordChannelLogger, Logger, composeLoggers, noOpLogger } from "./util/logger";
 import { REST } from "@discordjs/rest";
 
 const dbFile = "data/session-logs.db";
@@ -44,7 +44,7 @@ else if (global.config.pushLogTarget?.type === "airtable") {
 	global.pushlogTarget = new PushlogAirtable(
 		new Airtable({ apiKey: global.env.AIRTABLE_KEY }).base(global.config.pushLogTarget.baseId),
 		{ ...global.config.pushLogTarget },
-		composite(config.loggers?.map(initLogger) ?? [new ConsoleLogger()])
+		composeLoggers(config.loggers?.map(initLogger) ?? [new ConsoleLogger()])
 		)
 }
 
