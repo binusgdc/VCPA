@@ -1,133 +1,24 @@
-import * as gdrive from "@googleapis/drive";
-import * as gsheet from "@googleapis/sheets";
-import { ApplicationCommandData, CommandInteraction, GuildMember } from "discord.js";
-import * as fs from "fs";
+import { ApplicationCommandData, CommandInteraction } from "discord.js";
 
-import * as Util from "../util";
-import { ConfigFile, SessionSubject } from "../structures";
+import { SessionLog } from "../sessionLog";
+import { PushlogData } from "../pushlogTarget";
+import { Duration } from "luxon";
 
-type Subject = keyof ConfigFile['bgdc']['msSessionsSubjectRanges']
-
-type PushData = {
-	subject: Subject
-	topic: string
-	date: string
-	tutor: string
-	time: string
-	duration: string
-	documentator: string
-}
-
-async function pushData(data : PushData) {
-	const auth = new gsheet.auth.GoogleAuth({
-		keyFile: "gcreds.json",
-		scopes: [ "https://www.googleapis.com/auth/spreadsheets" ]
-	});
-
-	const gs = gsheet.sheets({ version: "v4", auth });
-
-	/* Where should we put the data? Find the range based on the subject. */
-
-	const valRangeRes = await gs.spreadsheets.values.get({
-		spreadsheetId: global.config.bgdc.msSessionsSheetId,
-		range: global.config.bgdc.msSessionsSubjectRanges[data.subject],
-		valueRenderOption: "FORMULA"
-	});
-
-	const valRange = valRangeRes.data.values;
-
-	/* Find the row on which to place the data. */
-
-	const ind = valRange!.findIndex((val) => val[2] === data.topic);
-
-	/* Fill in the new data */
-
-	let newVals = valRange;
-	newVals![ind][5] = '\'' + data.date;
-	newVals![ind][6] = data.tutor;
-	newVals![ind][7] = '\'' + data.time;
-	newVals![ind][8] = data.duration;
-	newVals![ind][9] = data.documentator;
-
-	/* Push the new data back to the sheet. */
-
-	const valUpdateRes = await gs.spreadsheets.values.update({
-		spreadsheetId: global.config.bgdc.msSessionsSheetId,
-		range: global.config.bgdc.msSessionsSubjectRanges[data.subject],
-		valueInputOption: "USER_ENTERED",
-		requestBody: { values: newVals }
-	});
-
-	return valUpdateRes;
-}
-
-async function pushCsv(data : PushData) {
-	const auth = new gdrive.auth.GoogleAuth({
-		keyFile: "gcreds.json",
-		scopes: [ "https://www.googleapis.com/auth/drive" ]
-	});
-
-	const ds = gdrive.drive({ version:"v3", auth });
-
-	const fileBaseName = Util.formatDate(global.lastSession!.endTime!, "STD");
-
-	const attdet = await ds.files.create({
-		requestBody: {
-			name: `${data.subject}-${fileBaseName}-attdet.csv`,
-			parents: [ global.config.bgdc.attdetCsvGdriveFolderId ]
-		},
-
-		media: {
-			mimeType: "text/csv",
-			body: fs.createReadStream(`./run/${fileBaseName}-attdet.csv`)
-		}
-	});
-
-	const procdet = await ds.files.create({
-		requestBody: {
-			name: `${data.subject}-${fileBaseName}-procdet.csv`,
-			parents: [ global.config.bgdc.procdetCsvGdriveFolderId ]
-		},
-
-		media: {
-			mimeType: "text/csv",
-			body: fs.createReadStream(`./run/${fileBaseName}-procdet.csv`)
-		}
-	});
-
-	return [attdet, procdet];
-}
-
-export const signature : ApplicationCommandData = {
+export const signature: ApplicationCommandData = {
 	name: "pushlog",
-	description: "Pushes the specified session's logs to the archive",
+	description: "[EXPERIMENTAL] Pushes the specified session's logs to an external archive",
 	options: [
-		{
-			name: "subject",
-			description: "Class subject",
-			type: "STRING",
-			required: true,
-			choices: [
-				{ name: "Game Programming A", value: "PROGA" },
-				{ name: "Game Programming B", value: "PROGB" },
-				{ name: "Game Programming C", value: "PROGC" },
-				{ name: "Game Design", value: "DESG"},
-				{ name: "2D Art", value: "A2D" },
-				{ name: "3D Art", value: "A3D" },
-				{ name: "Sound Engineering", value: "SND" }
-			]
-		},
 
 		{
-			name: "topic",
-			description: "Class topic",
+			name: "topic-id",
+			description: "Topic of the session according to the curriculum",
 			type: "STRING",
 			required: true
 		},
 
 		{
-			name: "tutor",
-			description: "Tutor Discord ID(s) (e.g.: \"@tutor1,@tutor2\")",
+			name: "mentors",
+			description: "Mentor Discord ID(s) (e.g.: \"@mentor1 @mentor2\")",
 			type: "STRING",
 			required: true
 		},
@@ -137,62 +28,76 @@ export const signature : ApplicationCommandData = {
 			description: "Class documentator's IRL name",
 			type: "STRING",
 			required: true
+		},
+
+		{
+			name: "session-id",
+			description: "The ID of the session to push",
+			type: "STRING",
+			required: false
 		}
+
+
 	]
 };
 
-export async function exec(interaction : CommandInteraction) {
-
-	if (global.lastSession == undefined) {
+export async function exec(interaction: CommandInteraction) {
+	
+	if (global.pushlogTarget == undefined) {
+		await interaction.reply("Error: push target is not configured.");
 		return;
 	}
 
 	await interaction.deferReply();
 
-	const executor = interaction.member as GuildMember;
 	const argv = interaction.options;
 
-	const data = {
-		subject: argv.getString("subject")! as SessionSubject,
-		topic: argv.getString("topic")!,
-		date: Util.formatDate(global.lastSession.startTime!, "DATE")!,
-		tutor: argv.getString("tutor")!,
-		time: Util.formatDate(global.lastSession.startTime!, "TME")!,
-		duration: Util.formatPeriod(global.lastSession.endTime!.toMillis() - global.lastSession.startTime!.toMillis(), "MINUTES")!,
-		documentator: argv.getString("documentator")!
+	const sessionIdToPush = argv.getString("session-id");
+
+	const logToPush = sessionIdToPush == undefined
+		? await global.sessionLogStore.latestUnpushed()
+		: await global.sessionLogStore.retrieve(sessionIdToPush);
+
+	if (logToPush == undefined) {
+		await interaction.editReply(">>> Session log not found.");
+		return;
 	}
 
-	// TODO: Sort out this mess and properly handle errors individually instead of a blanket catch
-	try {
-		const dataPushRes = await pushData(data);
-		const [attdet, procdet] = await pushCsv(data);
+	const data = toPushData(logToPush, argv.getString("topic-id")!, argv.getString("documentator")!, argv.getString("mentors")!);
 
-		const lastSessionName = Util.formatDate(global.lastSession.endTime!, "STD");
-
-		console.log(`>>> ${executor.id} attempted to push session ${lastSessionName}'s logs:`);
-		console.log((dataPushRes.status === 200) ? ">>> data: success" : (">>> data: failed\n" + dataPushRes));
-		console.log((attdet.status === 200) ? ">>> attdet: success" : (">>> attdet: failed\n" + attdet));
-		console.log((procdet.status === 200) ? ">>> procdet: success" : (">>> procdet: failed\n" + procdet));
-		console.log(`>>> Push overall ${(attdet && procdet) ? "successful" : "failed"}`);
-
-		let reply = `<@${executor.id}> attempted to push last session's data:\n`;
-		reply += ((dataPushRes.status === 200) ? "Pushed data successfully" : "Failed to push data") + '\n';
-		reply += ((attdet.status === 200) ? "Pushed attdet.csv successfully" : "Failed to push attdet.csv") + '\n';
-		reply += ((procdet.status === 200) ? "Pushed procdet.csv successfully" : "Failed to push procdet.csv");
-
-		interaction.editReply(reply);
-	} catch (err) {
-		const lastSessionName = Util.formatDate(global.lastSession.endTime!, "STD");
-
-		console.log(`>>> ${executor.id} attempted to push session ${lastSessionName}'s logs:`);
-		console.log(">>> Push failed for some reason:");
-		console.log(">>> data:");
-		console.log(data);
-		console.log(">>> Error:");
-		console.log(err);
-
-		let reply = `<@${executor.id}> attempted to push last session's data:\n`;
-		reply += "Push failed for some reason, please submit form manually :(";
-		interaction.editReply(reply);
+	const pushResult = await global.pushlogTarget?.push(data);
+	if (pushResult === "SUCCESS") {
+		await global.sessionLogStore.setLogPushed(logToPush.id);
 	}
+	await interaction.editReply(`>>> Attempted to push to archive. Result: ${pushResult}`);
+}
+
+function toPushData(sessionLog: SessionLog, topicId: string, recorderName: string, mentorDiscordUserIdsInput: string): PushlogData {
+	return {
+		topicId: topicId,
+		sessionDateTime: sessionLog.timeStarted,
+		sessionDuration: Duration.fromMillis(sessionLog.timeEnded.toMillis() - sessionLog.timeStarted.toMillis()),
+		recorderName: recorderName,
+		mentorDiscordUserIds: mentorDiscordUserIdsInput.split(" ").map(id => id.replace("<@", "").replace(">", "")),
+		attendees: Array.from(arrayGroupBy(sessionLog.events, (event) => event.userId).entries()).map(([userId, events]) => {
+			return {
+				discordUserId: userId,
+				attendanceDuration: Duration.fromMillis(
+					events.reduce(
+						(duration, event) => duration + ((event.timeOccurred.toMillis() - sessionLog.timeStarted.toMillis()) * (event.type === "Join" ? -1 : 1)), 0))
+			}
+		})
+	}
+}
+
+function arrayGroupBy<T>(array: Array<T>, grouper: (value: T) => string): Map<string, Array<T>> {
+	const result = new Map<string, Array<T>>();
+	for (const value of array) {
+		const key = grouper(value);
+		if (!result.has(key)) {
+			result.set(key, []);
+		}
+		result.get(key)!.push(value);
+	}
+	return result;
 }

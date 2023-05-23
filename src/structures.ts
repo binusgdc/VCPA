@@ -26,17 +26,38 @@ export type BGDCData = {
 	procdetCsvGdriveFolderId: string;
 }
 
-export type PushLogTargetConfig = PushLogTargetHttpJson
+export type PushLogTargetConfig = PushLogTargetHttpJson | PushLogTargetAirtable
 
 export interface PushLogTargetHttpJson {
-	type: "http-json"
+	type: "http-json";
 	endpoint: string;
 }
+
+export interface PushLogTargetAirtable {
+	type: "airtable";
+	baseId: string;
+	topicsTableId: string;
+	sessionsTableId: string;
+	attendanceTableId: string;
+	membersTableId: string;
+}
+
+export interface LoggerDiscordChannel {
+	type: "discordChannel";
+	channelId: string;
+}
+
+export interface LoggerConsole {
+	type: "console"
+}
+
+export type LoggerConfig = LoggerDiscordChannel | LoggerConsole
 
 export type ConfigFile = {
 	serviceLocationWhiteList: ServiceLocation[];
 	bgdc: BGDCData;
 	pushLogTarget: PushLogTargetConfig | undefined;
+	loggers: LoggerConfig[] | undefined
 }
 
 type EventType = "JOIN" | "LEAVE";
