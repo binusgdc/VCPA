@@ -47,7 +47,11 @@ export interface LoggerDiscordChannel {
 	channelId: string;
 }
 
-export type LoggerConfig = LoggerDiscordChannel
+export interface LoggerConsole {
+	type: "console"
+}
+
+export type LoggerConfig = LoggerDiscordChannel | LoggerConsole
 
 export type ConfigFile = {
 	serviceLocationWhiteList: ServiceLocation[];
