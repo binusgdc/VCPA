@@ -1,8 +1,8 @@
 import { ApplicationCommandData, CommandInteraction } from "discord.js";
 
-import { SessionEvent, SessionLog } from "../sessionLog";
+import { SessionLog } from "../sessionLog";
 import { PushlogData } from "../pushlogTarget";
-import { DateTime, Duration } from "luxon";
+import { Duration } from "luxon";
 
 export const signature: ApplicationCommandData = {
 	name: "pushlog",
