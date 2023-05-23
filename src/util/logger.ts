@@ -49,47 +49,92 @@ class CompositeLogger implements Logger {
 	}
 }
 
-export class ConsoleLogger implements Logger {
+export type LoggingLevel = "DEBUG" | "INFO" | "WARN" | "ERROR" | "FATAL" | "NONE"
+
+abstract class AbstractLogger implements Logger {
+
+	protected level: LoggingLevel
+
+	constructor(level?: LoggingLevel | undefined) {
+		this.level = level ?? "DEBUG"
+	}
+
 	async debug(message: string): Promise<void> {
-		console.log(`DEBUG: ${message}`)
+		if (this.level != "DEBUG") return;
+		await this._debug(message);
 	}
 	async info(message: string): Promise<void> {
-		console.log(`INFO: ${message}`);
+		if (this.level != "DEBUG" && this.level != "INFO") return;
+		await this._info(message);
 	}
 	async warn(message: string): Promise<void> {
-		console.log(`WARN: ${message}`);
+		if (this.level != "DEBUG" && this.level != "INFO" && this.level != "WARN") return;
+		await this._warn(message);
 	}
 	async error(message: string): Promise<void> {
-		console.error(`ERROR: ${message}`);
+		if (this.level != "DEBUG" && this.level != "INFO" && this.level != "WARN" && this.level != "ERROR") return;
+		await this._error(message);
 	}
 	async fatal(message: string): Promise<void> {
+		if (this.level != "DEBUG" && this.level != "INFO"  && this.level != "WARN" && this.level != "ERROR" && this.level != "FATAL") return;
+		await this._fatal(message);
+	}
+
+	protected abstract _debug(message: string): Promise<void>;
+	protected abstract _info(message: string): Promise<void>;
+	protected abstract _warn(message: string): Promise<void>;
+	protected abstract _error(message: string): Promise<void>;
+	protected abstract _fatal(message: string): Promise<void>;
+
+}
+
+export class ConsoleLogger extends AbstractLogger {
+
+	constructor(level?: LoggingLevel) {
+		super(level ?? "DEBUG")
+	}
+
+	override async _debug(message: string): Promise<void> {
+		console.log(`DEBUG: ${message}`)
+	}
+	override async _info(message: string): Promise<void> {
+		console.log(`INFO: ${message}`);
+	}
+	override async _warn(message: string): Promise<void> {
+		console.log(`WARN: ${message}`);
+	}
+	override async _error(message: string): Promise<void> {
+		console.error(`ERROR: ${message}`);
+	}
+	override async _fatal(message: string): Promise<void> {
 		console.error(`FATAL: ${message}`);
 	}
 }
 
-export class DiscordChannelLogger implements Logger {
+export class DiscordChannelLogger extends AbstractLogger {
 
 	private readonly client: REST
 	private readonly channelId: string
 
-	constructor(client: REST, channelId: string) {
+	constructor(client: REST, channelId: string, level?: LoggingLevel | undefined) {
+		super(level ?? "INFO")
 		this.client = client;
 		this.channelId = channelId;
 	}
 
-	public async debug(message: string): Promise<void> {
+	override async _debug(message: string): Promise<void> {
 		await this.sendMessageToLogChannel(`DEBUG: ${message}`);
 	}
-	public async info(message: string): Promise<void> {
+	override async _info(message: string): Promise<void> {
 		await this.sendMessageToLogChannel(`INFO: ${message}`);
 	}
-	public async warn(message: string): Promise<void> {
+	override async _warn(message: string): Promise<void> {
 		await this.sendMessageToLogChannel(`WARN: ${message}`);
 	}
-	public async error(message: string): Promise<void> {
+	override async _error(message: string): Promise<void> {
 		await this.sendMessageToLogChannel(`ERROR: ${message}`);
 	}
-	public async fatal(message: string): Promise<void> {
+	override async _fatal(message: string): Promise<void> {
 		await this.sendMessageToLogChannel(`FATAL: ${message}`);
 	}
 
