@@ -5,7 +5,7 @@ import { PushlogData } from "../pushlogTarget";
 import { DateTime, Duration } from "luxon";
 
 export const signature: ApplicationCommandData = {
-	name: "pushlogv2",
+	name: "pushlog",
 	description: "[EXPERIMENTAL] Pushes the specified session's logs to an external archive",
 	options: [
 

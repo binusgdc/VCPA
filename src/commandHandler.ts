@@ -5,7 +5,7 @@ import * as command_status from "./commands/status";
 import * as command_stop from "./commands/stop";
 import * as command_raisehand from "./commands/raisehand";
 import * as command_lowerhand from "./commands/lowerhand";
-import * as command_pushlogv2 from "./commands/pushlogv2";
+import * as command_pushlog from "./commands/pushlog";
 
 const commands = [
 	command_start,
@@ -13,7 +13,7 @@ const commands = [
 	command_stop,
 	command_raisehand,
 	command_lowerhand,
-	command_pushlogv2
+	command_pushlog
 ];
 
 export async function register(client : Client) {
