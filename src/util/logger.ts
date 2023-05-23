@@ -18,11 +18,11 @@ export function composite(loggers: Logger[]): Logger {
 }
 
 class NoOpLogger implements Logger {
-	public async debug(message: string): Promise<void> {}
-	public async info(message: string): Promise<void> {}
-	public async warn(message: string): Promise<void> {}
-	public async error(message: string): Promise<void> {}
-	public async fatal(message: string): Promise<void> {}
+	public async debug(_message: string): Promise<void> {}
+	public async info(_message: string): Promise<void> {}
+	public async warn(_message: string): Promise<void> {}
+	public async error(_message: string): Promise<void> {}
+	public async fatal(_message: string): Promise<void> {}
 }
 
 class CompositeLogger implements Logger {
@@ -46,6 +46,24 @@ class CompositeLogger implements Logger {
 	}
 	public async fatal(message: string): Promise<void> {
 		await Promise.allSettled(this.loggers.map(l => l.fatal(message)));
+	}
+}
+
+export class ConsoleLogger implements Logger {
+	async debug(message: string): Promise<void> {
+		console.log(`DEBUG: ${message}`)
+	}
+	async info(message: string): Promise<void> {
+		console.log(`INFO: ${message}`);
+	}
+	async warn(message: string): Promise<void> {
+		console.log(`WARN: ${message}`);
+	}
+	async error(message: string): Promise<void> {
+		console.error(`ERROR: ${message}`);
+	}
+	async fatal(message: string): Promise<void> {
+		console.error(`FATAL: ${message}`);
 	}
 }
 
