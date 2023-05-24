@@ -153,7 +153,7 @@ export class PushlogAirtable implements PushlogTarget {
                 const attendanceBatchPayload = []
                 for (const finishedResult of memberRecordsResults) {
                     if (finishedResult.status === "rejected") {
-                        this.logger.error(`Could not retrieve member: "${finishedResult.reason}". Continuing.`);
+                        this.logger.error(`Could not find member: "${finishedResult.reason}". Continuing.`);
                         continue;
                     }
                     const [attendance, memberDetails] = finishedResult.value;
@@ -161,7 +161,7 @@ export class PushlogAirtable implements PushlogTarget {
                         this.logger.error(`Discord ID <@${attendance.discordUserId}> not found in members`);
                         continue;
                     }
-                    this.logger.info(`Retrieved member: ${memberDetails.name} ${memberDetails.nim}`)
+                    this.logger.info(`Found member: ${memberDetails.name} ${memberDetails.nim}`)
                     attendanceBatchPayload.push({
                         "fields": {
                             "Session ID": [sessionRecordId],
