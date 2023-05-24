@@ -183,8 +183,7 @@ export class PushlogAirtable implements PushlogTarget {
             this.logger.info("Push finished");
             return "SUCCESS";
         } catch (error) {
-            this.logger.fatal("A fatal error occurred");
-            console.log(error);
+            this.logger.fatal(`A fatal error occurred: ${error}`);
             return "FAILURE";
         }
     }
