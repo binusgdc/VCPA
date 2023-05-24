@@ -59,6 +59,12 @@ export type AirtableRoutes = {
     membersTableId: string;
 }
 
+type MemberDetailRecord = {
+    recordId: string,
+    name: string,
+    nim: string
+}
+
 export class PushlogAirtable implements PushlogTarget {
     private readonly createBatchSize: number = 10;
     private readonly base: AirtableBase;
@@ -129,27 +135,37 @@ export class PushlogAirtable implements PushlogTarget {
 
                 this.logger.info(`Processing attendance: Batch ${i / this.createBatchSize + 1} (${batch.length})`);
 
-                const memberRecordsResults = await Promise.allSettled(batch.map(async (attendance: AttendanceDetail): Promise<[AttendanceDetail, string]> => {
+                const memberRecordsResults = await Promise.allSettled(batch.map(async (attendance: AttendanceDetail): Promise<[AttendanceDetail, MemberDetailRecord | null]> => {
                     const memberResult = await this.base(this.membersTableId).select({
                         filterByFormula: `{Discord UID} = ${attendance.discordUserId}`,
                         maxRecords: 1
                     }).all();
-                    if (memberResult.length != 1) throw new Error(`Discord ID <@${attendance.discordUserId}> not found in members`);
-                    this.logger.info(`Retrieved member: ${memberResult[0].get('Name')} ${memberResult[0].get('NIM')}`)
-                    return [attendance, memberResult[0].id];
+                    if (memberResult.length != 1) return [attendance, null];
+                    const [recordId, name, nim] = [memberResult[0].id, memberResult[0].get('Name'), memberResult[0].get('NIM')]
+                    if (typeof name !== 'string' || typeof nim !== 'string') throw new Error(`Unexpected result from airtable. Fields "Name" and "NIM" are expected to be strings.`)
+                    return [attendance, {
+                        recordId: recordId,
+                        name: name,
+                        nim: nim
+                    }];
                 }));
 
                 const attendanceBatchPayload = []
                 for (const finishedResult of memberRecordsResults) {
-                    if (finishedResult.status == "rejected") {
-                        this.logger.error(`Could not retrieve member: ${finishedResult.reason}. Continuing.`);
+                    if (finishedResult.status === "rejected") {
+                        this.logger.error(`Could not retrieve member: "${finishedResult.reason}". Continuing.`);
                         continue;
                     }
-                    const [attendance, memberRecordId] = finishedResult.value;
+                    const [attendance, memberDetails] = finishedResult.value;
+                    if (memberDetails === null) {
+                        this.logger.error(`Discord ID <@${attendance.discordUserId}> not found in members`);
+                        continue;
+                    }
+                    this.logger.info(`Retrieved member: ${memberDetails.name} ${memberDetails.nim}`)
                     attendanceBatchPayload.push({
                         "fields": {
                             "Session ID": [sessionRecordId],
-                            "Student ID": [memberRecordId],
+                            "Student ID": [memberDetails.recordId],
                             "Attend Duration": Math.max(Math.trunc(attendance.attendanceDuration.as('seconds')), 60)
                         }
                     });
