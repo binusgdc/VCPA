@@ -103,6 +103,9 @@ abstract class AbstractLogger implements Logger {
 }
 
 export class ConsoleLogger extends AbstractLogger {
+	// Color codes obtained from MS docs
+	// https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
+
 	constructor(level?: LoggingLevel) {
 		super(level ?? LoggingLevel.Debug)
 	}
@@ -116,15 +119,15 @@ export class ConsoleLogger extends AbstractLogger {
 	}
 
 	override async _warn(message: string): Promise<void> {
-		console.log(`WARN: ${message}`);
+		console.log(`\x1B[33mWARN:\x1B[0m ${message}`);
 	}
 
 	override async _error(message: string): Promise<void> {
-		console.error(`ERROR: ${message}`);
+		console.error(`\x1B[31mERROR:\x1B[0m ${message}`);
 	}
 
 	override async _fatal(message: string): Promise<void> {
-		console.error(`FATAL: ${message}`);
+		console.error(`\x1B[91m\x1B[4mFATAL:\x1B[0m ${message}`);
 	}
 }
 
