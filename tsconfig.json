@@ -14,8 +14,10 @@
 	},
 
 	"include": [
-		"src/*.ts",
-		"src/commands/*.ts",
-		"src/types/*.ts", 
-		"src/util/*.ts"	]
+		"src/**/*.ts"
+	],
+
+	"exclude": [
+		"src/test/**/*.ts"
+	]
 }
