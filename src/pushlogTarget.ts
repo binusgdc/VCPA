@@ -141,19 +141,26 @@ export class PushlogAirtable implements PushlogTarget {
                         maxRecords: 1
                     }).all();
                     if (memberResult.length != 1) return [attendance, null];
-                    const [recordId, name, nim] = [memberResult[0].id, memberResult[0].get('Name'), memberResult[0].get('NIM')]
-                    if (typeof name !== 'string' || typeof nim !== 'string') throw new Error(`Unexpected result from airtable. Fields "Name" and "NIM" are expected to be strings.`)
+                    const [recordId, nameResult, nimResult] = [memberResult[0].id, memberResult[0].get('Name'), memberResult[0].get('NIM')]
+                    let nameParsed: string
+                    let nimParsed: string
+                    try {
+                        nameParsed = (nameResult as any).toString()
+                        nimParsed = (nimResult as any).toString()
+                    } catch (error) {
+                        throw new Error(`Unexpected result from airtable. Fields "Name" and "NIM" are expected to be interpretable as strings. Instead got: Name - ${typeof nameResult}, NIM - ${typeof nimResult}`);
+                    }
                     return [attendance, {
                         recordId: recordId,
-                        name: name,
-                        nim: nim
+                        name: nameParsed,
+                        nim: nimParsed
                     }];
                 }));
 
                 const attendanceBatchPayload = []
                 for (const finishedResult of memberRecordsResults) {
                     if (finishedResult.status === "rejected") {
-                        this.logger.error(`Could not find member: "${finishedResult.reason}". Continuing.`);
+                        this.logger.fatal(`Unexpected error in finding member: "${finishedResult.reason}". Continuing...`);
                         continue;
                     }
                     const [attendance, memberDetails] = finishedResult.value;
