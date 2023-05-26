@@ -1,5 +1,4 @@
 import { SnowflakeUtil } from "discord.js";
-import "ts-jest";
 import { Session } from "../src/structures";
 import * as util from "../src/util";
 
