@@ -1,5 +1,3 @@
-import "ts-jest";
-
 import { LoggingLevel } from "../src/util/logger";
 import { ConsoleLogger } from "../src/util/loggers/consoleLogger";
 
