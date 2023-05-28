@@ -121,7 +121,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 
 	public async store(completedSession: CompletedSession): Promise<SessionLogId | undefined> {
 		const db = await this.connectionProvider.getConnection();
-		const nextId: SessionLogId = SnowflakeUtil.generate();
+		const nextId: SessionLogId = SnowflakeUtil.generate().toString();
 		try {
 			await db.run(
 				"INSERT INTO `session`(`id`, `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored`) VALUES (:id, :owner_id, :guild_id, :channel_id, :time_started, :time_ended, :time_stored)", {

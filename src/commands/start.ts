@@ -1,4 +1,4 @@
-import { ApplicationCommandData, CommandInteraction, GuildMember, VoiceChannel } from "discord.js";
+import { ApplicationCommandData, ApplicationCommandOptionType, ChannelType, ChatInputCommandInteraction, GuildMember, VoiceChannel } from "discord.js";
 
 import { Session } from "../structures";
 
@@ -9,13 +9,13 @@ export const signature : ApplicationCommandData = {
 		{
 			name: "channel",
 			description: "The voice channel to start the session in",
-			type: "CHANNEL",
+			type: ApplicationCommandOptionType.Channel,
 			required: false
 		}
 	]
 };
 
-export async function exec(interaction : CommandInteraction) {
+export async function exec(interaction : ChatInputCommandInteraction) {
 	const executor = interaction.member as GuildMember;
 	const argv = interaction.options;
 
@@ -28,7 +28,7 @@ export async function exec(interaction : CommandInteraction) {
 		return;
 	}
 
-	if (!targetChannel.isVoice()) {
+	if (targetChannel.type !== ChannelType.GuildVoice) {
 		console.log(`>>> Failed to start session: ${executor.id} tried to start a session somewhere not a voice channel!`);
 		await interaction.reply(`>>> Failed to start session: <@${executor.id}> tried to start a session somewhere not a voice channel!`);
 		return

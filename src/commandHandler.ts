@@ -1,4 +1,4 @@
-import { Client, CommandInteraction, GuildMember } from "discord.js";
+import { ChatInputCommandInteraction, Client, GuildMember } from "discord.js";
 
 import * as command_start from "./commands/start";
 import * as command_status from "./commands/status";
@@ -31,7 +31,7 @@ export async function register(client : Client) {
 	});
 }
 
-export async function handle(interaction : CommandInteraction) {
+export async function handle(interaction : ChatInputCommandInteraction) {
 
 	if (interaction.command == null) {
 		return;

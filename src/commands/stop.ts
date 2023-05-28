@@ -1,7 +1,7 @@
-import { ApplicationCommandData, CommandInteraction, GuildMember, VoiceChannel } from "discord.js";
+import { ApplicationCommandData, ApplicationCommandOptionType, ChannelType, ChatInputCommandInteraction, GuildMember, VoiceChannel } from "discord.js";
 import * as fs from "fs";
-import { SessionEvent } from "../sessionLog";
 
+import { SessionEvent } from "../sessionLog";
 import * as Util from "../util";
 
 export const signature: ApplicationCommandData = {
@@ -11,13 +11,13 @@ export const signature: ApplicationCommandData = {
 		{
 			name: "channel",
 			description: "The voice channel that hosts the session to be stopped",
-			type: "CHANNEL",
+			type: ApplicationCommandOptionType.Channel,
 			required: false
 		}
 	]
 };
 
-export async function exec(interaction: CommandInteraction) {
+export async function exec(interaction: ChatInputCommandInteraction) {
 	const executor = interaction.member as GuildMember;
 	const argv = interaction.options;
 
@@ -30,7 +30,7 @@ export async function exec(interaction: CommandInteraction) {
 		return;
 	}
 
-	if (!targetChannel.isVoice()) {
+	if (targetChannel.type !== ChannelType.GuildVoice) {
 		console.log(`>>> Failed to stop session: ${executor.id} tried to stop a session somewhere it couldn't be in anyway!`);
 		await interaction.reply(`>>> Failed to stop session: <@${executor.id}> tried to stop a session somewhere it couldn't be in anyway!`);
 		return;
@@ -73,7 +73,7 @@ export async function exec(interaction: CommandInteraction) {
 			}
 		})
 	})
-	
+
 	const responseMessage = storedLogId == undefined
 		? `FAILED to store the session log! Please push data before the next session.`
 		: `<@${executor.id}> stopped a session in <#${targetChannel.id}>! Session Log stored as: ${storedLogId}`
@@ -89,7 +89,7 @@ export async function exec(interaction: CommandInteraction) {
 			`./run/${fileBaseName}-procdet.csv`
 		]
 	});
-	
+
 	global.lastSession = session;
 
 	global.ongoingSessions.delete(`${targetGuildId}-${targetChannel.id}`);
