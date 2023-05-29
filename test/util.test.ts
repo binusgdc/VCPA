@@ -16,8 +16,8 @@ test("formatPeriodVerbose", () => {
 
 test("generateSessionOutput produces expected session info headers", () => {
 	const expectedHeaderColumns = ["date", "owner", "start", "duration"];
-	const owner = SnowflakeUtil.generate(0);
-	const channel = SnowflakeUtil.generate(1);
+	const owner = SnowflakeUtil.generate({ timestamp: 0 }).toString();
+	const channel = SnowflakeUtil.generate({ timestamp: 1 }).toString();
 	const session = new Session(owner, channel);
 	session.start();
 	session.end();
@@ -30,8 +30,8 @@ test("generateSessionOutput produces expected session info headers", () => {
 
 test("generateSessionOutput produces expected attendance info headers", () => {
 	const expectedHeaderColumns = ["sessionId", "id", "type", "time"];
-	const owner = SnowflakeUtil.generate(0);
-	const channel = SnowflakeUtil.generate(1);
+	const owner = SnowflakeUtil.generate({ timestamp: 0 }).toString();
+	const channel = SnowflakeUtil.generate({ timestamp: 1 }).toString();
 	const session = new Session(owner, channel);
 	session.start();
 	session.end();
@@ -44,8 +44,8 @@ test("generateSessionOutput produces expected attendance info headers", () => {
 
 test("generateSessionOutput produces expected procdet headers", () => {
 	const expectedHeaderColumns = ["id", "perc", "status", "duration"];
-	const owner = SnowflakeUtil.generate(0);
-	const channel = SnowflakeUtil.generate(1);
+	const owner = SnowflakeUtil.generate({ timestamp: 0 }).toString();
+	const channel = SnowflakeUtil.generate({ timestamp: 1 }).toString();
 	const session = new Session(owner, channel);
 	session.start();
 	session.end();
@@ -64,14 +64,14 @@ test("generateSessionOutput produces expected embed fields", () => {
 		"Duration (minutes)",
 		"Attendance Form",
 	];
-	const owner = SnowflakeUtil.generate(0);
-	const channel = SnowflakeUtil.generate(1);
+	const owner = SnowflakeUtil.generate({ timestamp: 0 }).toString();
+	const channel = SnowflakeUtil.generate({ timestamp: 1 }).toString();
 	const session = new Session(owner, channel);
 	session.start();
 	session.end();
 	util
 		.generateSessionOutput(session)
-		.embed.fields.map((field) => field.name)
+		.embed.data.fields?.map((field) => field.name)
 		.forEach((fieldName, index) =>
 			expect(fieldName).toBe(expectedFieldNames[index])
 		);
