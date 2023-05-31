@@ -11,36 +11,30 @@ export class PushlogCommandHandler extends AbstractCommandHandler {
 			name: "pushlog",
 			description: "[EXPERIMENTAL] Pushes the specified session's logs to an external archive",
 			options: [
-
 				{
 					name: "topic-id",
 					description: "Topic of the session according to the curriculum",
 					type: ApplicationCommandOptionType.String,
 					required: true
 				},
-
 				{
 					name: "mentors",
 					description: "Mentor Discord ID(s) (e.g.: \"@mentor1 @mentor2\")",
 					type: ApplicationCommandOptionType.String,
 					required: true
 				},
-
 				{
 					name: "documentator",
 					description: "Class documentator's IRL name",
 					type: ApplicationCommandOptionType.String,
 					required: true
 				},
-
 				{
 					name: "session-id",
 					description: "The ID of the session to push",
 					type: ApplicationCommandOptionType.String,
 					required: false
 				}
-
-
 			]
 		};
 	}
