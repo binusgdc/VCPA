@@ -1,76 +1,80 @@
 import { ApplicationCommandData, ApplicationCommandOptionType, ChatInputCommandInteraction } from "discord.js";
 import { Duration } from "luxon";
 
+import { AbstractCommandHandler } from "./abstractCommandHandler";
 import { PushlogData } from "../pushlogTarget";
 import { SessionLog } from "../sessionLog";
 
-export const signature: ApplicationCommandData = {
-	name: "pushlog",
-	description: "[EXPERIMENTAL] Pushes the specified session's logs to an external archive",
-	options: [
+export class PushlogCommandHandler extends AbstractCommandHandler {
+	public getSignature(): ApplicationCommandData {
+		return {
+			name: "pushlog",
+			description: "[EXPERIMENTAL] Pushes the specified session's logs to an external archive",
+			options: [
 
-		{
-			name: "topic-id",
-			description: "Topic of the session according to the curriculum",
-			type: ApplicationCommandOptionType.String,
-			required: true
-		},
+				{
+					name: "topic-id",
+					description: "Topic of the session according to the curriculum",
+					type: ApplicationCommandOptionType.String,
+					required: true
+				},
 
-		{
-			name: "mentors",
-			description: "Mentor Discord ID(s) (e.g.: \"@mentor1 @mentor2\")",
-			type: ApplicationCommandOptionType.String,
-			required: true
-		},
+				{
+					name: "mentors",
+					description: "Mentor Discord ID(s) (e.g.: \"@mentor1 @mentor2\")",
+					type: ApplicationCommandOptionType.String,
+					required: true
+				},
 
-		{
-			name: "documentator",
-			description: "Class documentator's IRL name",
-			type: ApplicationCommandOptionType.String,
-			required: true
-		},
+				{
+					name: "documentator",
+					description: "Class documentator's IRL name",
+					type: ApplicationCommandOptionType.String,
+					required: true
+				},
 
-		{
-			name: "session-id",
-			description: "The ID of the session to push",
-			type: ApplicationCommandOptionType.String,
-			required: false
+				{
+					name: "session-id",
+					description: "The ID of the session to push",
+					type: ApplicationCommandOptionType.String,
+					required: false
+				}
+
+
+			]
+		};
+	}
+
+	public async exec(interaction: ChatInputCommandInteraction): Promise<void> {
+		if (global.pushlogTarget == undefined) {
+			await interaction.reply("Error: push target is not configured.");
+			return;
 		}
 
+		await interaction.deferReply();
 
-	]
+		const argv = interaction.options;
+
+		const sessionIdToPush = argv.getString("session-id");
+
+		const logToPush = sessionIdToPush == undefined
+			? await global.sessionLogStore.latestUnpushed()
+			: await global.sessionLogStore.retrieve(sessionIdToPush);
+
+		if (logToPush == undefined) {
+			await interaction.editReply(">>> Session log not found.");
+			return;
+		}
+
+		const data = toPushData(logToPush, argv.getString("topic-id")!, argv.getString("documentator")!, argv.getString("mentors")!);
+
+		const pushResult = await global.pushlogTarget?.push(data);
+		if (pushResult === "SUCCESS") {
+			await global.sessionLogStore.setLogPushed(logToPush.id);
+		}
+		await interaction.editReply(`>>> Attempted to push to archive. Result: ${pushResult}`);
+	}
 };
-
-export async function exec(interaction: ChatInputCommandInteraction) {
-
-	if (global.pushlogTarget == undefined) {
-		await interaction.reply("Error: push target is not configured.");
-		return;
-	}
-
-	await interaction.deferReply();
-
-	const argv = interaction.options;
-
-	const sessionIdToPush = argv.getString("session-id");
-
-	const logToPush = sessionIdToPush == undefined
-		? await global.sessionLogStore.latestUnpushed()
-		: await global.sessionLogStore.retrieve(sessionIdToPush);
-
-	if (logToPush == undefined) {
-		await interaction.editReply(">>> Session log not found.");
-		return;
-	}
-
-	const data = toPushData(logToPush, argv.getString("topic-id")!, argv.getString("documentator")!, argv.getString("mentors")!);
-
-	const pushResult = await global.pushlogTarget?.push(data);
-	if (pushResult === "SUCCESS") {
-		await global.sessionLogStore.setLogPushed(logToPush.id);
-	}
-	await interaction.editReply(`>>> Attempted to push to archive. Result: ${pushResult}`);
-}
 
 function toPushData(sessionLog: SessionLog, topicId: string, recorderName: string, mentorDiscordUserIdsInput: string): PushlogData {
 	return {

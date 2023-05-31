@@ -24,7 +24,7 @@ if (envLoaded == undefined) throw Error("❌ invalid environment variables");
 
 global.env = envLoaded
 const config: ConfigFile = jsonfile.readFileSync("./config.json");
-global.ongoingSessions = new Map<string, Session>();
+const ongoingSessions = new Map<string, Session>();
 
 const botClient = new Client({
 	intents: [
@@ -84,20 +84,20 @@ botClient.on("voiceStateUpdate", (oldState, newState) => {
 	if ((oldChannel === null) && (newChannel !== null)) {
 		// User was not in a voice channel, and now joined our voice channel
 
-		const session = global.ongoingSessions.get(`${newGuild}-${newChannel}`);
+		const session = ongoingSessions.get(`${newGuild}-${newChannel}`);
 		if (session !== undefined) session.log("JOIN", person);
 	} else if ((oldChannel !== null) && (newChannel === null)) {
 		// User was in our voice channel, and now isn't in a voice channel
 
-		const session = global.ongoingSessions.get(`${oldGuild}-${oldChannel}`);
+		const session = ongoingSessions.get(`${oldGuild}-${oldChannel}`);
 		if (session !== undefined) session.log("LEAVE", person);
 	} else if ((oldChannel !== null) && (newChannel !== null)) {
 		// User was in a different voice channel, and now is in our voice channel
 
-		const newSession = global.ongoingSessions.get(`${newGuild}-${newChannel}`);
+		const newSession = ongoingSessions.get(`${newGuild}-${newChannel}`);
 		if (newSession !== undefined) newSession.log("JOIN", person);
 
-		const oldSession = global.ongoingSessions.get(`${oldGuild}-${oldChannel}`);
+		const oldSession = ongoingSessions.get(`${oldGuild}-${oldChannel}`);
 		if (oldSession !== undefined) oldSession.log("LEAVE", person);
 	}
 })

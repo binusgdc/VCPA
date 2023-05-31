@@ -1,20 +1,21 @@
 import { ChatInputCommandInteraction, Client, GuildMember } from "discord.js";
 
-import * as command_start from "./commands/start";
-import * as command_status from "./commands/status";
-import * as command_stop from "./commands/stop";
-import * as command_raisehand from "./commands/raisehand";
-import * as command_lowerhand from "./commands/lowerhand";
-import * as command_pushlog from "./commands/pushlog";
+import { StartCommandHandler } from "./commands/start";
+import { StatusCommandHandler } from "./commands/status";
+import { StopCommandHandler } from "./commands/stop";
+import { RaiseHandCommandHandler } from "./commands/raisehand";
+import { LowerHandCommandHandler } from "./commands/lowerhand";
+import { PushlogCommandHandler } from "./commands/pushlog";
 import { ServiceLocation } from "./structures";
+import { AbstractCommandHandler } from "./commands/abstractCommandHandler";
 
-const commands = [
-	command_start,
-	command_status,
-	command_stop,
-	command_raisehand,
-	command_lowerhand,
-	command_pushlog
+const commands: AbstractCommandHandler[] = [
+	new StartCommandHandler(),
+	new StatusCommandHandler(),
+	new StopCommandHandler(),
+	new RaiseHandCommandHandler(),
+	new LowerHandCommandHandler(),
+	new PushlogCommandHandler()
 ];
 
 export async function register(client : Client, serviceLocations: ServiceLocation[]) {
@@ -27,7 +28,7 @@ export async function register(client : Client, serviceLocations: ServiceLocatio
 
 		// Add all the commands
 		for (const command of commands) {
-			await guild.commands.create(command.signature);
+			await guild.commands.create(command.getSignature());
 		}
 	}
 }
@@ -61,7 +62,7 @@ export async function handle(interaction : ChatInputCommandInteraction, serviceL
 	const executorCommand = interaction.command.name;
 
 	for (let i = 0; i < commands.length; i++) {
-		if (executorCommand === commands[i].signature.name) {
+		if (executorCommand === commands[i].getSignature().name) {
 			await commands[i].exec(interaction);
 			return;
 		}
