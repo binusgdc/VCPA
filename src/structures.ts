@@ -1,4 +1,4 @@
-import { Snowflake, MessageEmbed } from "discord.js";
+import { Snowflake, EmbedBuilder } from "discord.js";
 import { DateTime } from "luxon";
 import * as Util from "./util";
 
@@ -107,5 +107,5 @@ export type SessionOutput = {
 	sesinfo: string,
 	attdet: string,
 	procdet: string,
-	embed: MessageEmbed
+	embed: EmbedBuilder
 }

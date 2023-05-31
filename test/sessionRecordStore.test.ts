@@ -39,15 +39,15 @@ function generateCompletedSession(lengthOfSessionMinutes: number = 10, numberOfU
 	});
 
 	return {
-		ownerId: SnowflakeUtil.generate(),
-		guildId: SnowflakeUtil.generate(),
-		channelId: SnowflakeUtil.generate(),
+		ownerId: SnowflakeUtil.generate().toString(),
+		guildId: SnowflakeUtil.generate().toString(),
+		channelId: SnowflakeUtil.generate().toString(),
 		timeStarted: startTime,
 		timeEnded: endTime,
 		// sorted by user then time
 		events: [...Array(numberOfUsers).keys()]
 			.map(_ => SnowflakeUtil.generate())
-			.flatMap(userId => generateEventsForUserId(userId, startTime, endTime, getRandomInteger(0, maxIntermediateEventsPerUser)))
+			.flatMap(userId => generateEventsForUserId(userId.toString(), startTime, endTime, getRandomInteger(0, maxIntermediateEventsPerUser)))
 	}
 }
 

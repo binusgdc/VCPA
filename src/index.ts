@@ -1,6 +1,6 @@
 import { REST } from "@discordjs/rest";
 import Airtable from "airtable";
-import { Client, Intents } from "discord.js";
+import { Client, GatewayIntentBits } from "discord.js";
 import * as fs from "fs";
 import * as jsonfile from "jsonfile";
 import { ISqlite, open } from "sqlite";
@@ -28,9 +28,9 @@ global.ongoingSessions = new Map<string, Session>();
 
 const botClient = new Client({
 	intents: [
-		Intents.FLAGS.GUILDS,
-		Intents.FLAGS.GUILD_MESSAGES,
-		Intents.FLAGS.GUILD_VOICE_STATES
+		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMessages,
+		GatewayIntentBits.GuildVoiceStates
 	]
 });
 
@@ -70,7 +70,7 @@ botClient.on("ready", async () => {
 });
 
 botClient.on("interactionCreate", async (interaction) => {
-	if (!interaction.isCommand()) return;
+	if (!interaction.isChatInputCommand()) return;
 	await commandHandler.handle(interaction);
 });
 

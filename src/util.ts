@@ -1,4 +1,4 @@
-import { MessageEmbed, Snowflake } from "discord.js";
+import { EmbedBuilder, Snowflake } from "discord.js";
 import { DateTime, Duration } from "luxon";
 import { Event, Session, SessionOutput } from "./structures";
 
@@ -110,7 +110,7 @@ export function generateSessionOutput(session: Session) : SessionOutput {
 
 	/* Generate session info embed for the session */
 
-	const embed = new MessageEmbed()
+	const embed = new EmbedBuilder()
 		.setColor(getRandomColor())
 		.setTitle("Session Stats")
 		.addFields(

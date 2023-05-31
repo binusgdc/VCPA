@@ -1,4 +1,5 @@
-import { ApplicationCommandData, CommandInteraction, MessageEmbed } from "discord.js";
+import { ApplicationCommandData, ApplicationCommandOptionType, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+
 import * as Util from "../util";
 
 export const signature : ApplicationCommandData = {
@@ -8,16 +9,16 @@ export const signature : ApplicationCommandData = {
 		{
 			name: "gift",
 			description: "A gift for me??? UwU",
-			type: "BOOLEAN",
+			type: ApplicationCommandOptionType.Boolean,
 			required: false
 		}
 	]
 };
 
-export async function exec(interaction : CommandInteraction) {
+export async function exec(interaction : ChatInputCommandInteraction) {
 	await interaction.reply({
 		embeds: [
-			new MessageEmbed()
+			new EmbedBuilder()
 				.setColor(Util.getRandomColor())
 				.setTitle("*Bot Status*")
 				.addFields([

@@ -1,4 +1,4 @@
-import { CommandInteraction, GuildMember, VoiceChannel } from "discord.js";
+import { ChannelType, ChatInputCommandInteraction, GuildMember, VoiceChannel } from "discord.js";
 
 export const signature = {
 	name: "lowerhand",
@@ -6,11 +6,11 @@ export const signature = {
 	options: []
 };
 
-export async function exec(interaction : CommandInteraction) {
+export async function exec(interaction : ChatInputCommandInteraction) {
 	const executor = interaction.member as GuildMember;
 	const targetChannel = executor.voice.channel as VoiceChannel;
 
-	if (targetChannel === null || !targetChannel.isVoice()) {
+	if (targetChannel === null || targetChannel.type !== ChannelType.GuildVoice) {
 		console.log(`>>> Failed to lower hand: ${executor.id} is not in a voice channel!`);
 		await interaction.reply({
 			content: `Failed to lower hand: You're not in a voice channel!`,
