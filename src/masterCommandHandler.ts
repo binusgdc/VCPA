@@ -1,13 +1,13 @@
 import { ChatInputCommandInteraction, Client, GuildMember } from "discord.js";
 
-import { StartCommandHandler } from "./commands/start";
-import { StatusCommandHandler } from "./commands/status";
-import { StopCommandHandler } from "./commands/stop";
-import { RaiseHandCommandHandler } from "./commands/raisehand";
-import { LowerHandCommandHandler } from "./commands/lowerhand";
-import { PushlogCommandHandler } from "./commands/pushlog";
+import { AbstractCommandHandler } from "./commandsHandlers/abstractCommandHandler";
+import { StartCommandHandler } from "./commandsHandlers/startCommandHandler";
+import { StatusCommandHandler } from "./commandsHandlers/statusCommandHandler";
+import { StopCommandHandler } from "./commandsHandlers/stopCommandHandler";
+import { RaiseHandCommandHandler } from "./commandsHandlers/raiseHandCommandHandler";
+import { LowerHandCommandHandler } from "./commandsHandlers/lowerHandCommandHandler";
+import { PushlogCommandHandler } from "./commandsHandlers/pushlogCommandHandler";
 import { ServiceLocation } from "./structures";
-import { AbstractCommandHandler } from "./commands/abstractCommandHandler";
 
 const commands: AbstractCommandHandler[] = [
 	new StartCommandHandler(),

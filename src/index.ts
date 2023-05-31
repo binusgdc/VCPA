@@ -6,8 +6,8 @@ import * as jsonfile from "jsonfile";
 import { ISqlite, open } from "sqlite";
 import sqlite3 from "sqlite3";
 
+import * as masterCommandHandler from "./masterCommandHandler";
 import { PushlogAirtable, PushlogHttp } from "./pushlogTarget";
-import * as commandHandler from "./commandHandler";
 import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLog";
 import { ConfigFile, LoggerConfig, Session } from "./structures";
 import { loadEnv } from "./util/env";
@@ -62,7 +62,7 @@ botClient.on("ready", async () => {
 		await performMigrations(dbConfig, "./data");
 	}
 
-	await commandHandler.register(botClient, config.serviceLocationWhiteList);
+	await masterCommandHandler.register(botClient, config.serviceLocationWhiteList);
 	global.sessionLogStore = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig));
 
 	console.log(`>>> Logged in as ${botClient.user!.tag}`);
@@ -71,7 +71,7 @@ botClient.on("ready", async () => {
 
 botClient.on("interactionCreate", async (interaction) => {
 	if (!interaction.isChatInputCommand()) return;
-	await commandHandler.handle(interaction, config.serviceLocationWhiteList);
+	await masterCommandHandler.handle(interaction, config.serviceLocationWhiteList);
 });
 
 botClient.on("voiceStateUpdate", (oldState, newState) => {
