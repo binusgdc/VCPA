@@ -6,6 +6,7 @@ import * as command_stop from "./commands/stop";
 import * as command_raisehand from "./commands/raisehand";
 import * as command_lowerhand from "./commands/lowerhand";
 import * as command_pushlog from "./commands/pushlog";
+import { ServiceLocation } from "./structures";
 
 const commands = [
 	command_start,
@@ -16,8 +17,8 @@ const commands = [
 	command_pushlog
 ];
 
-export async function register(client : Client) {
-	global.config.serviceLocationWhiteList.forEach(async (serviceLocation) => {
+export async function register(client : Client, serviceLocations: ServiceLocation[]) {
+	for (const serviceLocation of serviceLocations) {
 		// For every guild we plan to serve
 		const guild = await client.guilds.fetch(serviceLocation.guildId);
 
@@ -25,24 +26,21 @@ export async function register(client : Client) {
 		guild.commands.set([]);
 
 		// Add all the commands
-		commands.forEach(async (command) => {
+		for (const command of commands) {
 			await guild.commands.create(command.signature);
-		});
-	});
+		}
+	}
 }
 
-export async function handle(interaction : ChatInputCommandInteraction) {
-
-	if (interaction.command == null) {
-		return;
-	}
+export async function handle(interaction : ChatInputCommandInteraction, serviceLocations: ServiceLocation[]) {
+	if (!interaction.command) return;
 
 	const executor = interaction.member as GuildMember;
 
 	const executorGuild = interaction.guild;
 
 	// Check if the command was issued from a location we service
-	const requiredGuild = global.config.serviceLocationWhiteList.filter((serviceLocation) => serviceLocation.guildId === executorGuild?.id);
+	const requiredGuild = serviceLocations.filter((serviceLocation) => serviceLocation.guildId === executorGuild?.id);
 
 	if (requiredGuild.length <= 0) {
 		console.log(`>>> ${executor.id} tried to issue commands from without being in a serviced guild!`);

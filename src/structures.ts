@@ -11,7 +11,7 @@ const msSessionsSubjects = [
 	"SND"
 ] as const;
 
-type ServiceLocation = {
+export type ServiceLocation = {
 	guildId: Snowflake;
 	ioChannelId: Snowflake;
 	commandAccessRoleIds: Snowflake[];

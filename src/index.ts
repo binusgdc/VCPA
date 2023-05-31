@@ -9,7 +9,7 @@ import sqlite3 from "sqlite3";
 import { PushlogAirtable, PushlogHttp } from "./pushlogTarget";
 import * as commandHandler from "./commandHandler";
 import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLog";
-import { LoggerConfig, Session } from "./structures";
+import { ConfigFile, LoggerConfig, Session } from "./structures";
 import { loadEnv } from "./util/env";
 import { Logger } from "./util/logger";
 import { CompositeLogger } from "./util/loggers/compositeLogger";
@@ -23,7 +23,7 @@ const envLoaded = loadEnv();
 if (envLoaded == undefined) throw Error("❌ invalid environment variables");
 
 global.env = envLoaded
-global.config = jsonfile.readFileSync("./config.json");
+const config: ConfigFile = jsonfile.readFileSync("./config.json");
 global.ongoingSessions = new Map<string, Session>();
 
 const botClient = new Client({
@@ -38,16 +38,16 @@ const restClient = new REST({
 	version: '10'
 }).setToken(global.env.BOT_TOKEN);
 
-if (global.config.pushLogTarget?.type === "http-json") {
-	global.pushlogTarget = new PushlogHttp(global.config.pushLogTarget.endpoint);
-} else if (global.config.pushLogTarget?.type === "airtable") {
+if (config.pushLogTarget?.type === "http-json") {
+	global.pushlogTarget = new PushlogHttp(config.pushLogTarget.endpoint);
+} else if (config.pushLogTarget?.type === "airtable") {
 	if (!global.env.AIRTABLE_KEY) {
 		throw Error("❌ push log target is set to airtable, but AIRTABLE_KEY is not set");
 	}
 
 	global.pushlogTarget = new PushlogAirtable(
-		new Airtable({ apiKey: global.env.AIRTABLE_KEY }).base(global.config.pushLogTarget.baseId),
-		{ ...global.config.pushLogTarget },
+		new Airtable({ apiKey: global.env.AIRTABLE_KEY }).base(config.pushLogTarget.baseId),
+		{ ...config.pushLogTarget },
 		new CompositeLogger(config.loggers?.map(initLogger) ?? [new ConsoleLogger()])
 	);
 }
@@ -62,7 +62,7 @@ botClient.on("ready", async () => {
 		await performMigrations(dbConfig, "./data");
 	}
 
-	await commandHandler.register(botClient);
+	await commandHandler.register(botClient, config.serviceLocationWhiteList);
 	global.sessionLogStore = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig));
 
 	console.log(`>>> Logged in as ${botClient.user!.tag}`);
@@ -71,7 +71,7 @@ botClient.on("ready", async () => {
 
 botClient.on("interactionCreate", async (interaction) => {
 	if (!interaction.isChatInputCommand()) return;
-	await commandHandler.handle(interaction);
+	await commandHandler.handle(interaction, config.serviceLocationWhiteList);
 });
 
 botClient.on("voiceStateUpdate", (oldState, newState) => {

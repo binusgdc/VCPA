@@ -1,10 +1,9 @@
 import { SessionLogStore } from "../sessionLog";
-import { ConfigFile, Session } from "../structures"
+import { Session } from "../structures"
 import { Env } from "../util/env"
 
 declare global {
 	var env: Env;
-	var config: ConfigFile;
 
 	var ongoingSessions: Map<string, Session>;
 	var sessionLogStore: SessionLogStore;
