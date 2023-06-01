@@ -6,8 +6,6 @@ declare global {
 	var env: Env;
 
 	var sessionLogStore: SessionLogStore;
-	var lastSession: Session | undefined;
 
-	var BASE_DIR: string;
 	var pushlogTarget: PushlogTarget | undefined;
 }

@@ -103,8 +103,6 @@ export class StopCommandHandler extends AbstractCommandHandler {
 			]
 		});
 
-		global.lastSession = session;
-
 		this.sessionDb.delete(`${targetGuildId}-${targetChannel.id}`);
 	}
 };
