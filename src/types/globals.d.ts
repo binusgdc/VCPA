@@ -5,7 +5,6 @@ import { Env } from "../util/env"
 declare global {
 	var env: Env;
 
-	var ongoingSessions: Map<string, Session>;
 	var sessionLogStore: SessionLogStore;
 	var lastSession: Session | undefined;
 

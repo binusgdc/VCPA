@@ -4,6 +4,14 @@ import { AbstractCommandHandler } from "./abstractCommandHandler";
 import { Session } from "../structures";
 
 export class StartCommandHandler extends AbstractCommandHandler {
+	private sessionDb: Map<string, Session>;
+
+	public constructor(sessionDb: Map<string, Session>) {
+		super();
+
+		this.sessionDb = sessionDb;
+	}
+
 	public getSignature(): ApplicationCommandData {
 		return {
 			name: "start",
@@ -38,15 +46,15 @@ export class StartCommandHandler extends AbstractCommandHandler {
 			return
 		};
 
-		const session = global.ongoingSessions.get(`${targetGuild}-${targetChannel.id}`);
+		const session = this.sessionDb.get(`${targetGuild}-${targetChannel.id}`);
 		if (session !== undefined) {
 			console.log(`>>> Failed to start session: ${executor.id} tried to start a session in ${targetChannel.id} but a session is already running there!`);
 			await interaction.reply(`>>> Failed to start a session: <@${executor.id}> tried to start a session <#${targetChannel.id}> but a session is already running there!`);
 			return;
 		}
 
-		global.ongoingSessions.set(`${targetGuild}-${targetChannel.id}`, new Session(executor.id, targetChannel.id));
-		const s = global.ongoingSessions.get(`${targetGuild}-${targetChannel.id}`)!;
+		this.sessionDb.set(`${targetGuild}-${targetChannel.id}`, new Session(executor.id, targetChannel.id));
+		const s = this.sessionDb.get(`${targetGuild}-${targetChannel.id}`)!;
 		s.start();
 
 		console.log(`>>> ${executor.id} started a session in ${targetChannel.id}!`);

@@ -6,7 +6,13 @@ import * as jsonfile from "jsonfile";
 import { ISqlite, open } from "sqlite";
 import sqlite3 from "sqlite3";
 
-import * as masterCommandHandler from "./masterCommandHandler";
+import { StartCommandHandler } from "./commandsHandlers/startCommandHandler";
+import { StatusCommandHandler } from "./commandsHandlers/statusCommandHandler";
+import { StopCommandHandler } from "./commandsHandlers/stopCommandHandler";
+import { RaiseHandCommandHandler } from "./commandsHandlers/raiseHandCommandHandler";
+import { LowerHandCommandHandler } from "./commandsHandlers/lowerHandCommandHandler";
+import { PushlogCommandHandler } from "./commandsHandlers/pushlogCommandHandler";
+import { MasterCommandHandler } from "./masterCommandHandler";
 import { PushlogAirtable, PushlogHttp } from "./pushlogTarget";
 import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLog";
 import { ConfigFile, LoggerConfig, Session } from "./structures";
@@ -32,6 +38,19 @@ const botClient = new Client({
 		GatewayIntentBits.GuildMessages,
 		GatewayIntentBits.GuildVoiceStates
 	]
+});
+
+const masterCommandHandler = new MasterCommandHandler({
+	client: botClient,
+	commandHandlers: [
+		new StartCommandHandler(ongoingSessions),
+		new StatusCommandHandler(),
+		new StopCommandHandler(ongoingSessions),
+		new RaiseHandCommandHandler(),
+		new LowerHandCommandHandler(),
+		new PushlogCommandHandler()
+	],
+	serviceLocations: config.serviceLocationWhiteList
 });
 
 const restClient = new REST({
@@ -62,7 +81,7 @@ botClient.on("ready", async () => {
 		await performMigrations(dbConfig, "./data");
 	}
 
-	await masterCommandHandler.register(botClient, config.serviceLocationWhiteList);
+	await masterCommandHandler.finalizeCommandHandlersRegistration(botClient);
 	global.sessionLogStore = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig));
 
 	console.log(`>>> Logged in as ${botClient.user!.tag}`);
@@ -71,7 +90,7 @@ botClient.on("ready", async () => {
 
 botClient.on("interactionCreate", async (interaction) => {
 	if (!interaction.isChatInputCommand()) return;
-	await masterCommandHandler.handle(interaction, config.serviceLocationWhiteList);
+	await masterCommandHandler.handle(interaction);
 });
 
 botClient.on("voiceStateUpdate", (oldState, newState) => {

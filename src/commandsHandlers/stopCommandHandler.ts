@@ -3,9 +3,18 @@ import * as fs from "fs";
 
 import { AbstractCommandHandler } from "./abstractCommandHandler";
 import { SessionEvent } from "../sessionLog";
+import { Session } from "../structures";
 import * as Util from "../util";
 
 export class StopCommandHandler extends AbstractCommandHandler {
+	private sessionDb: Map<string, Session>;
+
+	public constructor(sessionDb: Map<string, Session>) {
+		super();
+
+		this.sessionDb = sessionDb;
+	}
+
 	public getSignature(): ApplicationCommandData {
 		return {
 			name: "stop",
@@ -40,7 +49,7 @@ export class StopCommandHandler extends AbstractCommandHandler {
 			return;
 		}
 
-		const session = global.ongoingSessions.get(`${targetGuildId}-${targetChannel.id}`);
+		const session = this.sessionDb.get(`${targetGuildId}-${targetChannel.id}`);
 		if (session === undefined) {
 			console.log(`>>> Failed to stop session: ${executor.id} tried to stop a non-existent session!`);
 			await interaction.reply(`>>> Failed to stop session: <@${executor.id}> tried to stop a non-existent session!`);
@@ -96,6 +105,6 @@ export class StopCommandHandler extends AbstractCommandHandler {
 
 		global.lastSession = session;
 
-		global.ongoingSessions.delete(`${targetGuildId}-${targetChannel.id}`);
+		this.sessionDb.delete(`${targetGuildId}-${targetChannel.id}`);
 	}
 };
