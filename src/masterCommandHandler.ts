@@ -1,12 +1,6 @@
 import { ChatInputCommandInteraction, Client, GuildMember } from "discord.js";
 
 import { AbstractCommandHandler } from "./commandsHandlers/abstractCommandHandler";
-import { StartCommandHandler } from "./commandsHandlers/startCommandHandler";
-import { StatusCommandHandler } from "./commandsHandlers/statusCommandHandler";
-import { StopCommandHandler } from "./commandsHandlers/stopCommandHandler";
-import { RaiseHandCommandHandler } from "./commandsHandlers/raiseHandCommandHandler";
-import { LowerHandCommandHandler } from "./commandsHandlers/lowerHandCommandHandler";
-import { PushlogCommandHandler } from "./commandsHandlers/pushlogCommandHandler";
 import { ServiceLocation } from "./structures";
 
 export type MasterCommandHandlerOptions = {
@@ -86,20 +80,4 @@ export class MasterCommandHandler {
 			}
 		}
 	}
-};
-
-// const commands: AbstractCommandHandler[] = [
-// 	new StartCommandHandler(),
-// 	new StatusCommandHandler(),
-// 	new StopCommandHandler(),
-// 	new RaiseHandCommandHandler(),
-// 	new LowerHandCommandHandler(),
-// 	new PushlogCommandHandler()
-// ];
-
-export async function register(client : Client, serviceLocations: ServiceLocation[]) {
-	//
-}
-
-export async function handle(interaction : ChatInputCommandInteraction, serviceLocations: ServiceLocation[]) {
 };
