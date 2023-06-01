@@ -4,6 +4,4 @@ import { Env } from "../util/env"
 
 declare global {
 	var env: Env;
-
-	var pushlogTarget: PushlogTarget | undefined;
 }

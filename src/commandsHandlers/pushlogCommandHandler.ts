@@ -2,16 +2,18 @@ import { ApplicationCommandData, ApplicationCommandOptionType, ChatInputCommandI
 import { Duration } from "luxon";
 
 import { AbstractCommandHandler } from "./abstractCommandHandler";
-import { PushlogData } from "../pushlogTarget";
+import { PushlogData, PushlogTarget } from "../pushlogTarget";
 import { SessionLog, SessionLogStore } from "../sessionLog";
 
 export class PushlogCommandHandler extends AbstractCommandHandler {
 	private sessionLogStore: SessionLogStore
+	private pushlogTarget: PushlogTarget | undefined;
 
-	public constructor(sessionLogStore: SessionLogStore) {
+	public constructor(sessionLogStore: SessionLogStore, pushlogTarget: PushlogTarget | undefined) {
 		super();
 
 		this.sessionLogStore = sessionLogStore;
+		this.pushlogTarget = pushlogTarget;
 	}
 
 	public getSignature(): ApplicationCommandData {
@@ -48,7 +50,7 @@ export class PushlogCommandHandler extends AbstractCommandHandler {
 	}
 
 	public async exec(interaction: ChatInputCommandInteraction): Promise<void> {
-		if (global.pushlogTarget == undefined) {
+		if (this.pushlogTarget == undefined) {
 			await interaction.reply("Error: push target is not configured.");
 			return;
 		}
@@ -70,7 +72,7 @@ export class PushlogCommandHandler extends AbstractCommandHandler {
 
 		const data = toPushData(logToPush, argv.getString("topic-id")!, argv.getString("documentator")!, argv.getString("mentors")!);
 
-		const pushResult = await global.pushlogTarget?.push(data);
+		const pushResult = await this.pushlogTarget?.push(data);
 		if (pushResult === "SUCCESS") {
 			await this.sessionLogStore.setLogPushed(logToPush.id);
 		}

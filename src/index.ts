@@ -13,7 +13,7 @@ import { RaiseHandCommandHandler } from "./commandsHandlers/raiseHandCommandHand
 import { LowerHandCommandHandler } from "./commandsHandlers/lowerHandCommandHandler";
 import { PushlogCommandHandler } from "./commandsHandlers/pushlogCommandHandler";
 import { MasterCommandHandler } from "./masterCommandHandler";
-import { PushlogAirtable, PushlogHttp } from "./pushlogTarget";
+import { PushlogAirtable, PushlogHttp, PushlogTarget } from "./pushlogTarget";
 import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLog";
 import { ConfigFile, LoggerConfig, Session } from "./structures";
 import { loadEnv } from "./util/env";
@@ -33,6 +33,7 @@ const config: ConfigFile = jsonfile.readFileSync("./config.json");
 const ongoingSessions = new Map<string, Session>();
 
 const sessionLogStore = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig));
+let pushlogTarget: PushlogTarget | undefined;
 
 const botClient = new Client({
 	intents: [
@@ -42,6 +43,26 @@ const botClient = new Client({
 	]
 });
 
+const restClient = new REST({
+	version: '10'
+}).setToken(global.env.BOT_TOKEN);
+
+if (config.pushLogTarget?.type === "http-json") {
+	pushlogTarget = new PushlogHttp(config.pushLogTarget.endpoint);
+} else if (config.pushLogTarget?.type === "airtable") {
+	if (!global.env.AIRTABLE_KEY) {
+		throw Error("❌ push log target is set to airtable, but AIRTABLE_KEY is not set");
+	}
+
+	pushlogTarget = new PushlogAirtable(
+		new Airtable({ apiKey: global.env.AIRTABLE_KEY }).base(config.pushLogTarget.baseId),
+		{ ...config.pushLogTarget },
+		new CompositeLogger(config.loggers?.map(initLogger) ?? [new ConsoleLogger()])
+	);
+}
+
+if (!pushlogTarget) console.error("⚠️ WARNING: Push log target is not configured in config.json");
+
 const masterCommandHandler = new MasterCommandHandler({
 	client: botClient,
 	commandHandlers: [
@@ -50,30 +71,10 @@ const masterCommandHandler = new MasterCommandHandler({
 		new StopCommandHandler(ongoingSessions, sessionLogStore),
 		new RaiseHandCommandHandler(),
 		new LowerHandCommandHandler(),
-		new PushlogCommandHandler(sessionLogStore)
+		new PushlogCommandHandler(sessionLogStore, pushlogTarget)
 	],
 	serviceLocations: config.serviceLocationWhiteList
 });
-
-const restClient = new REST({
-	version: '10'
-}).setToken(global.env.BOT_TOKEN);
-
-if (config.pushLogTarget?.type === "http-json") {
-	global.pushlogTarget = new PushlogHttp(config.pushLogTarget.endpoint);
-} else if (config.pushLogTarget?.type === "airtable") {
-	if (!global.env.AIRTABLE_KEY) {
-		throw Error("❌ push log target is set to airtable, but AIRTABLE_KEY is not set");
-	}
-
-	global.pushlogTarget = new PushlogAirtable(
-		new Airtable({ apiKey: global.env.AIRTABLE_KEY }).base(config.pushLogTarget.baseId),
-		{ ...config.pushLogTarget },
-		new CompositeLogger(config.loggers?.map(initLogger) ?? [new ConsoleLogger()])
-	);
-}
-
-if (!global.pushlogTarget) console.error("⚠️ WARNING: Push log target is not configured in config.json");
 
 if (!fs.existsSync(`./run`)) fs.mkdirSync(`./run/`);
 
