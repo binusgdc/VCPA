@@ -2,17 +2,19 @@ import { ApplicationCommandData, ApplicationCommandOptionType, ChannelType, Chat
 import * as fs from "fs";
 
 import { AbstractCommandHandler } from "./abstractCommandHandler";
-import { SessionEvent } from "../sessionLog";
+import { SessionEvent, SessionLogStore } from "../sessionLog";
 import { Session } from "../structures";
 import * as Util from "../util";
 
 export class StopCommandHandler extends AbstractCommandHandler {
 	private sessionDb: Map<string, Session>;
+	private sessionLogStore: SessionLogStore;
 
-	public constructor(sessionDb: Map<string, Session>) {
+	public constructor(sessionDb: Map<string, Session>, sessionLogStore: SessionLogStore) {
 		super();
 
 		this.sessionDb = sessionDb;
+		this.sessionLogStore = sessionLogStore;
 	}
 
 	public getSignature(): ApplicationCommandData {
@@ -72,7 +74,7 @@ export class StopCommandHandler extends AbstractCommandHandler {
 		fs.writeFileSync(`./run/${fileBaseName}-procdet.csv`, outputs.procdet);
 
 		console.log(`>>> ${executor.id} stopped a session in ${targetChannel.id}!`);
-		const storedLogId = await global.sessionLogStore.store({
+		const storedLogId = await this.sessionLogStore.store({
 			ownerId: session.owner,
 			guildId: targetGuildId!,
 			channelId: session.channel,

@@ -5,7 +5,5 @@ import { Env } from "../util/env"
 declare global {
 	var env: Env;
 
-	var sessionLogStore: SessionLogStore;
-
 	var pushlogTarget: PushlogTarget | undefined;
 }

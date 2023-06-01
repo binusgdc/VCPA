@@ -3,9 +3,17 @@ import { Duration } from "luxon";
 
 import { AbstractCommandHandler } from "./abstractCommandHandler";
 import { PushlogData } from "../pushlogTarget";
-import { SessionLog } from "../sessionLog";
+import { SessionLog, SessionLogStore } from "../sessionLog";
 
 export class PushlogCommandHandler extends AbstractCommandHandler {
+	private sessionLogStore: SessionLogStore
+
+	public constructor(sessionLogStore: SessionLogStore) {
+		super();
+
+		this.sessionLogStore = sessionLogStore;
+	}
+
 	public getSignature(): ApplicationCommandData {
 		return {
 			name: "pushlog",
@@ -52,8 +60,8 @@ export class PushlogCommandHandler extends AbstractCommandHandler {
 		const sessionIdToPush = argv.getString("session-id");
 
 		const logToPush = sessionIdToPush == undefined
-			? await global.sessionLogStore.latestUnpushed()
-			: await global.sessionLogStore.retrieve(sessionIdToPush);
+			? await this.sessionLogStore.latestUnpushed()
+			: await this.sessionLogStore.retrieve(sessionIdToPush);
 
 		if (logToPush == undefined) {
 			await interaction.editReply(">>> Session log not found.");
@@ -64,7 +72,7 @@ export class PushlogCommandHandler extends AbstractCommandHandler {
 
 		const pushResult = await global.pushlogTarget?.push(data);
 		if (pushResult === "SUCCESS") {
-			await global.sessionLogStore.setLogPushed(logToPush.id);
+			await this.sessionLogStore.setLogPushed(logToPush.id);
 		}
 		await interaction.editReply(`>>> Attempted to push to archive. Result: ${pushResult}`);
 	}

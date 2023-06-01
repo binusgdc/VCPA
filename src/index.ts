@@ -32,6 +32,8 @@ global.env = envLoaded
 const config: ConfigFile = jsonfile.readFileSync("./config.json");
 const ongoingSessions = new Map<string, Session>();
 
+const sessionLogStore = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig));
+
 const botClient = new Client({
 	intents: [
 		GatewayIntentBits.Guilds,
@@ -45,10 +47,10 @@ const masterCommandHandler = new MasterCommandHandler({
 	commandHandlers: [
 		new StartCommandHandler(ongoingSessions),
 		new StatusCommandHandler(),
-		new StopCommandHandler(ongoingSessions),
+		new StopCommandHandler(ongoingSessions, sessionLogStore),
 		new RaiseHandCommandHandler(),
 		new LowerHandCommandHandler(),
-		new PushlogCommandHandler()
+		new PushlogCommandHandler(sessionLogStore)
 	],
 	serviceLocations: config.serviceLocationWhiteList
 });
@@ -82,7 +84,6 @@ botClient.on("ready", async () => {
 	}
 
 	await masterCommandHandler.finalizeCommandHandlersRegistration(botClient);
-	global.sessionLogStore = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig));
 
 	console.log(`>>> Logged in as ${botClient.user!.tag}`);
 	console.log(`>>> Bonjour!`);
