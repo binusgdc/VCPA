@@ -28,7 +28,7 @@ const dbConfig = { filename: dbFile, driver: sqlite3.Database, mode: sqlite3.OPE
 const envLoaded = loadEnv();
 if (envLoaded == undefined) throw Error("❌ invalid environment variables");
 
-global.env = envLoaded
+const env = envLoaded;
 const config: ConfigFile = jsonfile.readFileSync("./config.json");
 const ongoingSessions = new Map<string, Session>();
 
@@ -45,17 +45,17 @@ const botClient = new Client({
 
 const restClient = new REST({
 	version: '10'
-}).setToken(global.env.BOT_TOKEN);
+}).setToken(env.BOT_TOKEN);
 
 if (config.pushLogTarget?.type === "http-json") {
 	pushlogTarget = new PushlogHttp(config.pushLogTarget.endpoint);
 } else if (config.pushLogTarget?.type === "airtable") {
-	if (!global.env.AIRTABLE_KEY) {
+	if (!env.AIRTABLE_KEY) {
 		throw Error("❌ push log target is set to airtable, but AIRTABLE_KEY is not set");
 	}
 
 	pushlogTarget = new PushlogAirtable(
-		new Airtable({ apiKey: global.env.AIRTABLE_KEY }).base(config.pushLogTarget.baseId),
+		new Airtable({ apiKey: env.AIRTABLE_KEY }).base(config.pushLogTarget.baseId),
 		{ ...config.pushLogTarget },
 		new CompositeLogger(config.loggers?.map(initLogger) ?? [new ConsoleLogger()])
 	);
@@ -123,7 +123,7 @@ botClient.on("voiceStateUpdate", (oldState, newState) => {
 	}
 })
 
-botClient.login(global.env.BOT_TOKEN);
+botClient.login(env.BOT_TOKEN);
 
 async function performMigrations(config: ISqlite.Config, migrationsPath: string) {
 	const connection = await open(config);
