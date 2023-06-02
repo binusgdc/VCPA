@@ -4,7 +4,6 @@ import { AbstractCommandHandler } from "./commandsHandlers/abstractCommandHandle
 import { ServiceLocation } from "./structures";
 
 export type MasterCommandHandlerOptions = {
-	client: Client;
 	commandHandlers: AbstractCommandHandler[];
 	serviceLocations: ServiceLocation[];
 };

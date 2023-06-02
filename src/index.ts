@@ -64,7 +64,6 @@ if (config.pushLogTarget?.type === "http-json") {
 if (!pushlogTarget) console.error("⚠️ WARNING: Push log target is not configured in config.json");
 
 const masterCommandHandler = new MasterCommandHandler({
-	client: botClient,
 	commandHandlers: [
 		new StartCommandHandler(ongoingSessions),
 		new StatusCommandHandler(),
