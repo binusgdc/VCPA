@@ -49,7 +49,7 @@ export class PushlogCommandHandler extends AbstractCommandHandler {
 		};
 	}
 
-	public async exec(interaction: ChatInputCommandInteraction): Promise<void> {
+	public async handle(interaction: ChatInputCommandInteraction): Promise<void> {
 		if (this.pushlogTarget == undefined) {
 			await interaction.reply("Error: push target is not configured.");
 			return;

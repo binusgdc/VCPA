@@ -6,7 +6,7 @@ export default class RoutingCommandHandler implements CommandHandler {
     private handlers: Map<string, CommandHandler>
     private noRouteHandler: CommandHandler
 
-    constructor(commands: { route: string, handler: CommandHandler }[], noRouteHandler: CommandHandler | undefined) {
+    constructor(commands: { route: string, handler: CommandHandler }[], noRouteHandler?: CommandHandler) {
         this.handlers = new Map();
         for (const { route, handler } of commands) {
             this.handlers.set(route, handler);

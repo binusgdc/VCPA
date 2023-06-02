@@ -11,7 +11,7 @@ export class LowerHandCommandHandler extends AbstractCommandHandler {
 		};
 	}
 
-	public async exec(interaction: ChatInputCommandInteraction): Promise<void> {
+	public async handle(interaction: ChatInputCommandInteraction): Promise<void> {
 		const executor = interaction.member as GuildMember;
 		const targetChannel = executor.voice.channel as VoiceChannel;
 

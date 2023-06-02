@@ -19,7 +19,7 @@ export class StatusCommandHandler extends AbstractCommandHandler {
 		};
 	}
 
-	public override async exec(interaction: ChatInputCommandInteraction) {
+	public override async handle(interaction: ChatInputCommandInteraction) {
 		await interaction.reply({
 			embeds: [
 				new EmbedBuilder()

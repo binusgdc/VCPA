@@ -27,7 +27,7 @@ export class StartCommandHandler extends AbstractCommandHandler {
 		};
 	}
 
-	public async exec(interaction: ChatInputCommandInteraction): Promise<void> {
+	public async handle(interaction: ChatInputCommandInteraction): Promise<void> {
 		const executor = interaction.member as GuildMember;
 		const argv = interaction.options;
 

@@ -5,14 +5,12 @@ import * as fs from "fs";
 import * as jsonfile from "jsonfile";
 import { ISqlite, open } from "sqlite";
 import sqlite3 from "sqlite3";
-
 import { StartCommandHandler } from "./commandsHandlers/startCommandHandler";
 import { StatusCommandHandler } from "./commandsHandlers/statusCommandHandler";
 import { StopCommandHandler } from "./commandsHandlers/stopCommandHandler";
 import { RaiseHandCommandHandler } from "./commandsHandlers/raiseHandCommandHandler";
 import { LowerHandCommandHandler } from "./commandsHandlers/lowerHandCommandHandler";
 import { PushlogCommandHandler } from "./commandsHandlers/pushlogCommandHandler";
-import { MasterCommandHandler } from "./masterCommandHandler";
 import { PushlogAirtable, PushlogHttp, PushlogTarget } from "./pushlogTarget";
 import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLog";
 import { ConfigFile, LoggerConfig, Session } from "./structures";
@@ -21,6 +19,8 @@ import { Logger } from "./util/logger";
 import { CompositeLogger } from "./util/loggers/compositeLogger";
 import { ConsoleLogger } from "./util/loggers/consoleLogger";
 import { DiscordChannelLogger } from "./util/loggers/discordChannelLogger";
+import RoutingCommandHandler from "./router";
+import { ServiceLocationsFilter } from "./filter";
 
 const dbFile = "data/session-logs.db";
 const dbConfig = { filename: dbFile, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE };
@@ -72,10 +72,11 @@ const commands = [
 	new PushlogCommandHandler(sessionLogStore, pushlogTarget)
 ]
 
-const masterCommandHandler = new MasterCommandHandler({
-	commandHandlers: commands,
-	serviceLocations: config.serviceLocationWhiteList
-});
+const router = new RoutingCommandHandler(
+	commands.map(c => ({ route: c.getSignature().name, handler: { handle: c.handle } }))
+)
+
+const masterHandler = new ServiceLocationsFilter(config.serviceLocationWhiteList).apply(router)
 
 if (!fs.existsSync(`./run`)) fs.mkdirSync(`./run/`);
 
@@ -97,7 +98,7 @@ botClient.on("ready", async () => {
 
 botClient.on("interactionCreate", async (interaction) => {
 	if (!interaction.isChatInputCommand()) return;
-	await masterCommandHandler.handle(interaction);
+	await masterHandler.handle(interaction);
 });
 
 botClient.on("voiceStateUpdate", (oldState, newState) => {
