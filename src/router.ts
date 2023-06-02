@@ -1,7 +1,5 @@
 import { ChatInputCommandInteraction, CacheType } from "discord.js";
 import CommandHandler from "./commandsHandlers/commandHandler";
-import Middleware from "./middleware/middleware";
-import { AbstractCommandHandler } from "./commandsHandlers/abstractCommandHandler";
 
 export default class RoutingCommandHandler implements CommandHandler {
 
