@@ -1,6 +1,6 @@
 import { REST } from "@discordjs/rest";
 import Airtable from "airtable";
-import { Client, GatewayIntentBits } from "discord.js";
+import { ApplicationCommandData, Client, GatewayIntentBits, Snowflake } from "discord.js";
 import * as fs from "fs";
 import * as jsonfile from "jsonfile";
 import { ISqlite, open } from "sqlite";
@@ -63,15 +63,17 @@ if (config.pushLogTarget?.type === "http-json") {
 
 if (!pushlogTarget) console.error("⚠️ WARNING: Push log target is not configured in config.json");
 
+const commands = [
+	new StartCommandHandler(ongoingSessions),
+	new StatusCommandHandler(),
+	new StopCommandHandler(ongoingSessions, sessionLogStore),
+	new RaiseHandCommandHandler(),
+	new LowerHandCommandHandler(),
+	new PushlogCommandHandler(sessionLogStore, pushlogTarget)
+]
+
 const masterCommandHandler = new MasterCommandHandler({
-	commandHandlers: [
-		new StartCommandHandler(ongoingSessions),
-		new StatusCommandHandler(),
-		new StopCommandHandler(ongoingSessions, sessionLogStore),
-		new RaiseHandCommandHandler(),
-		new LowerHandCommandHandler(),
-		new PushlogCommandHandler(sessionLogStore, pushlogTarget)
-	],
+	commandHandlers: commands,
 	serviceLocations: config.serviceLocationWhiteList
 });
 
@@ -83,7 +85,11 @@ botClient.on("ready", async () => {
 		await performMigrations(dbConfig, "./data");
 	}
 
-	await masterCommandHandler.finalizeCommandHandlersRegistration(botClient);
+	await reRegisterCommands(
+		botClient,
+		config.serviceLocationWhiteList.map(s => s.guildId),
+		commands.map(cmd => cmd.getSignature())
+	)
 
 	console.log(`>>> Logged in as ${botClient.user!.tag}`);
 	console.log(`>>> Bonjour!`);
@@ -136,5 +142,20 @@ function initLogger(config: LoggerConfig): Logger {
 	switch (config.type) {
 		case "discordChannel": return new DiscordChannelLogger(restClient, config.channelId)
 		case "console": return new ConsoleLogger()
+	}
+}
+
+async function reRegisterCommands(client: Client, guildIds: Snowflake[], commands: ApplicationCommandData[]) {
+	for (const guildId of guildIds) {
+		// For every guild we plan to serve
+		const guild = await client.guilds.fetch(guildId);
+
+		// Start fresh
+		guild.commands.set([]);
+
+		// Add all the commands
+		for (const command of commands) {
+			await guild.commands.create(command);
+		}
 	}
 }

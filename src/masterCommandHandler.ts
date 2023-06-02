@@ -12,36 +12,9 @@ export class MasterCommandHandler {
 	private commandHandlers: AbstractCommandHandler[];
 	private serviceLocations: ServiceLocation[];
 
-	public constructor(options: MasterCommandHandlerOptions) {
-		this.commandHandlers = options.commandHandlers;
-		this.serviceLocations = options.serviceLocations;
-	}
-
-	public registerCommandHandlers(commands: AbstractCommandHandler[]) {
-		for (const command of commands) {
-			this.commandHandlers.push(command);
-		}
-	}
-
-	public registerServiceLocations(serviceLocations: ServiceLocation[]) {
-		for (const serviceLocation of serviceLocations) {
-			this.serviceLocations.push(serviceLocation);
-		}
-	}
-
-	public async finalizeCommandHandlersRegistration(discordClient: Client) {
-		for (const serviceLocation of this.serviceLocations) {
-			// For every guild we plan to serve
-			const guild = await discordClient.guilds.fetch(serviceLocation.guildId);
-
-			// Start fresh
-			guild.commands.set([]);
-
-			// Add all the commands
-			for (const commandHandler of this.commandHandlers) {
-				await guild.commands.create(commandHandler.getSignature());
-			}
-		}
+	public constructor({ commandHandlers, serviceLocations }: MasterCommandHandlerOptions) {
+		this.commandHandlers = commandHandlers;
+		this.serviceLocations = serviceLocations;
 	}
 
 	public async handle(interaction: ChatInputCommandInteraction) {
