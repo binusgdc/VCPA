@@ -9,6 +9,7 @@
 		"forceConsistentCasingInFileNames": true,
 
 		"outDir": "build/",
+		"sourceMap": true,
 
 		"skipLibCheck": true
 	},
