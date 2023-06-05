@@ -1,6 +1,7 @@
 {
   "name": "vcpa",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -15,10 +16,13 @@
     "@googleapis/drive": "^2.4.0",
     "@googleapis/sheets": "^0.3.0",
     "@types/sqlite3": "^3.1.8",
+    "@typescript-eslint/eslint-plugin": "^5.59.8",
+    "@typescript-eslint/parser": "^5.59.8",
     "airtable": "^0.11.6",
     "axios": "^1.4.0",
     "discord.js": "^14.11.0",
     "dotenv": "^16.0.3",
+    "eslint": "^8.42.0",
     "jsonfile": "^6.1.0",
     "luxon": "^2.5.2",
     "sqlite": "^4.2.1",

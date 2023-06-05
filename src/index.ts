@@ -1,35 +1,36 @@
-import { REST } from "@discordjs/rest";
-import Airtable from "airtable";
-import { ApplicationCommandData, Client, GatewayIntentBits, Snowflake } from "discord.js";
 import * as fs from "fs";
 import * as jsonfile from "jsonfile";
-import { ISqlite, open } from "sqlite";
-import sqlite3 from "sqlite3";
-
-import { StartCommandHandler } from "./commandsHandlers/startCommandHandler";
-import { StatusCommandHandler } from "./commandsHandlers/statusCommandHandler";
-import { StopCommandHandler } from "./commandsHandlers/stopCommandHandler";
-import { RaiseHandCommandHandler } from "./commandsHandlers/raiseHandCommandHandler";
-import { LowerHandCommandHandler } from "./commandsHandlers/lowerHandCommandHandler";
-import { PushlogCommandHandler } from "./commandsHandlers/pushlogCommandHandler";
-import { PushlogAirtable, PushlogHttp, PushlogTarget } from "./pushlogTarget";
-import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLog";
+import { ApplicationCommandData, Client, GatewayIntentBits, Snowflake } from "discord.js";
 import { ConfigFile, LoggerConfig, Session } from "./structures";
-import { loadEnv } from "./util/env";
-import { Logger } from "./util/logger";
+import { ISqlite, open } from "sqlite";
+import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLog";
+import { PushlogAirtable, PushlogHttp, PushlogTarget } from "./pushlogTarget";
+import Airtable from "airtable";
 import { CompositeLogger } from "./util/loggers/compositeLogger";
 import { ConsoleLogger } from "./util/loggers/consoleLogger";
 import { DiscordChannelLogger } from "./util/loggers/discordChannelLogger";
+import { Logger } from "./util/logger";
+import { LowerHandCommandHandler } from "./commandsHandlers/lowerHandCommandHandler";
+import { PushlogCommandHandler } from "./commandsHandlers/pushlogCommandHandler";
+import { REST } from "@discordjs/rest";
+import { RaiseHandCommandHandler } from "./commandsHandlers/raiseHandCommandHandler";
 import RoutingCommandHandler from "./router";
 import { ServiceLocationsFilter } from "./filter";
+import { StartCommandHandler } from "./commandsHandlers/startCommandHandler";
+import { StatusCommandHandler } from "./commandsHandlers/statusCommandHandler";
+import { StopCommandHandler } from "./commandsHandlers/stopCommandHandler";
+import { loadEnv } from "./util/env";
+import sqlite3 from "sqlite3";
+
 
 const dbFile = "data/session-logs.db";
 const dbConfig = { filename: dbFile, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE };
 
 const envLoaded = loadEnv();
-if (envLoaded == undefined) throw Error("❌ invalid environment variables");
+if (!envLoaded) throw Error("❌ invalid environment variables");
 
 const env = envLoaded;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const config: ConfigFile = jsonfile.readFileSync("./config.json");
 const ongoingSessions = new Map<string, Session>();
 
@@ -45,7 +46,7 @@ const botClient = new Client({
 });
 
 const restClient = new REST({
-	version: '10'
+	version: "10"
 }).setToken(env.BOT_TOKEN);
 
 if (config.pushLogTarget?.type === "http-json") {
@@ -71,15 +72,15 @@ const commands = [
 	new RaiseHandCommandHandler(),
 	new LowerHandCommandHandler(),
 	new PushlogCommandHandler(sessionLogStore, pushlogTarget)
-]
+];
 
-const router = new RoutingCommandHandler(
-	commands.map(c => ({ route: c.getSignature().name, handler: { handle: c.handle } }))
-)
+const router = new RoutingCommandHandler(commands.map((c) => {
+	return { route: c.getSignature().name, handler: { handle: c.handle } };
+}));
 
-const masterHandler = new ServiceLocationsFilter(config.serviceLocationWhiteList).apply(router)
+const masterHandler = new ServiceLocationsFilter(config.serviceLocationWhiteList).apply(router);
 
-if (!fs.existsSync(`./run`)) fs.mkdirSync(`./run/`);
+if (!fs.existsSync("./run")) fs.mkdirSync("./run/");
 
 botClient.on("ready", async () => {
 	if (!fs.existsSync(dbFile)) {
@@ -91,10 +92,15 @@ botClient.on("ready", async () => {
 		botClient,
 		config.serviceLocationWhiteList.map(s => s.guildId),
 		commands.map(cmd => cmd.getSignature())
-	)
+	);
 
-	console.log(`>>> Logged in as ${botClient.user!.tag}`);
-	console.log(`>>> Bonjour!`);
+	if (!botClient.user) {
+		console.log(">>> Something went wrong :(");
+		return;
+	}
+
+	console.log(`>>> Logged in as ${botClient.user.tag}`);
+	console.log(">>> Bonjour!");
 });
 
 botClient.on("interactionCreate", async (interaction) => {
@@ -128,9 +134,9 @@ botClient.on("voiceStateUpdate", (oldState, newState) => {
 		const oldSession = ongoingSessions.get(`${oldGuild}-${oldChannel}`);
 		if (oldSession !== undefined) oldSession.log("LEAVE", person);
 	}
-})
+});
 
-botClient.login(env.BOT_TOKEN);
+await botClient.login(env.BOT_TOKEN);
 
 async function performMigrations(config: ISqlite.Config, migrationsPath: string) {
 	const connection = await open(config);
@@ -142,8 +148,8 @@ async function performMigrations(config: ISqlite.Config, migrationsPath: string)
 
 function initLogger(config: LoggerConfig): Logger {
 	switch (config.type) {
-		case "discordChannel": return new DiscordChannelLogger(restClient, config.channelId)
-		case "console": return new ConsoleLogger()
+		case "discordChannel": return new DiscordChannelLogger(restClient, config.channelId);
+		case "console": return new ConsoleLogger();
 	}
 }
 
@@ -153,7 +159,7 @@ async function reRegisterCommands(client: Client, guildIds: Snowflake[], command
 		const guild = await client.guilds.fetch(guildId);
 
 		// Start fresh
-		guild.commands.set([]);
+		await guild.commands.set([]);
 
 		// Add all the commands
 		for (const command of commands) {
