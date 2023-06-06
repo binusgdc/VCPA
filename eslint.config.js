@@ -1,6 +1,8 @@
 import eslint from "@eslint/js";
 import tsEslintPlugin from "@typescript-eslint/eslint-plugin";
 import tsEslintParser from "@typescript-eslint/parser";
+import eslintConfigPrettier from "eslint-config-prettier";
+import eslintPluginImport from "eslint-plugin-import";
 import globals from "globals";
 
 export default [
@@ -30,7 +32,8 @@ export default [
 		},
 
 		plugins: {
-			"@typescript-eslint": tsEslintPlugin
+			"@typescript-eslint": tsEslintPlugin,
+			"eslint-plugin-import": eslintPluginImport,
 		},
 
 		rules: {
@@ -88,95 +91,6 @@ export default [
 				"numbers": false
 			}],
 			"radix": ["error", "always"],
-			"sort-imports": ["error", {
-				"ignoreCase": false,
-				"ignoreDeclarationSort": false,
-				"ignoreMemberSort": false,
-				// "memberSyntaxSortOrder": ["none", "all", "multiple", "single"],
-				"allowSeparatedGroups": false
-			}],
-
-			// Layout & Formatting
-
-			"array-bracket-newline": ["error", "consistent"],
-			"arrow-parens": ["error", "as-needed", {
-				"requireForBlockBody": true
-			}],
-			"arrow-spacing": ["error", {
-				"before": true,
-				"after": true
-			}],
-			// "block-spacing": ["error", "always"], override by @typescript-eslint
-			// "brace-style": ["error", "1tbs"], override by @typescript-eslint
-			// "comma-dangle": ["error", "never"], override by @typescript-eslint
-			// "comma-spacing": ["error", { override by @typescript-eslint
-			// 	"before": false,
-			// 	"after": true
-			// }],
-			"comma-style": ["error", "last"],
-			"computed-property-spacing": ["error", "never"],
-			"dot-location": ["error", "property"],
-			"eol-last": ["error", "always"],
-			// "func-call-spacing": ["error", "never"], override by @typescript-eslint
-			"function-paren-newline": ["error", "multiline"],
-			"implicit-arrow-linebreak": ["error", "beside"],
-			// "indent": ["error", "tab"], override by @typescript-eslint
-			// "key-spacing": ["error", { override by @typescript-eslint
-			// 	"beforeColon": false,
-			// 	"afterColon": true,
-			// 	"mode": "strict"
-			// }],
-			// "keyword-spacing": ["error", { override by @typescript-eslint
-			// 	"before": true,
-			// 	"after": true
-			// }],
-			"linebreak-style": ["error", "unix"],
-			"max-len": ["warn", {
-				"code": 119,
-				"tabWidth": 4
-			}],
-			"new-parens": ["error", "always"],
-			"no-trailing-spaces": ["error", {
-				"skipBlankLines": false,
-				"ignoreComments": false
-			}],
-			"no-whitespace-before-property": ["error"],
-			"object-curly-newline": ["error", {
-				"consistent": true
-			}],
-			"padded-blocks": ["error", "never", {
-				"allowSingleLineBlocks": false
-			}],
-			// "quotes": ["error", "double", { override by @typescript-eslint
-			// 	"avoidEscape": false,
-			// 	"allowTemplateLiterals": false
-			// }],
-			"rest-spread-spacing": ["error", "never"],
-			// "semi": ["error", "always"], override by @typescript-eslint
-			"semi-spacing": ["error", {
-				"before": false,
-				"after": true
-			}],
-			"semi-style": ["error", "last"],
-			// "space-before-blocks": ["error", "always"], override by @typescript-eslint
-			// "space-before-function-paren": ["error", { override by @typescript-eslint
-			// 	"anonymous": "never",
-			// 	"named": "never",
-			// 	"asyncArrow": "always"
-			// }],
-			"space-in-parens": ["error", "never"],
-			"space-infix-ops": ["error"],
-			"space-unary-ops": ["error", {
-				"words": true,
-				"nonwords": false
-			}],
-			"switch-colon-spacing": ["error", {
-				"before": false,
-				"after": true
-			}],
-			"template-curly-spacing": ["error", "never"],
-			"template-tag-spacing": ["error", "never"],
-			"unicode-bom": ["error", "never"],
 
 			// @typescript-eslint/eslint-plugin
 
@@ -210,51 +124,49 @@ export default [
 			"@typescript-eslint/require-array-sort-compare": ["error", {
 				"ignoreStringArrays": true
 			}],
-			"@typescript-eslint/type-annotation-spacing": ["error"],
 
-			// Extensions
+			// eslint-plugin-import
 
-			"block-spacing": ["off"],
-			"@typescript-eslint/block-spacing": ["error", "never"],
-			"brace-style": ["off"],
-			"@typescript-eslint/brace-style": ["error", "1tbs"],
-			"comma-dangle": ["off"],
-			"@typescript-eslint/comma-dangle": ["error", "never"],
-			"comma-spacing": ["off"],
-			"@typescript-eslint/comma-spacing": ["error", {
-				"before": false,
-				"after": true
+			...eslintPluginImport.configs.recommended,
+			...eslintPluginImport.configs.typescript,
+
+			// Helpful warnings
+
+			"import/no-deprecated": ["error"],
+			"import/no-empty-named-blocks": ["error"],
+
+			// Module systems
+
+			// Static analysis
+
+			"import/no-absolute-path": ["error"],
+			"import/no-self-import": ["error"],
+
+			// Style guide
+
+			"import/first": ["error"],
+			"import/newline-after-import": ["error", {
+				"considerComments": true
 			}],
-			"func-call-spacing": ["off"],
-			"@typescript-eslint/func-call-spacing": ["error", "never"],
-			"indent": ["off"],
-			"@typescript-eslint/indent": ["error", "tab"],
-			"key-spacing": ["off"],
-			"@typescript-eslint/key-spacing": ["error", {
-				"beforeColon": false,
-				"afterColon": true,
-				"mode": "strict"
-			}],
-			"keyword-spacing": ["off"],
-			"@typescript-eslint/keyword-spacing": ["error", {
-				"before": true,
-				"after": true
-			}],
-			"quotes": ["off"],
-			"@typescript-eslint/quotes": ["error", "double", {
-				"avoidEscape": false,
-				"allowTemplateLiterals": false
-			}],
-			"semi": ["off"],
-			"@typescript-eslint/semi": ["error", "always"],
-			"space-before-blocks": ["off"],
-			"@typescript-eslint/space-before-blocks": ["error", "always"],
-			"space-before-function-paren": ["off"],
-			"@typescript-eslint/space-before-function-paren": ["error", {
-				"anonymous": "never",
-				"named": "never",
-				"asyncArrow": "always"
-			}],
+			"import/order": ["error", {
+				"groups": [
+					["builtin", "external"],
+					"internal",
+					["parent", "sibling", "index"],
+					"type",
+					"object"
+				],
+				"newlines-between": "always",
+				"alphabetize": {
+					"order": "asc",
+					"orderImportKind": "asc",
+					"caseInsensitive": false
+				}
+			}]
 		}
-	}
+	},
+
+	eslintConfigPrettier
 ];
+
+console.log(tsEslintPlugin)
