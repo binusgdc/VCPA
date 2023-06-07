@@ -2,24 +2,6 @@ import { Snowflake, EmbedBuilder } from "discord.js";
 import { DateTime } from "luxon";
 import * as Util from "./util";
 
-const msSessionsSubjects = [
-	"PROGA",
-	"PROGB",
-	"DESG",
-	"A2D",
-	"A3D",
-	"SND"
-] as const;
-
-export type SessionSubject = typeof msSessionsSubjects[number]
-
-export type BGDCData = {
-	msSessionsSheetId: string;
-	msSessionsSubjectRanges: { [K in SessionSubject]: string }
-	attdetCsvGdriveFolderId: string;
-	procdetCsvGdriveFolderId: string;
-}
-
 type EventType = "JOIN" | "LEAVE";
 
 export class Event {
