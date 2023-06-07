@@ -2,7 +2,7 @@ import { ApplicationCommandData, ApplicationCommandOptionType, ChatInputCommandI
 import { Duration } from "luxon";
 
 import { AbstractCommandHandler } from "./abstractCommandHandler";
-import { PushlogData, PushlogTarget } from "../pushlogTarget";
+import { PushlogData, PushlogTarget } from "../pushlog/pushlogTarget";
 import { SessionLog, SessionLogStore } from "../sessionLog";
 
 export class PushlogCommandHandler extends AbstractCommandHandler {

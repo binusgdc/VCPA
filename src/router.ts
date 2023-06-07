@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction } from "discord.js";
-import CommandHandler from "./commandsHandlers/commandHandler";
+import { CommandHandler } from "./commandsHandlers/commandHandler";
 
-export default class RoutingCommandHandler implements CommandHandler {
+export class RoutingCommandHandler implements CommandHandler {
 	private handlers: Map<string, CommandHandler>
 
 	public constructor(commands: { route: string, handler: CommandHandler }[]) {

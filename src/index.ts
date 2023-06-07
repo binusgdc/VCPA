@@ -4,7 +4,9 @@ import { ApplicationCommandData, Client, GatewayIntentBits, Snowflake } from "di
 import { ConfigFile, LoggerConfig, Session } from "./structures";
 import { ISqlite, open } from "sqlite";
 import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLog";
-import { PushlogAirtable, PushlogHttp, PushlogTarget } from "./pushlogTarget";
+import { PushlogTarget } from "./pushlog/pushlogTarget";
+import { PushlogHttp } from "./pushlog/pushlogHttp";
+import { PushlogAirtable } from "./pushlog/pushlogAirtable";
 import Airtable from "airtable";
 import { CompositeLogger } from "./util/loggers/compositeLogger";
 import { ConsoleLogger } from "./util/loggers/consoleLogger";
@@ -14,8 +16,8 @@ import { LowerHandCommandHandler } from "./commandsHandlers/lowerHandCommandHand
 import { PushlogCommandHandler } from "./commandsHandlers/pushlogCommandHandler";
 import { REST } from "@discordjs/rest";
 import { RaiseHandCommandHandler } from "./commandsHandlers/raiseHandCommandHandler";
-import RoutingCommandHandler from "./router";
-import { ServiceLocationsFilter } from "./filter";
+import { RoutingCommandHandler } from "./router";
+import { ServiceLocationsFilter } from "./filters/serviceLocationsFilter";
 import { StartCommandHandler } from "./commandsHandlers/startCommandHandler";
 import { StatusCommandHandler } from "./commandsHandlers/statusCommandHandler";
 import { StopCommandHandler } from "./commandsHandlers/stopCommandHandler";

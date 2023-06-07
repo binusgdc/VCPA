@@ -1,5 +1,5 @@
 import { ApplicationCommandData, ChatInputCommandInteraction } from "discord.js";
-import CommandHandler from "./commandHandler";
+import { CommandHandler } from "./commandHandler";
 
 export abstract class AbstractCommandHandler implements CommandHandler {
 	public abstract getSignature(): ApplicationCommandData;
