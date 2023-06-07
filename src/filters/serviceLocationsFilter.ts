@@ -1,5 +1,5 @@
 import { CommandHandler } from "../commandsHandlers/commandHandler";
-import { ServiceLocation } from "../structures";
+import { ServiceLocation } from "../util/config";
 import { Filter } from "./filter";
 
 export class ServiceLocationsFilter implements Filter {

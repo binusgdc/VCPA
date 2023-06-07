@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as jsonfile from "jsonfile";
 import { ApplicationCommandData, Client, GatewayIntentBits, Snowflake } from "discord.js";
-import { ConfigFile, LoggerConfig, Session } from "./structures";
+import { Session } from "./structures";
 import { ISqlite, open } from "sqlite";
 import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLog";
 import { PushlogTarget } from "./pushlog/pushlogTarget";
@@ -23,6 +23,7 @@ import { StatusCommandHandler } from "./commandsHandlers/statusCommandHandler";
 import { StopCommandHandler } from "./commandsHandlers/stopCommandHandler";
 import { loadEnv } from "./util/env";
 import sqlite3 from "sqlite3";
+import { ConfigFile, LoggerConfig } from "./util/config";
 
 
 const dbFile = "data/session-logs.db";

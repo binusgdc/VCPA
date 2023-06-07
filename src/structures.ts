@@ -11,12 +11,6 @@ const msSessionsSubjects = [
 	"SND"
 ] as const;
 
-export type ServiceLocation = {
-	guildId: Snowflake;
-	ioChannelId: Snowflake;
-	commandAccessRoleIds: Snowflake[];
-}
-
 export type SessionSubject = typeof msSessionsSubjects[number]
 
 export type BGDCData = {
@@ -24,40 +18,6 @@ export type BGDCData = {
 	msSessionsSubjectRanges: { [K in SessionSubject]: string }
 	attdetCsvGdriveFolderId: string;
 	procdetCsvGdriveFolderId: string;
-}
-
-export type PushLogTargetConfig = PushLogTargetHttpJson | PushLogTargetAirtable
-
-export interface PushLogTargetHttpJson {
-	type: "http-json";
-	endpoint: string;
-}
-
-export interface PushLogTargetAirtable {
-	type: "airtable";
-	baseId: string;
-	topicsTableId: string;
-	sessionsTableId: string;
-	attendanceTableId: string;
-	membersTableId: string;
-}
-
-export interface LoggerDiscordChannel {
-	type: "discordChannel";
-	channelId: string;
-}
-
-export interface LoggerConsole {
-	type: "console"
-}
-
-export type LoggerConfig = LoggerDiscordChannel | LoggerConsole
-
-export type ConfigFile = {
-	serviceLocationWhiteList: ServiceLocation[];
-	bgdc: BGDCData;
-	pushLogTarget: PushLogTargetConfig | undefined;
-	loggers: LoggerConfig[] | undefined
 }
 
 type EventType = "JOIN" | "LEAVE";
