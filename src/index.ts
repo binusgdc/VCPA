@@ -3,7 +3,7 @@ import * as jsonfile from "jsonfile";
 import { ApplicationCommandData, Client, GatewayIntentBits, Snowflake } from "discord.js";
 import { Session } from "./structures";
 import { ISqlite, open } from "sqlite";
-import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLog";
+import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLogStore/sqliteSessionLogStore";
 import { PushlogTarget } from "./pushlog/pushlogTarget";
 import { PushlogHttp } from "./pushlog/pushlogHttp";
 import { PushlogAirtable } from "./pushlog/pushlogAirtable";

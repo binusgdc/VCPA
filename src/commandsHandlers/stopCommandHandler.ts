@@ -2,9 +2,10 @@ import { ApplicationCommandData, ApplicationCommandOptionType, ChannelType, Chat
 import * as fs from "fs";
 
 import { AbstractCommandHandler } from "./abstractCommandHandler";
-import { SessionEvent, SessionLogStore } from "../sessionLog";
+import { SessionEvent } from "../session";
 import { Session } from "../structures";
 import * as Util from "../util";
+import { SessionLogStore } from "../sessionLogStore/sessionLogStore";
 
 export class StopCommandHandler extends AbstractCommandHandler {
 	private sessionDb: Map<string, Session>;

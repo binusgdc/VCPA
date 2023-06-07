@@ -3,7 +3,8 @@ import { Duration } from "luxon";
 
 import { AbstractCommandHandler } from "./abstractCommandHandler";
 import { PushlogData, PushlogTarget } from "../pushlog/pushlogTarget";
-import { SessionLog, SessionLogStore } from "../sessionLog";
+import { SessionLog } from "../session";
+import { SessionLogStore } from "../sessionLogStore/sessionLogStore";
 
 export class PushlogCommandHandler extends AbstractCommandHandler {
 	private sessionLogStore: SessionLogStore
