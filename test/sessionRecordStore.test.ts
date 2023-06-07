@@ -3,7 +3,9 @@ import * as fs from "fs";
 import { DateTime } from "luxon";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { SqliteSessionLogStore, LazyConnectionProvider, SessionLog, SessionLogId, SessionLogStore, SessionEvent, JoinedChannelEvent, LeftChannelEvent, CompletedSession } from "../src/sessionLog"
+import { CompletedSession, JoinedChannelEvent, LeftChannelEvent, SessionEvent, SessionLog, SessionLogId } from "../src/session";
+import { LazyConnectionProvider, SqliteSessionLogStore } from "../src/sessionLogStore/sqliteSessionLogStore";
+import { SessionLogStore } from "../src/sessionLogStore/sessionLogStore";
 import { DateTimeProvider, getRandomInteger } from "../src/util";
 
 const dbName = "sessions-test.db";
