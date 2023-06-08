@@ -4,8 +4,10 @@ import { OngoingSessionStore } from "../src/ongoingSessionStore/ongoingSessionSt
 import { SessionEvent, VoiceChannel } from "../src/session/session"
 import { DateTimeProvider, dtnow } from "../src/util";
 import { mock, instance, when, verify, anything, capture } from "ts-mockito"
+import { SessionLogStore } from "../src/sessionLogStore/sessionLogStore";
 
 const ongoingSessionStoreMock = mock<OngoingSessionStore>();
+const sessionLogStoreMock = mock<SessionLogStore>();
 const dateTimeProviderMock = mock<DateTimeProvider>();
 const now = dtnow();
 
@@ -26,7 +28,7 @@ test("startSessionInChannelWithOngoingSessionFails", async () => {
 	const { ownerId, channel } = generateStartSessionRequest();
 	when(ongoingSessionStoreMock.has(channel.guildId, channel.id)).thenResolve(true);
 
-	const sut = new SessionService(instance(ongoingSessionStoreMock), instance(dateTimeProviderMock));
+	const sut = new SessionService(instance(ongoingSessionStoreMock), instance(sessionLogStoreMock), instance(dateTimeProviderMock));
 
 	const result = await sut.startSession(ownerId, channel)
 	expect(result.ok).toBeFalsy();
@@ -39,7 +41,7 @@ test("startSessionStoresAnOngoingSession", async () => {
 	const { ownerId, channel } = generateStartSessionRequest();
 	when(ongoingSessionStoreMock.has(channel.guildId, channel.id)).thenResolve(false);
 	when(dateTimeProviderMock.now()).thenReturn(now);
-	const sut = new SessionService(instance(ongoingSessionStoreMock), instance(dateTimeProviderMock));
+	const sut = new SessionService(instance(ongoingSessionStoreMock), instance(sessionLogStoreMock), instance(dateTimeProviderMock));
 
 	await sut.startSession(ownerId, channel);
 
@@ -58,7 +60,7 @@ test("startSessionStoresOngoingSessionWithInitialJoinEvents", async () => {
 	const members = Array.from(Array(5)).map(() => SnowflakeUtil.generate().toString());
 	when(ongoingSessionStoreMock.has(guildId, channelId)).thenResolve(false);
 	when(dateTimeProviderMock.now()).thenReturn(now);
-	const sut = new SessionService(instance(ongoingSessionStoreMock), instance(dateTimeProviderMock));
+	const sut = new SessionService(instance(ongoingSessionStoreMock), instance(sessionLogStoreMock), instance(dateTimeProviderMock));
 
 	await sut.startSession(ownerId, {
 		id: channelId,
@@ -76,12 +78,12 @@ test("stopSessionInChannelWithNoOngoingSessionFails", async () => {
 	when(ongoingSessionStoreMock.get(anything(), anything())).thenResolve(undefined);
 	when(dateTimeProviderMock.now()).thenReturn(now);
 
-	const sut = new SessionService(instance(ongoingSessionStoreMock), instance(dateTimeProviderMock));
+	const sut = new SessionService(instance(ongoingSessionStoreMock), instance(sessionLogStoreMock), instance(dateTimeProviderMock));
 
 	const result = await sut.stopSession(channel);
 
 	expect(result.ok).toBeFalsy();
 	if (!result.ok) {
-		expect(result.error).toEqual("SessionNotFound");
+		expect(result.error.type).toEqual("SessionNotFound");
 	}
 })

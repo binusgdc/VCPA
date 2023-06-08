@@ -4,16 +4,28 @@ import { DateTimeProvider, generateSessionOutput } from "../util";
 import { Result, error, ok } from "../util/result";
 import { OngoingSessionStore } from "../ongoingSessionStore/ongoingSessionStore";
 import { SessionOutput } from "../structures";
+import { SessionLogStore } from "../sessionLogStore/sessionLogStore";
 
 export type StartSessionError = "SessionOngoing";
-export type StopSessionError = "SessionNotFound" | "LogNotStored";
+export type StopSessionError = SessionNotFound | LogNotStored;
+
+type SessionNotFound = {
+    type: "SessionNotFound";
+}
+
+type LogNotStored = {
+    type: "LogNotStored";
+    sessionOutput: SessionOutput;
+}
 
 export class SessionService {
     private readonly ongoingSessionStore: OngoingSessionStore;
+    private readonly sessionLogStore: SessionLogStore;
     private readonly dateTimeProvider: DateTimeProvider;
 
-    constructor(ongoingSessionStore: OngoingSessionStore, dateTimeProvider: DateTimeProvider) {
+    constructor(ongoingSessionStore: OngoingSessionStore, sessionLogStore: SessionLogStore, dateTimeProvider: DateTimeProvider) {
         this.ongoingSessionStore = ongoingSessionStore;
+        this.sessionLogStore = sessionLogStore;
         this.dateTimeProvider = dateTimeProvider;
     }
     async handleJoinedChannel(userId: Snowflake, guildId: Snowflake, channelId: Snowflake) {
@@ -56,7 +68,7 @@ export class SessionService {
     async stopSession(channel: VoiceChannel): Promise<Result<[CompletedSession, SessionOutput], StopSessionError>> {
         const session = await this.ongoingSessionStore.get(channel.guildId, channel.id);
         if (session === undefined) {
-            return error("SessionNotFound");
+            return error({ type: "SessionNotFound" });
         }
         const timeEnded = this.dateTimeProvider.now();
         const remainingLeaveEvents = channel.memberUserIds.map<SessionEvent>((userId) => ({
@@ -71,6 +83,10 @@ export class SessionService {
         };
         const sessionOutput = generateSessionOutput(completedSession);
         await this.ongoingSessionStore.delete(channel.guildId, channel.id);
+        const storeLogResult = await this.sessionLogStore.store(completedSession);
+        if (storeLogResult === undefined) {
+            return error({ type: "LogNotStored", sessionOutput: sessionOutput });
+        }
         return ok([completedSession, sessionOutput]);
     }
 }
