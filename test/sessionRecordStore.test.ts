@@ -3,7 +3,7 @@ import * as fs from "fs";
 import { DateTime } from "luxon";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { CompletedSession, JoinedChannelEvent, LeftChannelEvent, SessionEvent, SessionLog, SessionLogId } from "../src/session";
+import { CompletedSession, JoinedChannelEvent, LeftChannelEvent, SessionEvent, SessionLog, SessionLogId } from "../src/session/session";
 import { LazyConnectionProvider, SqliteSessionLogStore } from "../src/sessionLogStore/sqliteSessionLogStore";
 import { SessionLogStore } from "../src/sessionLogStore/sessionLogStore";
 import { DateTimeProvider, getRandomInteger } from "../src/util";

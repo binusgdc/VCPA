@@ -1,4 +1,4 @@
-import { CompletedSession, SessionLogId, SessionLog } from "../session";
+import { CompletedSession, SessionLogId, SessionLog } from "../session/session";
 
 export interface SessionLogStore {
     store(completedSession: CompletedSession): Promise<SessionLogId | undefined>;

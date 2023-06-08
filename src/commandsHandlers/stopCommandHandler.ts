@@ -2,7 +2,7 @@ import { ApplicationCommandData, ApplicationCommandOptionType, ChannelType, Chat
 import * as fs from "fs";
 
 import { AbstractCommandHandler } from "./abstractCommandHandler";
-import { SessionEvent } from "../session";
+import { SessionEvent } from "../session/session";
 import { Session } from "../structures";
 import * as Util from "../util";
 import { SessionLogStore } from "../sessionLogStore/sessionLogStore";

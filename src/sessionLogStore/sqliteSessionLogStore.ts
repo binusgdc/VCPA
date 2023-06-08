@@ -5,7 +5,7 @@ import { DateTime } from "luxon";
 import { ISqlite, Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { DateTimeProvider, dtnow } from "../util";
-import { SessionLog, CompletedSession, SessionLogId, SessionEvent } from "../session";
+import { SessionLog, CompletedSession, SessionLogId, SessionEvent } from "../session/session";
 
 const sessionEventSchemaSqlite = z.object({
     event_code: z.literal("JOIN").or(z.literal("LEAVE")),
