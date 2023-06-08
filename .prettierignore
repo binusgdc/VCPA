@@ -2,9 +2,14 @@ build/
 config.json
 gcreds.json
 tsconfig.json
+package.json
+package-lock.json
+eslint.config.js
+jest.config.cjs
 node_modules/
 run/
 coverage/
 .vscode/
 data/*.db
 .env*
+*.md
