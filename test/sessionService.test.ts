@@ -1,8 +1,8 @@
 import { SnowflakeUtil, Snowflake } from "discord.js";
 import { SessionService } from "../src/session/sessionService";
 import { OngoingSessionStore } from "../src/ongoingSessionStore/ongoingSessionStore";
-import { SessionEvent, VoiceChannel } from "../src/session/session"
-import { DateTimeProvider, dtnow } from "../src/util";
+import { CompletedSession, OngoingSession, SessionEvent, VoiceChannel } from "../src/session/session"
+import { DateTimeProvider, dtnow, generateSessionOutput } from "../src/util";
 import { mock, instance, when, verify, anything, capture } from "ts-mockito"
 import { SessionLogStore } from "../src/sessionLogStore/sessionLogStore";
 
@@ -85,5 +85,64 @@ test("stopSessionInChannelWithNoOngoingSessionFails", async () => {
 	expect(result.ok).toBeFalsy();
 	if (!result.ok) {
 		expect(result.error.type).toEqual("SessionNotFound");
+	}
+})
+
+test("stopSessionStoresCompletedSession", async () => {
+	const { ownerId, channel } = generateStartSessionRequest();
+	const originalSession: OngoingSession = {
+		ownerId: ownerId,
+		channelId: channel.id,
+		guildId: channel.guildId,
+		timeStarted: now,
+		events: []
+	}
+	const timeEnded = now.plus({ minutes: 30 });
+	when(ongoingSessionStoreMock.get(channel.guildId, channel.id)).thenResolve(originalSession);
+	when(dateTimeProviderMock.now()).thenReturn(timeEnded);
+
+	const sut = new SessionService(instance(ongoingSessionStoreMock), instance(sessionLogStoreMock), instance(dateTimeProviderMock));
+
+	await sut.stopSession(channel);
+
+	const expected: CompletedSession = {
+		...originalSession,
+		timeEnded: timeEnded
+	}
+	verify(sessionLogStoreMock.store(anything())).once();
+	const [storedSession] = capture(sessionLogStoreMock.store).last();
+	expect(storedSession).toEqual(expected);
+})
+
+test("stopSessionWithStoreLogErrorStillReturnsOutput", async () => {
+	const { ownerId, channel } = generateStartSessionRequest();
+	const originalSession: OngoingSession = {
+		ownerId: ownerId,
+		channelId: channel.id,
+		guildId: channel.guildId,
+		timeStarted: now,
+		events: []
+	}
+	when(ongoingSessionStoreMock.get(channel.guildId, channel.id)).thenResolve(originalSession);
+	const timeEnded = now.plus({ minutes: 30 });
+	when(sessionLogStoreMock.store(anything())).thenResolve(undefined);
+	when(dateTimeProviderMock.now()).thenReturn(timeEnded);
+
+	const sut = new SessionService(instance(ongoingSessionStoreMock), instance(sessionLogStoreMock), instance(dateTimeProviderMock));
+
+	const expected = generateSessionOutput({
+		...originalSession,
+		timeEnded: timeEnded
+	});
+	const result = await sut.stopSession(channel);
+	expect(result.ok).toBeFalsy();
+	if (!result.ok) {
+		const error = result.error;
+		expect(error.type).toEqual("LogNotStored");
+		if (error.type === "LogNotStored") {
+			expect(error.sessionOutput.attdet).toEqual(expected.attdet);
+			expect(error.sessionOutput.procdet).toEqual(expected.procdet);
+			expect(error.sessionOutput.sesinfo).toEqual(expected.sesinfo);
+		}
 	}
 })
