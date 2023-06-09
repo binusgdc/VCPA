@@ -12,4 +12,5 @@ coverage/
 .vscode/
 data/*.db
 .env*
+.editorconfig
 *.md

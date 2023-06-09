@@ -8,4 +8,5 @@ coverage/
 .vscode/
 data/*.db
 .env*
+.editorconfig
 test/
