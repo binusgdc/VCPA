@@ -114,7 +114,7 @@ test("stopSessionStoresCompletedSession", async () => {
 	expect(storedSession).toEqual(expected);
 })
 
-test("stopSessionWithStoreLogErrorStillReturnsOutput", async () => {
+test("stopSessionWithStoreLogErrorStillReturnsSessionData", async () => {
 	const { ownerId, channel } = generateStartSessionRequest();
 	const originalSession: OngoingSession = {
 		ownerId: ownerId,
@@ -130,19 +130,17 @@ test("stopSessionWithStoreLogErrorStillReturnsOutput", async () => {
 
 	const sut = new SessionService(instance(ongoingSessionStoreMock), instance(sessionLogStoreMock), instance(dateTimeProviderMock));
 
-	const expected = generateSessionOutput({
+	const expectedSessionData: CompletedSession = {
 		...originalSession,
 		timeEnded: timeEnded
-	});
+	};
 	const result = await sut.stopSession(channel);
 	expect(result.ok).toBeFalsy();
 	if (!result.ok) {
 		const error = result.error;
 		expect(error.type).toEqual("LogNotStored");
 		if (error.type === "LogNotStored") {
-			expect(error.sessionOutput.attdet).toEqual(expected.attdet);
-			expect(error.sessionOutput.procdet).toEqual(expected.procdet);
-			expect(error.sessionOutput.sesinfo).toEqual(expected.sesinfo);
+			expect(error.sessionOutput.sessionData).toEqual(expectedSessionData);
 		}
 	}
 })

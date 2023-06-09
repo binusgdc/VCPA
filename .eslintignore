@@ -8,3 +8,4 @@ coverage/
 .vscode/
 data/*.db
 .env*
+test/
