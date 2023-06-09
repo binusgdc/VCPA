@@ -1,30 +1,30 @@
+import { REST } from "@discordjs/rest";
+import Airtable from "airtable";
+import { ApplicationCommandData, Client, GatewayIntentBits, Snowflake } from "discord.js";
 import * as fs from "fs";
 import * as jsonfile from "jsonfile";
-import { ApplicationCommandData, Client, GatewayIntentBits, Snowflake } from "discord.js";
-import { Session } from "./structures";
 import { ISqlite, open } from "sqlite";
-import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLogStore/sqliteSessionLogStore";
-import { PushlogTarget } from "./pushlog/pushlogTarget";
-import { PushlogHttp } from "./pushlog/pushlogHttp";
-import { PushlogAirtable } from "./pushlog/pushlogAirtable";
-import Airtable from "airtable";
-import { CompositeLogger } from "./util/loggers/compositeLogger";
-import { ConsoleLogger } from "./util/loggers/consoleLogger";
-import { DiscordChannelLogger } from "./util/loggers/discordChannelLogger";
-import { Logger } from "./util/logger";
+import sqlite3 from "sqlite3";
+
 import { LowerHandCommandHandler } from "./commandsHandlers/lowerHandCommandHandler";
 import { PushlogCommandHandler } from "./commandsHandlers/pushlogCommandHandler";
-import { REST } from "@discordjs/rest";
 import { RaiseHandCommandHandler } from "./commandsHandlers/raiseHandCommandHandler";
-import { RoutingCommandHandler } from "./router";
-import { ServiceLocationsFilter } from "./filters/serviceLocationsFilter";
 import { StartCommandHandler } from "./commandsHandlers/startCommandHandler";
 import { StatusCommandHandler } from "./commandsHandlers/statusCommandHandler";
 import { StopCommandHandler } from "./commandsHandlers/stopCommandHandler";
-import { loadEnv } from "./util/env";
-import sqlite3 from "sqlite3";
+import { ServiceLocationsFilter } from "./filters/serviceLocationsFilter";
+import { PushlogAirtable } from "./pushlog/pushlogAirtable";
+import { PushlogHttp } from "./pushlog/pushlogHttp";
+import { PushlogTarget } from "./pushlog/pushlogTarget";
+import { RoutingCommandHandler } from "./router";
+import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLogStore/sqliteSessionLogStore";
+import { Session } from "./structures";
 import { ConfigFile, LoggerConfig } from "./util/config";
-
+import { loadEnv } from "./util/env";
+import { Logger } from "./util/logger";
+import { CompositeLogger } from "./util/loggers/compositeLogger";
+import { ConsoleLogger } from "./util/loggers/consoleLogger";
+import { DiscordChannelLogger } from "./util/loggers/discordChannelLogger";
 
 const dbFile = "data/session-logs.db";
 const dbConfig = { filename: dbFile, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE };
