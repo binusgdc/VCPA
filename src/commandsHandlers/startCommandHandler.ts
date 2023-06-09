@@ -1,15 +1,14 @@
 import { ApplicationCommandData, ApplicationCommandOptionType, ChannelType, ChatInputCommandInteraction, GuildMember, VoiceChannel } from "discord.js";
 
 import { AbstractCommandHandler } from "./abstractCommandHandler";
-import { Session } from "../structures";
+import { SessionService } from "../session/sessionService";
 
 export class StartCommandHandler extends AbstractCommandHandler {
-	private sessionDb: Map<string, Session>;
+	private readonly sessionService: SessionService
 
-	public constructor(sessionDb: Map<string, Session>) {
+	public constructor(sessionService: SessionService) {
 		super();
-
-		this.sessionDb = sessionDb;
+		this.sessionService = sessionService;
 	}
 
 	public getSignature(): ApplicationCommandData {
@@ -28,43 +27,40 @@ export class StartCommandHandler extends AbstractCommandHandler {
 	}
 
 	public async handle(interaction: ChatInputCommandInteraction): Promise<void> {
-		const executor = interaction.member as GuildMember;
-		const argv = interaction.options;
 
-		const targetGuild = interaction.guildId;
-		const targetChannel = (argv.getChannel("channel") ?? executor.voice.channel) as VoiceChannel;
+		if (interaction.guild === null) {
+			return;
+		}
+
+		const targetChannel = interaction.options.getChannel("channel") ?? (await interaction.guild.members.fetch(interaction.user.id)).voice.channel;
 
 		if (targetChannel === null) {
-			console.log(`>>> Failed to start session: ${executor.id} tried to start a session but they're not in a voice channel!`);
-			await interaction.reply(`>>> Failed to start session: <@${executor.id}> tried to start a session but they're not in a voice channel!`);
+			console.log(`>>> Failed to start session: ${interaction.user.id} tried to start a session but they're not in a voice channel!`)
+			await interaction.reply(`>>> Failed to start session: <@${interaction.user.id}> tried to start a session but they're not in a voice channel!`)
 			return;
 		}
 
 		if (targetChannel.type !== ChannelType.GuildVoice) {
-			console.log(`>>> Failed to start session: ${executor.id} tried to start a session somewhere not a voice channel!`);
-			await interaction.reply(`>>> Failed to start session: <@${executor.id}> tried to start a session somewhere not a voice channel!`);
+			console.log(`>>> Failed to start session: ${interaction.user.id} tried to start a session somewhere not a voice channel!`);
+			await interaction.reply(`>>> Failed to start session: <@${interaction.user.id}> tried to start a session somewhere not a voice channel!`);
 			return
-		};
+		}
 
-		const session = this.sessionDb.get(`${targetGuild}-${targetChannel.id}`);
-		if (session !== undefined) {
-			console.log(`>>> Failed to start session: ${executor.id} tried to start a session in ${targetChannel.id} but a session is already running there!`);
-			await interaction.reply(`>>> Failed to start a session: <@${executor.id}> tried to start a session <#${targetChannel.id}> but a session is already running there!`);
+		const startSessionResult = await this.sessionService.startSession(interaction.user.id, {
+			id: targetChannel.id,
+			guildId: interaction.guild.id,
+			memberUserIds: [...(targetChannel as VoiceChannel).members.mapValues(m => m.id).values()]
+		});
+
+		if (!startSessionResult.ok) {
+			if (startSessionResult.error === "SessionOngoing") {
+				console.log(`>>> Failed to start session: ${interaction.user.id} tried to start a session in ${targetChannel.id} but a session is already running there!`);
+				await interaction.reply(`>>> Failed to start a session: <@${interaction.user.id}> tried to start a session <#${targetChannel.id}> but a session is already running there!`);
+			}
 			return;
 		}
 
-		this.sessionDb.set(`${targetGuild}-${targetChannel.id}`, new Session(executor.id, targetChannel.id));
-		const s = this.sessionDb.get(`${targetGuild}-${targetChannel.id}`)!;
-		s.start();
-
-		console.log(`>>> ${executor.id} started a session in ${targetChannel.id}!`);
-		await interaction.reply(`>>> <@${executor.id}> started a session in <#${targetChannel.id}>!`);
-
-		const members = targetChannel.members;
-		members.forEach((member) => {
-			// Pretend everyone joined at the same time as the session starts
-
-			s.log("JOIN", member.id, s.startTime);
-		});
+		console.log(`>>> ${interaction.user.id} started a session in ${targetChannel.id}!`);
+		await interaction.reply(`>>> <@${interaction.user.id}> started a session in <#${targetChannel.id}>!`);
 	}
-};
+}
