@@ -1,7 +1,14 @@
 import { EmbedBuilder, Snowflake } from "discord.js";
 import { DateTime, Duration } from "luxon";
-import { Event, Session, SessionOutput } from "./structures";
+
 import { CompletedSession, SessionEvent } from "./session/session";
+
+export type SessionOutput = {
+	sesinfo: string;
+	attdet: string;
+	procdet: string;
+	embed: EmbedBuilder;
+}
 
 export function getRandomColor() {
 	// Evenly distributed random javascript integer
@@ -13,13 +20,11 @@ export function getRandomColor() {
 export function getRandomInteger(min: number, max: number): number {
 	// Evenly distributed random javascript integer
 	// https://stackoverflow.com/a/1527820
-	min = Math.ceil(min);
-	max = Math.floor(max);
-	return Math.floor(Math.random() * (max - min + 1)) + min;
+	return Math.floor(Math.random() * (Math.floor(max) - Math.ceil(min) + 1)) + Math.ceil(min);
 }
 
 export interface DateTimeProvider {
-	now(): DateTime
+	now(): DateTime;
 }
 
 export function dtnow() {
@@ -59,10 +64,10 @@ export function generateSessionOutput(session: CompletedSession): SessionOutput 
 	/* Generate csv string of session general information */
 
 	let sesinfo = "date,owner,start,duration\n";
-	sesinfo += formatDate(session.timeStarted, "DATE") + ',';
+	sesinfo += `${formatDate(session.timeStarted, "DATE")  },`;
 	sesinfo += `${session.ownerId}` + ',';
-	sesinfo += formatDate(session.timeStarted, "TME") + ',';
-	sesinfo += formatPeriod(session.timeEnded.toMillis() - session.timeStarted.toMillis(), "MINUTES") + '\n';
+	sesinfo += `${formatDate(session.timeStarted, "TME")  },`;
+	sesinfo += `${formatPeriod(session.timeEnded.toMillis() - session.timeStarted.toMillis(), "MINUTES")  }\n`;
 
 	/* Generate csv string of join/leave events in the session */
 
@@ -71,20 +76,20 @@ export function generateSessionOutput(session: CompletedSession): SessionOutput 
 		attdet += "stub-id" + ',';
 		attdet += `${session.events[i].userId}` + ',';
 		attdet += `${session.events[i].type}` + ',';
-		attdet += formatDate(session.events[i].timeOccurred, "EXCEL") + '\n';
+		attdet += `${formatDate(session.events[i].timeOccurred, "EXCEL")  }\n`;
 	}
 
 	/* Generate csv string of attendance verdicts for the session's attendees */
 	// TODO: Rediscover how this dark magic works
 
-	let uniqueIds: Snowflake[] = [];
+	const uniqueIds: Snowflake[] = [];
 	session.events.forEach((event) => { if (!uniqueIds.includes(event.userId)) uniqueIds.push(event.userId); });
 
-	let attendees: { id: Snowflake, duration: number, events: SessionEvent[] }[] = [];
+	const attendees: { id: Snowflake; duration: number; events: SessionEvent[]; }[] = [];
 	uniqueIds.forEach((uid) => { attendees.push({ id: uid, duration: 0, events: [] }); });
 
 	session.events.forEach((event) => {
-		let attendee = attendees.find((attendee) => { return attendee.id === event.userId; });
+		const attendee = attendees.find((attendee) => attendee.id === event.userId);
 		attendee?.events.push(event);
 	});
 
@@ -99,9 +104,9 @@ export function generateSessionOutput(session: CompletedSession): SessionOutput 
 	let procdet = "id,perc,status,duration\n";
 	attendees.forEach((attendee) => {
 		procdet += `${attendee.id}` + ',';
-		procdet += (attendee.duration / sessionDuration) + ',';
-		procdet += (((attendee.duration / sessionDuration) > 0.8) ? "Hadir" : "Absen") + ',';
-		procdet += formatPeriod(attendee.duration, "MINUTES") + '\n';
+		procdet += `${attendee.duration / sessionDuration  },`;
+		procdet += `${((attendee.duration / sessionDuration) > 0.8) ? "Hadir" : "Absen"  },`;
+		procdet += `${formatPeriod(attendee.duration, "MINUTES")  }\n`;
 	});
 
 	/* Generate session info embed for the session */
