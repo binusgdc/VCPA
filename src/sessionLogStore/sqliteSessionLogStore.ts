@@ -38,7 +38,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 	private readonly connectionProvider: SqliteDbConnectionProvider;
 	private readonly dateTimeProvider: DateTimeProvider;
 
-	constructor(
+	public constructor(
 		connectionProvider: SqliteDbConnectionProvider,
 		dateTimeProvider: DateTimeProvider | undefined = undefined
 	) {
@@ -53,6 +53,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 	public async latestUnpushed(): Promise<SessionLog | undefined> {
 		const db = await this.connectionProvider.getConnection();
 		try {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const sessionResult = await db.get(
 				"SELECT `id`, `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored`, `time_pushed` \
                 FROM `session` \
@@ -60,7 +61,8 @@ export class SqliteSessionLogStore implements SessionLogStore {
                 ORDER BY `time_stored` DESC \
                 LIMIT 1"
 			);
-			if (sessionResult == undefined) return undefined;
+			if (sessionResult === undefined) return undefined;
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
 			const sessionId = sessionResult["id"];
 			const eventsResult: [] = await db.all(
 				"SELECT `time_occurred`, `event_code`, `user_id` \
@@ -68,6 +70,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
                 WHERE `session_id`=:session_id \
                 ORDER BY count",
 				{
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 					":session_id": sessionId.toString()
 				}
 			);
@@ -80,7 +83,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 		} catch (error) {
 			return undefined;
 		} finally {
-			db.close();
+			void db.close();
 		}
 	}
 
@@ -117,12 +120,13 @@ export class SqliteSessionLogStore implements SessionLogStore {
 		} catch (error) {
 			return undefined;
 		} finally {
-			db.close();
+			void db.close();
 		}
 	}
 	public async retrieve(id: SessionLogId): Promise<SessionLog | undefined> {
 		const db = await this.connectionProvider.getConnection();
 		try {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const sessionResult = await db.get(
 				"SELECT `id`, `owner_id`, `guild_id`, `channel_id`, `time_started`, `time_ended`, `time_stored`, `time_pushed` \
                 FROM `session` \
@@ -131,7 +135,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 					":id": id.toString()
 				}
 			);
-			if (sessionResult == undefined) return undefined;
+			if (sessionResult === undefined) return undefined;
 			const eventsResult: [] = await db.all(
 				"SELECT `time_occurred`, `event_code`, `user_id` \
                 FROM `event` \
@@ -149,7 +153,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 		} catch (error) {
 			return undefined;
 		} finally {
-			db.close();
+			void db.close();
 		}
 	}
 	public async retrieveAll(): Promise<SessionLog[] | undefined> {
@@ -166,6 +170,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
                     FROM `event` \
                     WHERE `session_id` = :session_id",
 					{
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
 						":session_id": sessionResult["id"]
 					}
 				);
@@ -182,7 +187,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 		} catch (error) {
 			return undefined;
 		} finally {
-			db.close();
+			void db.close();
 		}
 	}
 	public async delete(id: SessionLogId): Promise<void> {
@@ -207,7 +212,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 		} catch (error) {
 			return;
 		} finally {
-			db.close();
+			void db.close();
 		}
 	}
 
@@ -224,7 +229,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 				}
 			);
 		} finally {
-			db.close();
+			void db.close();
 		}
 	}
 
@@ -256,7 +261,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 			events: parsed.events.map(mapEvent),
 			timeStored: DateTime.fromISO(parsed.time_stored),
 			timePushed:
-				parsed.time_pushed != null && parsed.time_pushed != undefined
+				parsed.time_pushed !== null && parsed.time_pushed !== undefined
 					? DateTime.fromISO(parsed.time_pushed)
 					: undefined,
 			timeEnded: DateTime.fromISO(parsed.time_ended)
@@ -271,11 +276,11 @@ export interface SqliteDbConnectionProvider {
 export class LazyConnectionProvider implements SqliteDbConnectionProvider {
 	private readonly config: ISqlite.Config;
 
-	constructor(config: ISqlite.Config) {
+	public constructor(config: ISqlite.Config) {
 		this.config = config;
 	}
 
-	async getConnection(): Promise<Database<sqlite3.Database, sqlite3.Statement>> {
+	public async getConnection(): Promise<Database<sqlite3.Database, sqlite3.Statement>> {
 		return await open(this.config);
 	}
 }
