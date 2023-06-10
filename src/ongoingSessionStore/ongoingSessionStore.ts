@@ -1,8 +1,9 @@
 import { Snowflake } from "discord.js";
-import { OngoingSession, SessionEvent } from "../session/session";
 import { DateTime } from "luxon";
 
-type SessionDetails = { ownerId: Snowflake, guildId: Snowflake, channelId: Snowflake, timeStarted: DateTime, events: SessionEvent[] }
+import { OngoingSession, SessionEvent } from "../session/session";
+
+type SessionDetails = { ownerId: Snowflake; guildId: Snowflake; channelId: Snowflake; timeStarted: DateTime; events: SessionEvent[]; }
 
 export interface OngoingSessionStore {
     has(guildId: Snowflake, channelId: Snowflake): Promise<boolean>;
@@ -14,13 +15,13 @@ export interface OngoingSessionStore {
 export class InMemoryOngoingSessionStore implements OngoingSessionStore {
     private map: Map<string, OngoingSession> = new Map();
 
-    has(guildId: string, channelId: string): Promise<boolean> {
+    public has(guildId: string, channelId: string): Promise<boolean> {
         return Promise.resolve(this.map.has(this.composeKey(guildId, channelId)));
     }
-    get(guildId: string, channelId: string): Promise<OngoingSession | undefined> {
+    public get(guildId: string, channelId: string): Promise<OngoingSession | undefined> {
         return Promise.resolve(this.map.get(this.composeKey(guildId, channelId)));
     }
-    put({ ownerId, guildId, channelId, timeStarted, events }: SessionDetails): Promise<OngoingSession> {
+    public put({ ownerId, guildId, channelId, timeStarted, events }: SessionDetails): Promise<OngoingSession> {
         const newSession: OngoingSession = {
             ownerId: ownerId,
             guildId: guildId,
@@ -31,7 +32,7 @@ export class InMemoryOngoingSessionStore implements OngoingSessionStore {
         this.map.set(this.composeKey(newSession.guildId, newSession.channelId), newSession)
         return Promise.resolve(newSession);
     }
-    delete(guildId: string, channelId: string): Promise<OngoingSession | undefined> {
+    public delete(guildId: string, channelId: string): Promise<OngoingSession | undefined> {
         const existingSession = this.map.get(this.composeKey(guildId, channelId));
         if (existingSession === undefined) {
             return Promise.resolve(undefined);
