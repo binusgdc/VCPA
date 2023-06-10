@@ -52,6 +52,7 @@
 		"no-eval": ["error", { "allowIndirect": false }],
 		"no-floating-decimal": ["error"],
 		"no-implied-eval": ["error"],
+		"no-multi-str": ["error"],
 		"no-octal-escape": ["error"],
 		"no-param-reassign": ["error"],
 		"no-var": ["error"],
