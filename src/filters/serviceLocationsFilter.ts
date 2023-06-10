@@ -1,19 +1,19 @@
+import { Filter } from "./filter";
 import { CommandHandler } from "../commandsHandlers/commandHandler";
 import { ServiceLocation } from "../util/config";
-import { Filter } from "./filter";
 
 export class ServiceLocationsFilter implements Filter {
 
     private readonly serviceLocations: Map<string, ServiceLocation>
 
-    constructor(serviceLocations: ServiceLocation[]) {
+    public constructor(serviceLocations: ServiceLocation[]) {
         this.serviceLocations = new Map();
         for (const location of serviceLocations) {
             this.serviceLocations.set(location.guildId, location)
         }
     }
 
-    apply(handler: CommandHandler): CommandHandler {
+    public apply(handler: CommandHandler): CommandHandler {
         const serviceLocations = this.serviceLocations;
         return {
             async handle(command) {

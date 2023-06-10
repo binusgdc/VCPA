@@ -2,7 +2,7 @@ import { SnowflakeUtil, Snowflake } from "discord.js";
 import { SessionService } from "../src/session/sessionService";
 import { OngoingSessionStore } from "../src/ongoingSessionStore/ongoingSessionStore";
 import { CompletedSession, OngoingSession, SessionEvent, VoiceChannel } from "../src/session/session"
-import { DateTimeProvider, dtnow, generateSessionOutput } from "../src/util";
+import { DateTimeProvider, dtnow } from "../src/util/date";
 import { mock, instance, when, verify, anything, capture } from "ts-mockito"
 import { SessionLogStore } from "../src/sessionLogStore/sessionLogStore";
 

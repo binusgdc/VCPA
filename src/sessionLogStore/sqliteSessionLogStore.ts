@@ -5,9 +5,8 @@ import sqlite3 from "sqlite3";
 import { z } from "zod";
 
 import { SessionLogStore } from "./sessionLogStore";
-import { DateTimeProvider } from "../util/date";
 import { SessionLog, CompletedSession, SessionLogId, SessionEvent } from "../session/session";
-import { dtnow } from "../util";
+import { DateTimeProvider, dtnow } from "../util/date";
 
 const sessionEventSchemaSqlite = z.object({
 	event_code: z.literal("JOIN").or(z.literal("LEAVE")),

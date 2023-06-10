@@ -7,12 +7,11 @@ import {
 	SessionEvent,
 	SessionLog,
 	VoiceChannel,
-	formatDate,
 	generateSessionOutput
 } from "./session";
 import { OngoingSessionStore } from "../ongoingSessionStore/ongoingSessionStore";
 import { SessionLogStore } from "../sessionLogStore/sessionLogStore";
-import { DateTimeProvider } from "../util/date";
+import { DateTimeProvider, formatDate } from "../util/date";
 import { Result, error, ok } from "../util/result";
 
 export type StartSessionError = "SessionOngoing";

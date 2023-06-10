@@ -6,7 +6,8 @@ import sqlite3 from "sqlite3";
 import { CompletedSession, JoinedChannelEvent, LeftChannelEvent, SessionEvent, SessionLog, SessionLogId } from "../src/session/session";
 import { LazyConnectionProvider, SqliteSessionLogStore } from "../src/sessionLogStore/sqliteSessionLogStore";
 import { SessionLogStore } from "../src/sessionLogStore/sessionLogStore";
-import { DateTimeProvider, getRandomInteger } from "../src/util";
+import { DateTimeProvider } from "../src/util/date";
+import { getRandomInteger } from "../src/util/random"
 
 const dbName = "sessions-test.db";
 const dbConfig = { filename: dbName, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE }
