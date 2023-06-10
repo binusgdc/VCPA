@@ -3,12 +3,9 @@ import { z } from "zod";
 const schema = z.object({
 	DISCORD_BOT_TOKEN: z.string().or(z.undefined()),
 	AIRTABLE_API_KEY: z.string().or(z.undefined())
-}).required();
+});
 
-export type Env = {
-	DISCORD_BOT_TOKEN: string | undefined;
-	AIRTABLE_API_KEY: string | undefined;
-}
+export type Env = z.infer<typeof schema>
 
 export function loadEnv(): Env | undefined {
 	const result = schema.safeParse({
