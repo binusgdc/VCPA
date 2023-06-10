@@ -1,11 +1,12 @@
 import axios from "axios";
+
 import { PushlogData, PushlogResponse, PushlogTarget } from "./pushlogTarget";
 
 export class PushlogHttp implements PushlogTarget {
 
     private readonly endpoint: string;
 
-    constructor(endpoint: string) {
+    public constructor(endpoint: string) {
         this.endpoint = endpoint;
     }
 
@@ -14,10 +15,10 @@ export class PushlogHttp implements PushlogTarget {
             ...logData,
             sessionDateTime: logData.sessionDateTime.toUTC().toISO(),
             sessionDuration: logData.sessionDuration.toISO(),
-            attendees: logData.attendees.map((attendee) => ({
+            attendees: logData.attendees.map((attendee) => {return {
                 ...attendee,
                 attendanceDuration: attendee.attendanceDuration.toISO()
-            }))
+            }})
         });
         try {
             const response = await axios.post(this.endpoint, payload);

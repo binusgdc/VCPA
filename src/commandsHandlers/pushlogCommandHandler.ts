@@ -1,20 +1,15 @@
 import { ApplicationCommandData, ApplicationCommandOptionType, ChatInputCommandInteraction } from "discord.js";
-import { Duration } from "luxon";
 
 import { AbstractCommandHandler } from "./abstractCommandHandler";
-import { PushlogData, PushlogTarget } from "../pushlog/pushlogTarget";
-import { SessionLog } from "../session/session";
-import { SessionLogStore } from "../sessionLogStore/sessionLogStore";
+import { PushlogService } from "../session/pushlogService";
 
 export class PushlogCommandHandler extends AbstractCommandHandler {
-	private sessionLogStore: SessionLogStore
-	private pushlogTarget: PushlogTarget | undefined;
+	private readonly pushlogService: PushlogService;
 
-	public constructor(sessionLogStore: SessionLogStore, pushlogTarget: PushlogTarget | undefined) {
+	public constructor(pushlogService: PushlogService) {
 		super();
 
-		this.sessionLogStore = sessionLogStore;
-		this.pushlogTarget = pushlogTarget;
+		this.pushlogService = pushlogService;
 	}
 
 	public getSignature(): ApplicationCommandData {
@@ -30,7 +25,7 @@ export class PushlogCommandHandler extends AbstractCommandHandler {
 				},
 				{
 					name: "mentors",
-					description: "Mentor Discord ID(s) (e.g.: \"@mentor1 @mentor2\")",
+					description: 'Mentor Discord ID(s) (e.g.: "@mentor1 @mentor2")',
 					type: ApplicationCommandOptionType.String,
 					required: true
 				},
@@ -51,68 +46,48 @@ export class PushlogCommandHandler extends AbstractCommandHandler {
 	}
 
 	public async handle(interaction: ChatInputCommandInteraction): Promise<void> {
-		if (this.pushlogTarget === undefined) {
-			await interaction.reply("Error: push target is not configured.");
-			return;
-		}
-
 		await interaction.deferReply();
 
 		const argv = interaction.options;
 
-		const sessionIdToPush = argv.getString("session-id");
+		const sessionIdToPush = argv.getString("session-id") ?? undefined;
 
-		const logToPush = sessionIdToPush === null
-			? await this.sessionLogStore.latestUnpushed()
-			: await this.sessionLogStore.retrieve(sessionIdToPush);
+		const [topicId, documentatorName, mentorIdsInput] = [
+			argv.getString("topic-id"),
+			argv.getString("documentator"),
+			argv.getString("mentors")
+		];
 
-		if (logToPush === undefined) {
-			await interaction.editReply(">>> Session log not found.");
+		if (topicId === null || documentatorName === null || mentorIdsInput === null) {
 			return;
 		}
 
-		const [topicId, documentatorName, mentorIds] = [argv.getString("topic-id"), argv.getString("documentator"), argv.getString("mentors")]
+		const mentorIds = mentorIdsInput.split(" ").map((id) => id.replace("<@", "").replace(">", ""));
 
-		if (topicId === null || documentatorName === null || mentorIds === null) {
-			return;
-		}
+		const pushResult = await this.pushlogService.pushSessionLog(
+			topicId,
+			documentatorName,
+			mentorIds,
+			sessionIdToPush
+		);
 
-		const data = toPushData(logToPush, topicId, documentatorName, mentorIds);
-
-		const pushResult = await this.pushlogTarget?.push(data);
-		if (pushResult === "SUCCESS") {
-			await this.sessionLogStore.setLogPushed(logToPush.id);
-		}
-		await interaction.editReply(`>>> Attempted to push to archive. Result: ${pushResult}`);
-	}
-}
-
-function toPushData(sessionLog: SessionLog, topicId: string, recorderName: string, mentorDiscordUserIdsInput: string): PushlogData {
-	return {
-		topicId: topicId,
-		sessionDateTime: sessionLog.timeStarted,
-		sessionDuration: Duration.fromMillis(sessionLog.timeEnded.toMillis() - sessionLog.timeStarted.toMillis()),
-		recorderName: recorderName,
-		mentorDiscordUserIds: mentorDiscordUserIdsInput.split(" ").map(id => id.replace("<@", "").replace(">", "")),
-		attendees: Array.from(arrayGroupBy(sessionLog.events, (event) => event.userId).entries()).map(([userId, events]) => {
-			return {
-				discordUserId: userId,
-				attendanceDuration: Duration.fromMillis(
-					events.reduce(
-						(duration, event) => duration + ((event.timeOccurred.toMillis() - sessionLog.timeStarted.toMillis()) * (event.type === "Join" ? -1 : 1)), 0))
+		if (!pushResult.ok) {
+			let errorMessage: string;
+			switch (pushResult.error.type) {
+				case "LogNotFound":
+					errorMessage = "The specified log ID was not found.";
+					break;
+				case "NoUnpushed":
+					errorMessage = "No unpushed session logs were found. Specify a log by its ID to push it again.";
+					break;
+				case "PushUnsuccessful":
+					errorMessage = "Something went wrong while pushing the log";
+					break;
 			}
-		})
-	}
-}
-
-function arrayGroupBy<T>(array: Array<T>, grouper: (value: T) => string): Map<string, Array<T>> {
-	const result = new Map<string, Array<T>>();
-	for (const value of array) {
-		const key = grouper(value);
-		if (!result.has(key)) {
-			result.set(key, []);
+			await interaction.editReply(`>>> Attempted to push to archive. Result: ${errorMessage}`);
+			return;
 		}
-		result.get(key)!.push(value);
+
+		await interaction.editReply(`>>> Attempted to push to archive. Result: SUCCESS`);
 	}
-	return result;
 }
