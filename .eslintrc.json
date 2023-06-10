@@ -103,9 +103,6 @@
 		"@typescript-eslint/no-require-imports": ["error"],
 		"@typescript-eslint/no-unsafe-declaration-merging": ["error"],
 		"@typescript-eslint/no-unsafe-enum-comparison": ["error"],
-		"@typescript-eslint/parameter-properties": ["error", {
-			"prefer": "parameter-property"
-		}],
 		"@typescript-eslint/prefer-literal-enum-member": ["error"],
 		"@typescript-eslint/prefer-optional-chain": ["error"],
 		"@typescript-eslint/prefer-string-starts-ends-with": ["error"],
