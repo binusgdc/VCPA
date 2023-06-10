@@ -1,3 +1,4 @@
+/* eslint-disable no-multi-str */
 import { SnowflakeUtil } from "discord.js";
 import { DateTime } from "luxon";
 import { ISqlite, Database, open } from "sqlite";
