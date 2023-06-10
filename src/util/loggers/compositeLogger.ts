@@ -1,9 +1,9 @@
-import { Logger } from "../logger";
+import { Logger } from "./logger";
 
 export class CompositeLogger implements Logger {
 	private readonly loggers: Logger[]
 
-	constructor(loggers: Logger[]) {
+	public constructor(loggers: Logger[]) {
 		this.loggers = loggers;
 	}
 

@@ -1,33 +1,33 @@
-import { Logger, LoggingLevel } from "../logger";
+import { Logger, LoggingLevel } from "./logger";
 
 export abstract class AbstractLogger implements Logger {
 	protected level: LoggingLevel
 
-	constructor(level?: LoggingLevel | undefined) {
+	protected constructor(level?: LoggingLevel | undefined) {
 		this.level = level ?? LoggingLevel.Debug
 	}
 
-	async debug(message: string): Promise<void> {
+	public async debug(message: string): Promise<void> {
 		if (this.level > LoggingLevel.Debug) return;
 		await this._debug(message);
 	}
 
-	async info(message: string): Promise<void> {
+	public async info(message: string): Promise<void> {
 		if (this.level > LoggingLevel.Info) return;
 		await this._info(message);
 	}
 
-	async warn(message: string): Promise<void> {
+	public async warn(message: string): Promise<void> {
 		if (this.level > LoggingLevel.Warn) return;
 		await this._warn(message);
 	}
 
-	async error(message: string): Promise<void> {
+	public async error(message: string): Promise<void> {
 		if (this.level > LoggingLevel.Error) return;
 		await this._error(message);
 	}
 
-	async fatal(message: string): Promise<void> {
+	public async fatal(message: string): Promise<void> {
 		if (this.level > LoggingLevel.Fatal) return;
 		await this._fatal(message);
 	}

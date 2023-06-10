@@ -1,7 +1,7 @@
 import { AirtableBase } from "airtable/lib/airtable_base";
 
 import { AttendanceDetail, PushlogData, PushlogResponse, PushlogTarget } from "./pushlogTarget";
-import { Logger } from "../util/logger";
+import { Logger } from "../util/loggers/logger";
 
 export type AirtableRoutes = {
     topicsTableId: string;

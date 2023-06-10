@@ -25,7 +25,7 @@ import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLogStore
 import { ConfigFile, LoggerConfig } from "./util/config";
 import { DateTimeProvider, dtnow } from "./util/date";
 import { loadEnv } from "./util/env";
-import { Logger } from "./util/logger";
+import { Logger } from "./util/loggers/logger";
 import { CompositeLogger } from "./util/loggers/compositeLogger";
 import { ConsoleLogger } from "./util/loggers/consoleLogger";
 import { DiscordChannelLogger } from "./util/loggers/discordChannelLogger";
