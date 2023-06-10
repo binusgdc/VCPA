@@ -6,6 +6,7 @@ import * as jsonfile from "jsonfile";
 import { ISqlite, open } from "sqlite";
 import sqlite3 from "sqlite3";
 
+import { AbstractCommandHandler } from "./commandsHandlers/abstractCommandHandler";
 import { LowerHandCommandHandler } from "./commandsHandlers/lowerHandCommandHandler";
 import { PushlogCommandHandler } from "./commandsHandlers/pushlogCommandHandler";
 import { RaiseHandCommandHandler } from "./commandsHandlers/raiseHandCommandHandler";
@@ -18,6 +19,7 @@ import { PushlogAirtable } from "./pushlogTarget/pushlogAirtable";
 import { PushlogHttp } from "./pushlogTarget/pushlogHttp";
 import { PushlogTarget } from "./pushlogTarget/pushlogTarget";
 import { RoutingCommandHandler } from "./router";
+import { PushlogService } from "./session/pushlogService";
 import { SessionService } from "./session/sessionService";
 import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLogStore/sqliteSessionLogStore";
 import { ConfigFile, LoggerConfig } from "./util/config";
@@ -76,18 +78,19 @@ const dateTimeProvider: DateTimeProvider = {
 	now: () => dtnow(),
 };
 const sessionService = new SessionService(ongoingSessions, sessionLogStore, dateTimeProvider);
+const pushlogService = pushlogTarget !== undefined ? new PushlogService(sessionLogStore, pushlogTarget) : undefined;
 
-const commands = [
+const commands: AbstractCommandHandler[] = [
 	new StartCommandHandler(sessionService),
 	new StatusCommandHandler(),
 	new StopCommandHandler(sessionService),
 	new RaiseHandCommandHandler(),
 	new LowerHandCommandHandler(),
-	new PushlogCommandHandler(sessionLogStore, pushlogTarget)
+	...(pushlogService ? [new PushlogCommandHandler(pushlogService)] : [])
 ];
 
 const router = new RoutingCommandHandler(commands.map((c) => {
-	return { route: c.getSignature().name, handler: { handle: c.handle } };
+	return { route: c.getSignature().name, handler: c };
 }));
 
 const masterHandler = new ServiceLocationsFilter(config.serviceLocationWhiteList).apply(router);
