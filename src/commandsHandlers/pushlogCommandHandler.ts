@@ -51,7 +51,7 @@ export class PushlogCommandHandler extends AbstractCommandHandler {
 	}
 
 	public async handle(interaction: ChatInputCommandInteraction): Promise<void> {
-		if (this.pushlogTarget == undefined) {
+		if (this.pushlogTarget === undefined) {
 			await interaction.reply("Error: push target is not configured.");
 			return;
 		}
@@ -62,16 +62,22 @@ export class PushlogCommandHandler extends AbstractCommandHandler {
 
 		const sessionIdToPush = argv.getString("session-id");
 
-		const logToPush = sessionIdToPush == undefined
+		const logToPush = sessionIdToPush === null
 			? await this.sessionLogStore.latestUnpushed()
 			: await this.sessionLogStore.retrieve(sessionIdToPush);
 
-		if (logToPush == undefined) {
+		if (logToPush === undefined) {
 			await interaction.editReply(">>> Session log not found.");
 			return;
 		}
 
-		const data = toPushData(logToPush, argv.getString("topic-id")!, argv.getString("documentator")!, argv.getString("mentors")!);
+		const [topicId, documentatorName, mentorIds] = [argv.getString("topic-id"), argv.getString("documentator"), argv.getString("mentors")]
+
+		if (topicId === null || documentatorName === null || mentorIds === null) {
+			return;
+		}
+
+		const data = toPushData(logToPush, topicId, documentatorName, mentorIds);
 
 		const pushResult = await this.pushlogTarget?.push(data);
 		if (pushResult === "SUCCESS") {
@@ -79,7 +85,7 @@ export class PushlogCommandHandler extends AbstractCommandHandler {
 		}
 		await interaction.editReply(`>>> Attempted to push to archive. Result: ${pushResult}`);
 	}
-};
+}
 
 function toPushData(sessionLog: SessionLog, topicId: string, recorderName: string, mentorDiscordUserIdsInput: string): PushlogData {
 	return {

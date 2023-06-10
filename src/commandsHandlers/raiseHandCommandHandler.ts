@@ -37,11 +37,11 @@ export class RaiseHandCommandHandler extends AbstractCommandHandler {
 			return;
 		}
 
-		executor.setNickname("![✋] " + username);
+		await executor.setNickname(`![✋] ${  username}`);
 		console.log(`>>> User ${executor.id} raised their hand!`);
 		await interaction.reply({
 			content: "Raised hand!",
 			ephemeral: true
 		});
 	}
-};
+}

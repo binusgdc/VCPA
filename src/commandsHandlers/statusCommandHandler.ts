@@ -1,7 +1,8 @@
 import { ApplicationCommandData, ApplicationCommandOptionType, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 
 import { AbstractCommandHandler } from "./abstractCommandHandler";
-import * as Util from "../util";
+import * as Date from "../util/date"
+import * as Random from "../util/random"
 
 export class StatusCommandHandler extends AbstractCommandHandler {
 	public override getSignature(): ApplicationCommandData {
@@ -23,7 +24,7 @@ export class StatusCommandHandler extends AbstractCommandHandler {
 		await interaction.reply({
 			embeds: [
 				new EmbedBuilder()
-					.setColor(Util.getRandomColor())
+					.setColor(Random.getRandomColor())
 					.setTitle("*Bot Status*")
 					.addFields([
 						{
@@ -33,7 +34,7 @@ export class StatusCommandHandler extends AbstractCommandHandler {
 
 						{
 							name: "Time",
-							value: `It _was_ ${Util.dtnow().toString()}... This ain't instant messaging, though!`
+							value: `It _was_ ${Date.dtnow().toString()}... This ain't instant messaging, though!`
 						},
 
 						{
@@ -44,4 +45,4 @@ export class StatusCommandHandler extends AbstractCommandHandler {
 			]
 		});
 	}
-};
+}

@@ -1,10 +1,18 @@
 import { Snowflake } from "discord.js";
 import * as fs from "fs";
 
-import { CompletedSession, OngoingSession, SessionEvent, SessionLog, SessionLogId, VoiceChannel } from "./session";
+import {
+	CompletedSession,
+	OngoingSession,
+	SessionEvent,
+	SessionLog,
+	VoiceChannel,
+	formatDate,
+	generateSessionOutput
+} from "./session";
 import { OngoingSessionStore } from "../ongoingSessionStore/ongoingSessionStore";
 import { SessionLogStore } from "../sessionLogStore/sessionLogStore";
-import { DateTimeProvider, formatDate, generateSessionOutput } from "../util";
+import { DateTimeProvider } from "../util/date";
 import { Result, error, ok } from "../util/result";
 
 export type StartSessionError = "SessionOngoing";
@@ -17,14 +25,14 @@ type SessionNotFound = {
 type LogNotStored = {
 	type: "LogNotStored";
 	sessionOutput: {
-        sessionData: CompletedSession;
-        fileOutputPaths: string[];
-    };
+		sessionData: CompletedSession;
+		fileOutputPaths: string[];
+	};
 };
 
 type StopSessionOutput = {
-    sessionLog: SessionLog;
-    fileOutputPaths: string[];
+	sessionLog: SessionLog;
+	fileOutputPaths: string[];
 };
 
 export class SessionService {
@@ -75,9 +83,7 @@ export class SessionService {
 		});
 		return ok(createdSession);
 	}
-	public async stopSession(
-		channel: VoiceChannel
-	): Promise<Result<StopSessionOutput, StopSessionError>> {
+	public async stopSession(channel: VoiceChannel): Promise<Result<StopSessionOutput, StopSessionError>> {
 		const session = await this.ongoingSessionStore.get(channel.guildId, channel.id);
 		if (session === undefined) {
 			return error({ type: "SessionNotFound" });
@@ -97,33 +103,32 @@ export class SessionService {
 		};
 
 		const { sesinfo, attdet, procdet } = generateSessionOutput(completedSession);
-        const fileBaseName = formatDate(completedSession.timeEnded, "STD");
-        const sesinfoFilePath = `./run/${fileBaseName}-sesinfo.csv`
-        const attdetFilePath = `./run/${fileBaseName}-attdet.csv`
-        const procdetFilePath = `./run/${fileBaseName}-procdet.csv`
-        const fileOutputPaths = [
-            sesinfoFilePath,
-            attdetFilePath,
-            procdetFilePath
-        ]
-        fs.writeFileSync(sesinfoFilePath, sesinfo);
+		const fileBaseName = formatDate(completedSession.timeEnded, "STD");
+		const sesinfoFilePath = `./run/${fileBaseName}-sesinfo.csv`;
+		const attdetFilePath = `./run/${fileBaseName}-attdet.csv`;
+		const procdetFilePath = `./run/${fileBaseName}-procdet.csv`;
+		const fileOutputPaths = [sesinfoFilePath, attdetFilePath, procdetFilePath];
+		fs.writeFileSync(sesinfoFilePath, sesinfo);
 		fs.writeFileSync(attdetFilePath, attdet);
 		fs.writeFileSync(procdetFilePath, procdet);
-		
-        await this.ongoingSessionStore.delete(channel.guildId, channel.id);
+
+		await this.ongoingSessionStore.delete(channel.guildId, channel.id);
 		const sessionLogId = await this.sessionLogStore.store(completedSession);
-        if (sessionLogId !== undefined) {
-            const storedLog = await this.sessionLogStore.retrieve(sessionLogId);
-            if (storedLog !== undefined) {
-                return ok({
-                    sessionLog: storedLog,
-                    fileOutputPaths: fileOutputPaths 
-                });
-            }
-        }
-        return error({ type: "LogNotStored", sessionOutput: {
-            sessionData: completedSession,
-            fileOutputPaths: fileOutputPaths
-        }});  
+		if (sessionLogId !== undefined) {
+			const storedLog = await this.sessionLogStore.retrieve(sessionLogId);
+			if (storedLog !== undefined) {
+				return ok({
+					sessionLog: storedLog,
+					fileOutputPaths: fileOutputPaths
+				});
+			}
+		}
+		return error({
+			type: "LogNotStored",
+			sessionOutput: {
+				sessionData: completedSession,
+				fileOutputPaths: fileOutputPaths
+			}
+		});
 	}
 }

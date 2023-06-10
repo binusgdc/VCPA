@@ -37,11 +37,11 @@ export class LowerHandCommandHandler extends AbstractCommandHandler {
 			return;
 		}
 
-		executor.setNickname(username.substring(5));
+		await executor.setNickname(username.substring(5));
 		console.log(`>>> User ${executor.id} lowered their hand!`);
 		await interaction.reply({
 			content: "Lowered hand!",
 			ephemeral: true
 		});
 	}
-};
+}

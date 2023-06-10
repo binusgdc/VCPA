@@ -1,4 +1,4 @@
-import { ApplicationCommandData, ApplicationCommandOptionType, ChannelType, ChatInputCommandInteraction, GuildMember, VoiceChannel } from "discord.js";
+import { ApplicationCommandData, ApplicationCommandOptionType, ChannelType, ChatInputCommandInteraction, VoiceChannel } from "discord.js";
 
 import { AbstractCommandHandler } from "./abstractCommandHandler";
 import { SessionService } from "../session/sessionService";
