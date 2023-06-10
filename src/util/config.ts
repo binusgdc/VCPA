@@ -38,8 +38,8 @@ export type BGDCData = {
 };
 
 export type ConfigFile = {
-	discordBotToken: string;
-	airtableApiKey: string;
+	discordBotToken: string | undefined;
+	airtableApiKey: string | undefined;
 	serviceLocationWhiteList: ServiceLocation[];
 	pushLogTarget: PushLogTargetConfig;
 	loggers: LoggerConfig[];
