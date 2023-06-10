@@ -5,6 +5,8 @@ tsconfig.json
 package.json
 package-lock.json
 eslint.config.js
+.eslintignore
+.eslintrc.json
 jest.config.cjs
 node_modules/
 run/
