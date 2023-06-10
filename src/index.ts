@@ -50,17 +50,19 @@ const botClient = new Client({
 
 const restClient = new REST({
 	version: "10"
-}).setToken(env.BOT_TOKEN);
+}).setToken(env.DISCORD_BOT_TOKEN ?? config.discordBotToken);
 
 if (config.pushLogTarget?.type === "http-json") {
 	pushlogTarget = new PushlogHttp(config.pushLogTarget.endpoint);
 } else if (config.pushLogTarget?.type === "airtable") {
-	if (!env.AIRTABLE_KEY) {
+	const airtableApiKey = env.AIRTABLE_API_KEY ?? config.airtableApiKey;
+
+	if (!airtableApiKey) {
 		throw Error("❌ push log target is set to airtable, but AIRTABLE_KEY is not set");
 	}
 
 	pushlogTarget = new PushlogAirtable(
-		new Airtable({ apiKey: env.AIRTABLE_KEY }).base(config.pushLogTarget.baseId),
+		new Airtable({ apiKey: airtableApiKey }).base(config.pushLogTarget.baseId),
 		{ ...config.pushLogTarget },
 		new CompositeLogger(config.loggers?.map(initLogger) ?? [new ConsoleLogger()])
 	);
@@ -139,7 +141,9 @@ botClient.on("voiceStateUpdate", (oldState, newState) => {
 	}
 });
 
-await botClient.login(env.BOT_TOKEN);
+const discordBotToken = env.DISCORD_BOT_TOKEN ?? config.discordBotToken;
+if (!discordBotToken) throw Error("Missing discord bot token");
+await botClient.login(discordBotToken);
 
 async function performMigrations(config: ISqlite.Config, migrationsPath: string) {
 	const connection = await open(config);

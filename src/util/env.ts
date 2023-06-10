@@ -1,25 +1,27 @@
 import { z } from "zod";
 
 const schema = z.object({
-	BOT_TOKEN: z.string(),
-	AIRTABLE_KEY: z.string().or(z.undefined())
+	DISCORD_BOT_TOKEN: z.string().or(z.undefined()),
+	AIRTABLE_API_KEY: z.string().or(z.undefined())
 }).required();
 
 export type Env = {
-	BOT_TOKEN: string
-	AIRTABLE_KEY: string | undefined
+	DISCORD_BOT_TOKEN: string | undefined;
+	AIRTABLE_API_KEY: string | undefined;
 }
 
 export function loadEnv(): Env | undefined {
 	const result = schema.safeParse({
-		BOT_TOKEN: process.env.BOT_TOKEN,
-		AIRTABLE_KEY: process.env.AIRTABLE_KEY
+		DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
+		AIRTABLE_API_KEY: process.env.AIRTABLE_API_KEY
 	});
+
 	if (result.success) {
 		return {
-			BOT_TOKEN: result.data.BOT_TOKEN,
-			AIRTABLE_KEY: result.data.AIRTABLE_KEY
+			DISCORD_BOT_TOKEN: result.data.DISCORD_BOT_TOKEN,
+			AIRTABLE_API_KEY: result.data.AIRTABLE_API_KEY
 		};
+	} else {
+		return undefined;
 	}
-	else return undefined;
 }
