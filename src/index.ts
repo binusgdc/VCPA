@@ -143,7 +143,7 @@ botClient.on("voiceStateUpdate", async (oldState, newState) => {
 	}
 });
 
-await botClient.login(botToken);
+(async () => { await botClient.login(botToken); })();
 
 async function performMigrations(config: ISqlite.Config, migrationsPath: string) {
 	const connection = await open(config);
