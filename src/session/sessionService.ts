@@ -7,7 +7,7 @@ import {
 	SessionEvent,
 	SessionLog,
 	VoiceChannel,
-	generateSessionOutput
+	generateSessionOutput,
 } from "./session";
 import { OngoingSessionStore } from "../ongoingSessionStore/ongoingSessionStore";
 import { SessionLogStore } from "../sessionLogStore/sessionLogStore";
@@ -46,7 +46,7 @@ export class SessionService {
 		sessionAtChannel.events.push({
 			type: "Join",
 			userId: userId,
-			timeOccurred: this.dateTimeProvider.now()
+			timeOccurred: this.dateTimeProvider.now(),
 		});
 	}
 	public async handleLeftChannel(userId: Snowflake, guildId: Snowflake, channelId: Snowflake) {
@@ -55,7 +55,7 @@ export class SessionService {
 		sessionAtChannel.events.push({
 			type: "Leave",
 			userId: userId,
-			timeOccurred: this.dateTimeProvider.now()
+			timeOccurred: this.dateTimeProvider.now(),
 		});
 	}
 	public async startSession(
@@ -70,7 +70,7 @@ export class SessionService {
 			return {
 				type: "Join",
 				userId: userId,
-				timeOccurred: timeStarted
+				timeOccurred: timeStarted,
 			};
 		});
 		const createdSession = await this.ongoingSessionStore.put({
@@ -78,7 +78,7 @@ export class SessionService {
 			guildId: channel.guildId,
 			channelId: channel.id,
 			timeStarted: timeStarted,
-			events: startJoinEvents
+			events: startJoinEvents,
 		});
 		return ok(createdSession);
 	}
@@ -92,13 +92,13 @@ export class SessionService {
 			return {
 				type: "Leave",
 				userId: userId,
-				timeOccurred: timeEnded
+				timeOccurred: timeEnded,
 			};
 		});
 		session.events.push(...remainingLeaveEvents);
 		const completedSession: CompletedSession = {
 			...session,
-			timeEnded: timeEnded
+			timeEnded: timeEnded,
 		};
 
 		const { sesinfo, attdet, procdet } = generateSessionOutput(completedSession);
@@ -118,7 +118,7 @@ export class SessionService {
 			if (storedLog !== undefined) {
 				return ok({
 					sessionLog: storedLog,
-					fileOutputPaths: fileOutputPaths
+					fileOutputPaths: fileOutputPaths,
 				});
 			}
 		}
@@ -126,8 +126,8 @@ export class SessionService {
 			type: "LogNotStored",
 			sessionOutput: {
 				sessionData: completedSession,
-				fileOutputPaths: fileOutputPaths
-			}
+				fileOutputPaths: fileOutputPaths,
+			},
 		});
 	}
 }

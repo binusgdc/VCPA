@@ -4,7 +4,7 @@ import {
 	ChannelType,
 	ChatInputCommandInteraction,
 	EmbedBuilder,
-	VoiceChannel
+	VoiceChannel,
 } from "discord.js";
 
 import { AbstractCommandHandler } from "./abstractCommandHandler";
@@ -26,9 +26,9 @@ export class StopCommandHandler extends AbstractCommandHandler {
 					name: "channel",
 					description: "The voice channel that hosts the session to be stopped",
 					type: ApplicationCommandOptionType.Channel,
-					required: false
-				}
-			]
+					required: false,
+				},
+			],
 		};
 	}
 	public async handle(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -63,7 +63,7 @@ export class StopCommandHandler extends AbstractCommandHandler {
 		const stopSessionResult = await this.sessionService.stopSession({
 			id: targetChannel.id,
 			guildId: interaction.guild.id,
-			memberUserIds: [...(targetChannel as VoiceChannel).members.mapValues((m) => m.id).values()]
+			memberUserIds: [...(targetChannel as VoiceChannel).members.mapValues((m) => m.id).values()],
 		});
 
 		if (!stopSessionResult.ok) {
@@ -79,7 +79,7 @@ export class StopCommandHandler extends AbstractCommandHandler {
 				const { sessionData, fileOutputPaths } = stopSessionResult.error.sessionOutput;
 				await interaction.followUp({
 					embeds: [this.buildEmbedFromSessionDetails(sessionData)],
-					files: fileOutputPaths
+					files: fileOutputPaths,
 				});
 			}
 			return;
@@ -95,7 +95,7 @@ export class StopCommandHandler extends AbstractCommandHandler {
 		);
 		await interaction.followUp({
 			embeds: [this.buildEmbedFromSessionDetails(sessionLog)],
-			files: fileOutputPaths
+			files: fileOutputPaths,
 		});
 	}
 
@@ -109,11 +109,11 @@ export class StopCommandHandler extends AbstractCommandHandler {
 				{ name: "Start Time", value: Date.formatDate(session.timeStarted, "TME") },
 				{
 					name: "Duration (minutes)",
-					value: Date.formatPeriod(session.timeEnded.toMillis() - session.timeStarted.toMillis(), "MINUTES")
+					value: Date.formatPeriod(session.timeEnded.toMillis() - session.timeStarted.toMillis(), "MINUTES"),
 				},
 				{
 					name: "Attendance Form",
-					value: "[Google Form](https://docs.google.com/forms/d/e/1FAIpQLSdGjYqEQS9R4xK95_rwQHT-idPE0SBmbpD6g6ChBX4WFV_dCg/viewform?usp=sf_link)"
+					value: "[Google Form](https://docs.google.com/forms/d/e/1FAIpQLSdGjYqEQS9R4xK95_rwQHT-idPE0SBmbpD6g6ChBX4WFV_dCg/viewform?usp=sf_link)",
 				}
 			);
 	}

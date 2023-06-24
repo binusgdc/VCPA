@@ -1,5 +1,5 @@
 export interface Logger {
-	debug(message:string): Promise<void>;
+	debug(message: string): Promise<void>;
 	info(message: string): Promise<void>;
 	warn(message: string): Promise<void>;
 	error(message: string): Promise<void>;
@@ -12,5 +12,5 @@ export enum LoggingLevel {
 	Warn = 2,
 	Error = 3,
 	Fatal = 4,
-	None = 5
+	None = 5,
 }

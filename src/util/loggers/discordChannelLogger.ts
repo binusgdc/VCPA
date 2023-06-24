@@ -5,11 +5,11 @@ import { AbstractLogger } from "./abstractLogger";
 import { LoggingLevel } from "./logger";
 
 export class DiscordChannelLogger extends AbstractLogger {
-	private readonly client: REST
-	private readonly channelId: string
+	private readonly client: REST;
+	private readonly channelId: string;
 
 	public constructor(client: REST, channelId: string, level?: LoggingLevel | undefined) {
-		super(level ?? LoggingLevel.Info)
+		super(level ?? LoggingLevel.Info);
 		this.client = client;
 		this.channelId = channelId;
 	}
@@ -37,8 +37,8 @@ export class DiscordChannelLogger extends AbstractLogger {
 	private async sendMessageToLogChannel(message: string): Promise<void> {
 		await this.client.post(Routes.channelMessages(this.channelId), {
 			body: {
-				content: message
-			}
-		})
+				content: message,
+			},
+		});
 	}
 }

@@ -44,15 +44,11 @@ if (botToken === undefined) throw Error("❌ invalid configuration. Discord bot 
 let pushlogTarget: PushlogTarget | undefined;
 
 const botClient = new Client({
-	intents: [
-		GatewayIntentBits.Guilds,
-		GatewayIntentBits.GuildMessages,
-		GatewayIntentBits.GuildVoiceStates
-	]
+	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates],
 });
 
 const restClient = new REST({
-	version: "10"
+	version: "10",
 }).setToken(botToken);
 
 if (config.pushLogTarget?.type === "http-json") {
@@ -86,12 +82,14 @@ const commands: AbstractCommandHandler[] = [
 	new StopCommandHandler(sessionService),
 	new RaiseHandCommandHandler(),
 	new LowerHandCommandHandler(),
-	...(pushlogService ? [new PushlogCommandHandler(pushlogService)] : [])
+	...(pushlogService ? [new PushlogCommandHandler(pushlogService)] : []),
 ];
 
-const router = new RoutingCommandHandler(commands.map((c) => {
-	return { route: c.getSignature().name, handler: c };
-}));
+const router = new RoutingCommandHandler(
+	commands.map((c) => {
+		return { route: c.getSignature().name, handler: c };
+	})
+);
 
 const masterHandler = new ServiceLocationsFilter(config.serviceLocationWhiteList).apply(router);
 
@@ -105,8 +103,8 @@ botClient.on("ready", async () => {
 
 	await reRegisterCommands(
 		botClient,
-		config.serviceLocationWhiteList.map(s => s.guildId),
-		commands.map(cmd => cmd.getSignature())
+		config.serviceLocationWhiteList.map((s) => s.guildId),
+		commands.map((cmd) => cmd.getSignature())
 	);
 
 	if (!botClient.user) {
@@ -130,33 +128,37 @@ botClient.on("voiceStateUpdate", async (oldState, newState) => {
 	const newGuild = newState.guild.id;
 	const newChannel = newState.channelId;
 
-	if ((oldChannel === null) && (newChannel !== null)) {
+	if (oldChannel === null && newChannel !== null) {
 		// User was not in a voice channel, and now joined our voice channel
 		await sessionService.handleJoinedChannel(person, newGuild, newChannel);
-	} else if ((oldChannel !== null) && (newChannel === null)) {
+	} else if (oldChannel !== null && newChannel === null) {
 		// User was in our voice channel, and now isn't in a voice channel
 		await sessionService.handleLeftChannel(person, oldGuild, oldChannel);
-	} else if ((oldChannel !== null) && (newChannel !== null)) {
+	} else if (oldChannel !== null && newChannel !== null) {
 		// User was in a different voice channel, and now is in our voice channel
 		await sessionService.handleLeftChannel(person, oldGuild, oldChannel);
 		await sessionService.handleJoinedChannel(person, newGuild, newChannel);
 	}
 });
 
-(async () => { await botClient.login(botToken); })();
+(async () => {
+	await botClient.login(botToken);
+})();
 
 async function performMigrations(config: ISqlite.Config, migrationsPath: string) {
 	const connection = await open(config);
 	await connection.migrate({
-		migrationsPath: migrationsPath
+		migrationsPath: migrationsPath,
 	});
 	await connection.close();
 }
 
 function initLogger(config: LoggerConfig): Logger {
 	switch (config.type) {
-		case "discordChannel": return new DiscordChannelLogger(restClient, config.channelId);
-		case "console": return new ConsoleLogger();
+		case "discordChannel":
+			return new DiscordChannelLogger(restClient, config.channelId);
+		case "console":
+			return new ConsoleLogger();
 	}
 }
 

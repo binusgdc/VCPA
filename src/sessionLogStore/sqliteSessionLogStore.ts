@@ -13,8 +13,8 @@ const sessionEventSchemaSqlite = z.object({
 	event_code: z.literal("JOIN").or(z.literal("LEAVE")),
 	user_id: z.string(),
 	time_occurred: z.string().datetime({
-		offset: true
-	})
+		offset: true,
+	}),
 });
 
 const sessionLogSchemaSqlite = z.object({
@@ -23,16 +23,16 @@ const sessionLogSchemaSqlite = z.object({
 	guild_id: z.string(),
 	channel_id: z.string(),
 	time_started: z.string().datetime({
-		offset: true
+		offset: true,
 	}),
 	time_ended: z.string().datetime({
-		offset: true
+		offset: true,
 	}),
 	events: sessionEventSchemaSqlite.array(),
 	time_stored: z.string().datetime({
-		offset: true
+		offset: true,
 	}),
-	time_pushed: z.union([z.string(), z.undefined(), z.null()])
+	time_pushed: z.union([z.string(), z.undefined(), z.null()]),
 });
 
 export class SqliteSessionLogStore implements SessionLogStore {
@@ -47,7 +47,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 		this.dateTimeProvider = dateTimeProvider ?? {
 			now() {
 				return dtnow();
-			}
+			},
 		};
 	}
 
@@ -72,13 +72,13 @@ export class SqliteSessionLogStore implements SessionLogStore {
                 ORDER BY count",
 				{
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-					":session_id": sessionId.toString()
+					":session_id": sessionId.toString(),
 				}
 			);
 			return this.mapSessionLog(
 				sessionLogSchemaSqlite.parse({
 					...sessionResult,
-					events: eventsResult
+					events: eventsResult,
 				})
 			);
 		} catch (error) {
@@ -101,7 +101,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 					":channel_id": completedSession.channelId.toString(),
 					":time_started": completedSession.timeStarted.toISO(),
 					":time_ended": completedSession.timeEnded.toISO(),
-					":time_stored": this.dateTimeProvider.now().toISO()
+					":time_stored": this.dateTimeProvider.now().toISO(),
 				}
 			);
 			for (let index = 0; index < completedSession.events.length; index++) {
@@ -113,7 +113,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 						":session_id": nextId.toString(),
 						":time_occurred": sessionEvent.timeOccurred.toISO(),
 						":event_code": sessionEvent.type.toUpperCase(),
-						":user_id": sessionEvent.userId
+						":user_id": sessionEvent.userId,
 					}
 				);
 			}
@@ -133,7 +133,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
                 FROM `session` \
                 WHERE `id`=:id",
 				{
-					":id": id.toString()
+					":id": id.toString(),
 				}
 			);
 			if (sessionResult === undefined) return undefined;
@@ -143,12 +143,12 @@ export class SqliteSessionLogStore implements SessionLogStore {
                 WHERE `session_id`=:session_id \
                 ORDER BY count",
 				{
-					":session_id": id.toString()
+					":session_id": id.toString(),
 				}
 			);
 			const parsed = sessionLogSchemaSqlite.parse({
 				...sessionResult,
-				events: eventsResult
+				events: eventsResult,
 			});
 			return this.mapSessionLog(parsed);
 		} catch (error) {
@@ -172,14 +172,14 @@ export class SqliteSessionLogStore implements SessionLogStore {
                     WHERE `session_id` = :session_id",
 					{
 						// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-						":session_id": sessionResult["id"]
+						":session_id": sessionResult["id"],
 					}
 				);
 				sessions.push(
 					this.mapSessionLog(
 						sessionLogSchemaSqlite.parse({
 							...sessionResult,
-							events: eventsResult
+							events: eventsResult,
 						})
 					)
 				);
@@ -199,7 +199,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
                 FROM `event` \
                 WHERE `session_id`=:session_id",
 				{
-					":session_id": id.toString()
+					":session_id": id.toString(),
 				}
 			);
 			await db.run(
@@ -207,7 +207,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
                 FROM `session` \
                 WHERE `id`=:id",
 				{
-					":id": id.toString()
+					":id": id.toString(),
 				}
 			);
 		} catch (error) {
@@ -226,7 +226,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
                 WHERE `id`=:id",
 				{
 					":id": id,
-					":time_pushed": this.dateTimeProvider.now().toISODate()
+					":time_pushed": this.dateTimeProvider.now().toISODate(),
 				}
 			);
 		} finally {
@@ -249,7 +249,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 			return {
 				type: type,
 				userId: eventParsed.user_id,
-				timeOccurred: DateTime.fromISO(eventParsed.time_occurred)
+				timeOccurred: DateTime.fromISO(eventParsed.time_occurred),
 			};
 		}
 
@@ -265,7 +265,7 @@ export class SqliteSessionLogStore implements SessionLogStore {
 				parsed.time_pushed !== null && parsed.time_pushed !== undefined
 					? DateTime.fromISO(parsed.time_pushed)
 					: undefined,
-			timeEnded: DateTime.fromISO(parsed.time_ended)
+			timeEnded: DateTime.fromISO(parsed.time_ended),
 		};
 	}
 }

@@ -8,7 +8,7 @@ export class ConsoleLogger extends AbstractLogger {
 	}
 
 	protected override _debug(message: string): Promise<void> {
-		console.debug(`DEBUG: ${message}`)
+		console.debug(`DEBUG: ${message}`);
 		return Promise.resolve();
 	}
 

@@ -1,4 +1,4 @@
-import { LoggingLevel } from "../src/util/logger";
+import { LoggingLevel } from "../src/util/loggers/logger";
 import { ConsoleLogger } from "../src/util/loggers/consoleLogger";
 
 test("consoleTextFormatter", async () => {

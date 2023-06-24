@@ -3,24 +3,31 @@ import * as fs from "fs";
 import { DateTime } from "luxon";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { CompletedSession, JoinedChannelEvent, LeftChannelEvent, SessionEvent, SessionLog, SessionLogId } from "../src/session/session";
+import {
+	CompletedSession,
+	JoinedChannelEvent,
+	LeftChannelEvent,
+	SessionEvent,
+	SessionLog,
+	SessionLogId,
+} from "../src/session/session";
 import { LazyConnectionProvider, SqliteSessionLogStore } from "../src/sessionLogStore/sqliteSessionLogStore";
 import { SessionLogStore } from "../src/sessionLogStore/sessionLogStore";
 import { DateTimeProvider } from "../src/util/date";
-import { getRandomInteger } from "../src/util/random"
+import { getRandomInteger } from "../src/util/random";
 
 const dbName = "sessions-test.db";
-const dbConfig = { filename: dbName, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE }
+const dbConfig = { filename: dbName, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE };
 let sut: SessionLogStore;
 const dateTimeProviderMock: DateTimeProvider = {
-	now: jest.fn().mockReturnValue(DateTime.now())
-}
+	now: jest.fn().mockReturnValue(DateTime.now()),
+};
 
 async function setupDatabase() {
 	fs.writeFileSync(dbName, "");
 	const connection = await open(dbConfig);
 	await connection.migrate({
-		migrationsPath: "./data"
+		migrationsPath: "./data",
 	});
 	connection.close();
 	sut = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig), dateTimeProviderMock);
@@ -30,15 +37,18 @@ function deleteDatabase() {
 	if (fs.existsSync(dbName)) fs.rmSync(dbName);
 }
 
-function generateCompletedSession(lengthOfSessionMinutes: number = 10, numberOfUsers: number = 1, maxIntermediateEventsPerUser: number = 0): CompletedSession {
-
+function generateCompletedSession(
+	lengthOfSessionMinutes: number = 10,
+	numberOfUsers: number = 1,
+	maxIntermediateEventsPerUser: number = 0
+): CompletedSession {
 	lengthOfSessionMinutes = Math.max(10, lengthOfSessionMinutes);
 	numberOfUsers = Math.max(0, numberOfUsers);
 	maxIntermediateEventsPerUser = Math.max(0, maxIntermediateEventsPerUser);
 
 	const startTime = DateTime.now();
 	const endTime = startTime.plus({
-		minutes: lengthOfSessionMinutes
+		minutes: lengthOfSessionMinutes,
 	});
 
 	return {
@@ -49,13 +59,24 @@ function generateCompletedSession(lengthOfSessionMinutes: number = 10, numberOfU
 		timeEnded: endTime,
 		// sorted by user then time
 		events: [...Array(numberOfUsers).keys()]
-			.map(_ => SnowflakeUtil.generate())
-			.flatMap(userId => generateEventsForUserId(userId.toString(), startTime, endTime, getRandomInteger(0, maxIntermediateEventsPerUser)))
-	}
+			.map((_) => SnowflakeUtil.generate())
+			.flatMap((userId) =>
+				generateEventsForUserId(
+					userId.toString(),
+					startTime,
+					endTime,
+					getRandomInteger(0, maxIntermediateEventsPerUser)
+				)
+			),
+	};
 }
 
-function generateEventsForUserId(userId: Snowflake, startTime: DateTime, endTime: DateTime, quantity: number): SessionEvent[] {
-
+function generateEventsForUserId(
+	userId: Snowflake,
+	startTime: DateTime,
+	endTime: DateTime,
+	quantity: number
+): SessionEvent[] {
 	function floorToEven(number: number): number {
 		const i = Math.floor(number);
 		return i % 2 == 0 || i == 0 ? i : i - 1;
@@ -65,41 +86,45 @@ function generateEventsForUserId(userId: Snowflake, startTime: DateTime, endTime
 	const durationMilliseconds = Math.max(0, endTime.toMillis() - startTime.toMillis());
 
 	const intermediateEvents: SessionEvent[] = [...Array(numberOfIntermediateEvents).keys()]
-		.map(_ => Math.random())
+		.map((_) => Math.random())
 		.sort()
-		.map(portion => Math.floor(portion * durationMilliseconds))
+		.map((portion) => Math.floor(portion * durationMilliseconds))
 		.map((timeStampMilliseconds, index) => {
 			const count = index + 2;
 			return count % 2 == 0
 				? {
-					type: "Leave",
-					userId: userId,
-					timeOccurred: startTime.plus(timeStampMilliseconds)
-				}
+						type: "Leave",
+						userId: userId,
+						timeOccurred: startTime.plus(timeStampMilliseconds),
+				  }
 				: {
-					type: "Join",
-					userId: userId,
-					timeOccurred: startTime.plus(timeStampMilliseconds)
-				}
+						type: "Join",
+						userId: userId,
+						timeOccurred: startTime.plus(timeStampMilliseconds),
+				  };
 		});
 
 	const startEvent: JoinedChannelEvent = {
 		type: "Join",
 		userId: userId,
-		timeOccurred: startTime
+		timeOccurred: startTime,
 	};
 
 	const endEvent: LeftChannelEvent = {
 		type: "Leave",
 		userId: userId,
-		timeOccurred: endTime
+		timeOccurred: endTime,
 	};
 
 	return [startEvent, ...intermediateEvents, endEvent];
 }
 
-beforeEach(() => { return setupDatabase(); });
-afterEach(() => { deleteDatabase(); });
+beforeEach(() => {
+	return setupDatabase();
+});
+afterEach(() => {
+	deleteDatabase();
+});
 
 test("Generated session log's events are properly ordered for a single user", () => {
 	const tries = 50;
@@ -109,15 +134,13 @@ test("Generated session log's events are properly ordered for a single user", ()
 			const event = log.events[iEvent];
 			const next = log.events[iEvent + 1];
 			expect(event.timeOccurred.toMillis()).toBeLessThan(next.timeOccurred.toMillis());
-			if (event.type == "Join")
-				expect(next.type).toEqual("Leave");
-			else
-				expect(next.type).toEqual("Join");
+			if (event.type == "Join") expect(next.type).toEqual("Leave");
+			else expect(next.type).toEqual("Join");
 		}
 	}
-})
+});
 
-test('Inserted session should be retrievable', async () => {
+test("Inserted session should be retrievable", async () => {
 	const expected = generateCompletedSession();
 	const id = await sut.store(expected);
 	const actual = await sut.retrieve(id as SessionLogId);
@@ -125,7 +148,7 @@ test('Inserted session should be retrievable', async () => {
 	expectSessionsToEqual(actual!, expected);
 });
 
-test('Session just inserted should have undefined time pushed', async () => {
+test("Session just inserted should have undefined time pushed", async () => {
 	const expected = generateCompletedSession();
 	const id = await sut.store(expected);
 	const actual = await sut.retrieve(id as SessionLogId);
@@ -133,10 +156,10 @@ test('Session just inserted should have undefined time pushed', async () => {
 	expect(actual?.timePushed).toBeUndefined();
 });
 
-test('Session set to pushed should have expected date pushed', async () => {
+test("Session set to pushed should have expected date pushed", async () => {
 	const now = DateTime.now();
 	const sut = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig), {
-		now: () => now
+		now: () => now,
 	});
 
 	const expected = generateCompletedSession();
@@ -147,13 +170,12 @@ test('Session set to pushed should have expected date pushed', async () => {
 	expect(actual?.timePushed?.toISODate()).toEqual(now.toISODate());
 });
 
-test('Latest returns the most recent by time stored', async () => {
-
+test("Latest returns the most recent by time stored", async () => {
 	const sut = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig), {
-		now: DateTime.now
+		now: DateTime.now,
 	});
 
-	const previousSessions = [...Array(10).keys()].map(_ => generateCompletedSession());
+	const previousSessions = [...Array(10).keys()].map((_) => generateCompletedSession());
 	for (const completedSession of previousSessions) {
 		await sut.store(completedSession);
 	}
@@ -164,14 +186,14 @@ test('Latest returns the most recent by time stored', async () => {
 	expectSessionsToEqual(actual!, expectedLater);
 });
 
-test('Trying to store the same session twice should return undefined', async () => {
+test("Trying to store the same session twice should return undefined", async () => {
 	const expected = generateCompletedSession();
 	await sut.store(expected);
 	const secondTry = await sut.store(expected);
 	expect(secondTry).toBeUndefined();
 });
 
-test('Trying to retrieve a session after deleting it should return undefined', async () => {
+test("Trying to retrieve a session after deleting it should return undefined", async () => {
 	const expectedFirst = generateCompletedSession();
 	const id = (await sut.store(expectedFirst)) as SessionLogId;
 	await sut.delete(id);
@@ -179,24 +201,29 @@ test('Trying to retrieve a session after deleting it should return undefined', a
 	expect(attempt).toBeUndefined();
 });
 
-test('Retrieving all sessions with events returns all inserted sessions', async () => {
+test("Retrieving all sessions with events returns all inserted sessions", async () => {
 	const expected = [...Array(10).keys()]
-		.map(_ => generateCompletedSession(10, 3, 6))
-		.reduce((dict, next) => dict.set(next.guildId + "-" + next.channelId, next), new Map<string, CompletedSession>());
+		.map((_) => generateCompletedSession(10, 3, 6))
+		.reduce(
+			(dict, next) => dict.set(next.guildId + "-" + next.channelId, next),
+			new Map<string, CompletedSession>()
+		);
 
 	for (const session of expected.values()) {
 		await sut.store(session);
 	}
 
-	const actual = ((await sut.retrieveAll()) as SessionLog[])
-		.reduce((dict, next) => dict.set(next.guildId + "-" + next.channelId, next), new Map<string, SessionLog>());
+	const actual = ((await sut.retrieveAll()) as SessionLog[]).reduce(
+		(dict, next) => dict.set(next.guildId + "-" + next.channelId, next),
+		new Map<string, SessionLog>()
+	);
 
 	for (const id of expected.keys()) {
-		expectSessionsToEqual(actual.get(id)!, expected.get(id)!)
+		expectSessionsToEqual(actual.get(id)!, expected.get(id)!);
 	}
 });
 
-test('Storing session creates a log with the current time', async () => {
+test("Storing session creates a log with the current time", async () => {
 	const expected = generateCompletedSession();
 	const id = await sut.store(expected);
 	const actual = await sut.retrieve(id as SessionLogId);
@@ -210,9 +237,9 @@ function expectSessionsToEqual(actual: CompletedSession, expected: CompletedSess
 	expect(actual.ownerId).toEqual(expected.ownerId);
 	expect(actual.timeStarted).toEqual(expected.timeStarted);
 	expect(actual.timeEnded).toEqual(expected.timeEnded);
-	const actualEvents = [...actual!.events].sort()
-	const expectedEvents = [...expected.events].sort()
+	const actualEvents = [...actual!.events].sort();
+	const expectedEvents = [...expected.events].sort();
 	for (let index = 0; index < actualEvents.length; index++) {
-		expect(actualEvents[index]).toEqual(expectedEvents[index])
+		expect(actualEvents[index]).toEqual(expectedEvents[index]);
 	}
 }

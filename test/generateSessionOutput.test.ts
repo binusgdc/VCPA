@@ -15,8 +15,8 @@ test("generateSessionOutput produces expected session info headers", () => {
 		channelId: channel,
 		timeStarted: now,
 		timeEnded: now.plus({ minutes: 5 }),
-		events: []
-	}
+		events: [],
+	};
 	const report = generateSessionOutput(session);
 	const headerColumns = report.sesinfo.split("\n")[0].split(",");
 	for (let index = 0; index < expectedHeaderColumns.length; index++) {
@@ -35,8 +35,8 @@ test("generateSessionOutput produces expected attendance info headers", () => {
 		channelId: channel,
 		timeStarted: now,
 		timeEnded: now.plus({ minutes: 5 }),
-		events: []
-	}
+		events: [],
+	};
 	const report = generateSessionOutput(session);
 	const headerColumns = report.attdet.split("\n")[0].split(",");
 	for (let index = 0; index < expectedHeaderColumns.length; index++) {
@@ -55,8 +55,8 @@ test("generateSessionOutput produces expected procdet headers", () => {
 		channelId: channel,
 		timeStarted: now,
 		timeEnded: now.plus({ minutes: 5 }),
-		events: []
-	}
+		events: [],
+	};
 	const report = generateSessionOutput(session);
 	const headerColumns = report.procdet.split("\n")[0].split(",");
 	for (let index = 0; index < expectedHeaderColumns.length; index++) {

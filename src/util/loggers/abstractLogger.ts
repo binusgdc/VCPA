@@ -1,10 +1,10 @@
 import { Logger, LoggingLevel } from "./logger";
 
 export abstract class AbstractLogger implements Logger {
-	protected level: LoggingLevel
+	protected level: LoggingLevel;
 
 	protected constructor(level?: LoggingLevel | undefined) {
-		this.level = level ?? LoggingLevel.Debug
+		this.level = level ?? LoggingLevel.Debug;
 	}
 
 	public async debug(message: string): Promise<void> {
@@ -37,5 +37,4 @@ export abstract class AbstractLogger implements Logger {
 	protected abstract _warn(message: string): Promise<void>;
 	protected abstract _error(message: string): Promise<void>;
 	protected abstract _fatal(message: string): Promise<void>;
-
 }

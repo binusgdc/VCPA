@@ -1,8 +1,13 @@
-import { ApplicationCommandData, ApplicationCommandOptionType, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import {
+	ApplicationCommandData,
+	ApplicationCommandOptionType,
+	ChatInputCommandInteraction,
+	EmbedBuilder,
+} from "discord.js";
 
 import { AbstractCommandHandler } from "./abstractCommandHandler";
-import * as Date from "../util/date"
-import * as Random from "../util/random"
+import * as Date from "../util/date";
+import * as Random from "../util/random";
 
 export class StatusCommandHandler extends AbstractCommandHandler {
 	public override getSignature(): ApplicationCommandData {
@@ -14,9 +19,9 @@ export class StatusCommandHandler extends AbstractCommandHandler {
 					name: "gift",
 					description: "A gift for me??? UwU",
 					type: ApplicationCommandOptionType.Boolean,
-					required: false
-				}
-			]
+					required: false,
+				},
+			],
 		};
 	}
 
@@ -29,20 +34,20 @@ export class StatusCommandHandler extends AbstractCommandHandler {
 					.addFields([
 						{
 							name: "Online",
-							value: "Yes! No... Maybe?"
+							value: "Yes! No... Maybe?",
 						},
 
 						{
 							name: "Time",
-							value: `It _was_ ${Date.dtnow().toString()}... This ain't instant messaging, though!`
+							value: `It _was_ ${Date.dtnow().toString()}... This ain't instant messaging, though!`,
 						},
 
 						{
 							name: "Emotion",
-							value: (interaction.options.getBoolean("gift") ? "OMG GIFT!!! :Yeee:" : ":sad:")
-						}
-					])
-			]
+							value: interaction.options.getBoolean("gift") ? "OMG GIFT!!! :Yeee:" : ":sad:",
+						},
+					]),
+			],
 		});
 	}
 }

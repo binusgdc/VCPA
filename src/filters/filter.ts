@@ -12,9 +12,9 @@ export function pipe(first: Filter, ...rest: Filter[]): Filter {
 			return [first, ...rest].reduce((prev, next) => {
 				return {
 					apply(handler) {
-						return prev.apply(next.apply(handler))
+						return prev.apply(next.apply(handler));
 					},
-				}
+				};
 			});
 	}
 }

@@ -75,7 +75,7 @@ export function generateSessionOutput(session: CompletedSession): SessionOutput 
 		if (!uniqueIds.includes(event.userId)) uniqueIds.push(event.userId);
 	});
 
-	const attendees: { id: Snowflake; duration: number; events: SessionEvent[]; }[] = [];
+	const attendees: { id: Snowflake; duration: number; events: SessionEvent[] }[] = [];
 	uniqueIds.forEach((uid) => {
 		attendees.push({ id: uid, duration: 0, events: [] });
 	});

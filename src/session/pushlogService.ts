@@ -77,10 +77,10 @@ export class PushlogService {
 										(event.type === "Join" ? -1 : 1),
 								0
 							)
-						)
+						),
 					};
 				}
-			)
+			),
 		};
 	}
 

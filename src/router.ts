@@ -3,9 +3,9 @@ import { ChatInputCommandInteraction } from "discord.js";
 import { CommandHandler } from "./commandsHandlers/commandHandler";
 
 export class RoutingCommandHandler implements CommandHandler {
-	private handlers: Map<string, CommandHandler>
+	private handlers: Map<string, CommandHandler>;
 
-	public constructor(commands: { route: string; handler: CommandHandler; }[]) {
+	public constructor(commands: { route: string; handler: CommandHandler }[]) {
 		this.handlers = new Map();
 
 		for (const { route, handler } of commands) {
