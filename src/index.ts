@@ -2,7 +2,6 @@ import { REST } from "@discordjs/rest";
 import Airtable from "airtable";
 import { ApplicationCommandData, Client, GatewayIntentBits, Snowflake } from "discord.js";
 import * as fs from "fs";
-import * as jsonfile from "jsonfile";
 import { ISqlite, open } from "sqlite";
 import sqlite3 from "sqlite3";
 
@@ -13,7 +12,6 @@ import { RaiseHandCommandHandler } from "./commandsHandlers/raiseHandCommandHand
 import { StartCommandHandler } from "./commandsHandlers/startCommandHandler";
 import { StatusCommandHandler } from "./commandsHandlers/statusCommandHandler";
 import { StopCommandHandler } from "./commandsHandlers/stopCommandHandler";
-import { ServiceLocationsFilter } from "./filters/serviceLocationsFilter";
 import { InMemoryOngoingSessionStore } from "./ongoingSessionStore/ongoingSessionStore";
 import { PushlogAirtable } from "./pushlogTarget/pushlogAirtable";
 import { PushlogHttp } from "./pushlogTarget/pushlogHttp";
@@ -21,25 +19,34 @@ import { PushlogTarget } from "./pushlogTarget/pushlogTarget";
 import { RoutingCommandHandler } from "./router";
 import { PushlogService } from "./session/pushlogService";
 import { SessionService } from "./session/sessionService";
+import { InMemorySessionLogStore } from "./sessionLogStore/inMemoryBufferSessionLogStore";
+import { SessionLogStore } from "./sessionLogStore/sessionLogStore";
 import { LazyConnectionProvider, SqliteSessionLogStore } from "./sessionLogStore/sqliteSessionLogStore";
-import { ConfigFile, LoggerConfig } from "./util/config";
+import { LoggerConfig, SessionLogStoreConfig, loadAndParseConfig } from "./util/config";
 import { DateTimeProvider, dtnow } from "./util/date";
 import { loadEnv } from "./util/env";
-import { Logger } from "./util/loggers/logger";
 import { CompositeLogger } from "./util/loggers/compositeLogger";
 import { ConsoleLogger } from "./util/loggers/consoleLogger";
 import { DiscordChannelLogger } from "./util/loggers/discordChannelLogger";
+import { Logger } from "./util/loggers/logger";
 
 const dbFile = "data/session-logs.db";
 const dbConfig = { filename: dbFile, driver: sqlite3.Database, mode: sqlite3.OPEN_READWRITE };
 
 const envLoaded = loadEnv();
-if (!envLoaded) throw Error("❌ invalid environment variables");
-const env = envLoaded;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const config: ConfigFile = jsonfile.readFileSync("./config.json");
-const botToken = env.DISCORD_BOT_TOKEN ?? config.discordBotToken;
-if (botToken === undefined) throw Error("❌ invalid configuration. Discord bot token is not set.");
+if (!envLoaded.success) {
+	console.error(envLoaded.error);
+	throw new Error("❌ invalid environment variables");
+}
+const env = envLoaded.data;
+const botToken = env.DISCORD_BOT_TOKEN;
+const configResult = loadAndParseConfig(env);
+
+if (!configResult.ok) {
+	throw configResult.error;
+}
+
+const config = configResult.value;
 
 let pushlogTarget: PushlogTarget | undefined;
 
@@ -54,7 +61,7 @@ const restClient = new REST({
 if (config.pushLogTarget?.type === "http-json") {
 	pushlogTarget = new PushlogHttp(config.pushLogTarget.endpoint);
 } else if (config.pushLogTarget?.type === "airtable") {
-	const airtableApiKey = env.AIRTABLE_API_KEY ?? config.airtableApiKey;
+	const airtableApiKey = env.AIRTABLE_API_KEY;
 	if (!airtableApiKey) {
 		throw Error("❌ push log target is set to airtable, but AIRTABLE_KEY is not set");
 	}
@@ -68,11 +75,11 @@ if (config.pushLogTarget?.type === "http-json") {
 
 if (!pushlogTarget) console.error("⚠️ WARNING: Push log target is not configured in config.json");
 
-const ongoingSessions = new InMemoryOngoingSessionStore();
-const sessionLogStore = new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig));
 const dateTimeProvider: DateTimeProvider = {
 	now: () => dtnow(),
 };
+const ongoingSessions = new InMemoryOngoingSessionStore();
+const sessionLogStore = initSessionLogStore(config.sessionLogStore);
 const sessionService = new SessionService(ongoingSessions, sessionLogStore, dateTimeProvider);
 const pushlogService = pushlogTarget !== undefined ? new PushlogService(sessionLogStore, pushlogTarget) : undefined;
 
@@ -91,19 +98,14 @@ const router = new RoutingCommandHandler(
 	})
 );
 
-const masterHandler = new ServiceLocationsFilter(config.serviceLocationWhiteList).apply(router);
+const masterHandler = router;
 
 if (!fs.existsSync("./run")) fs.mkdirSync("./run/");
 
 botClient.on("ready", async () => {
-	if (!fs.existsSync(dbFile)) {
-		fs.writeFileSync(dbFile, "");
-		await performMigrations(dbConfig, "./data");
-	}
-
 	await reRegisterCommands(
 		botClient,
-		config.serviceLocationWhiteList.map((s) => s.guildId),
+		config.servicedGuildIds,
 		commands.map((cmd) => cmd.getSignature())
 	);
 
@@ -141,9 +143,7 @@ botClient.on("voiceStateUpdate", async (oldState, newState) => {
 	}
 });
 
-(async () => {
-	await botClient.login(botToken);
-})();
+botClient.login(botToken).catch((err) => console.error(err));
 
 async function performMigrations(config: ISqlite.Config, migrationsPath: string) {
 	const connection = await open(config);
@@ -159,6 +159,19 @@ function initLogger(config: LoggerConfig): Logger {
 			return new DiscordChannelLogger(restClient, config.channelId);
 		case "console":
 			return new ConsoleLogger();
+	}
+}
+
+function initSessionLogStore(config: SessionLogStoreConfig): SessionLogStore {
+	switch (config.type) {
+		case "sqlite":
+			if (!fs.existsSync(dbFile)) {
+				fs.writeFileSync(dbFile, "");
+				performMigrations(dbConfig, "./data").catch((err) => console.error(err));
+			}
+			return new SqliteSessionLogStore(new LazyConnectionProvider(dbConfig));
+		case "memory":
+			return new InMemorySessionLogStore(10, dateTimeProvider);
 	}
 }
 
