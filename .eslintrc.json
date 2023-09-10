@@ -130,28 +130,6 @@
 		// Static analysis
 
 		"import/no-absolute-path": ["error"],
-		"import/no-self-import": ["error"],
-
-		// Style guide
-
-		"import/first": ["error"],
-		"import/newline-after-import": ["error", {
-			"considerComments": true
-		}],
-		"import/order": ["error", {
-			"groups": [
-				["builtin", "external"],
-				"internal",
-				["parent", "sibling", "index"],
-				"type",
-				"object"
-			],
-			"newlines-between": "always",
-			"alphabetize": {
-				"order": "asc",
-				"orderImportKind": "asc",
-				"caseInsensitive": false
-			}
-		}]
+		"import/no-self-import": ["error"]
 	}
 }
