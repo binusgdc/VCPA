@@ -89,6 +89,7 @@ export class SessionService {
         if (session === undefined) {
             return error({ type: "SessionNotFound" })
         }
+
         const timeEnded = this.dateTimeProvider.now()
         const remainingLeaveEvents = channel.memberUserIds.map<SessionEvent>((userId) => {
             return {
@@ -115,21 +116,30 @@ export class SessionService {
 
         await this.ongoingSessionStore.delete(channel.guildId, channel.id)
         const sessionLogId = await this.sessionLogStore.store(completedSession)
-        if (sessionLogId !== undefined) {
-            const storedLog = await this.sessionLogStore.retrieve(sessionLogId)
-            if (storedLog !== undefined) {
-                return ok({
-                    sessionLog: storedLog,
+        if (sessionLogId === undefined) {
+            return error({
+                type: "LogNotStored",
+                sessionOutput: {
+                    sessionData: completedSession,
                     fileOutputPaths: fileOutputPaths,
-                })
-            }
+                },
+            })
         }
-        return error({
-            type: "LogNotStored",
-            sessionOutput: {
-                sessionData: completedSession,
-                fileOutputPaths: fileOutputPaths,
-            },
+
+        const storedLog = await this.sessionLogStore.retrieve(sessionLogId)
+        if (storedLog === undefined) {
+            return error({
+                type: "LogNotStored",
+                sessionOutput: {
+                    sessionData: completedSession,
+                    fileOutputPaths: fileOutputPaths,
+                },
+            })
+        }
+
+        return ok({
+            sessionLog: storedLog,
+            fileOutputPaths: fileOutputPaths,
         })
     }
 }

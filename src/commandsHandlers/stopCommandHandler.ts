@@ -6,6 +6,7 @@ import {
     EmbedBuilder,
     VoiceChannel,
 } from "discord.js"
+import * as fs from "fs"
 
 import { AbstractCommandHandler } from "./abstractCommandHandler"
 import { CompletedSession } from "../session/session"
@@ -101,6 +102,10 @@ export class StopCommandHandler extends AbstractCommandHandler {
             embeds: [this.buildEmbedFromSessionDetails(sessionLog)],
             files: fileOutputPaths,
         })
+
+        for (const path of fileOutputPaths) {
+            fs.rmSync(path)
+        }
     }
 
     private buildEmbedFromSessionDetails(session: CompletedSession): EmbedBuilder {
