@@ -5,6 +5,7 @@ import { SessionLog, SessionLogId } from "./session"
 import { PushlogData, PushlogTarget } from "../pushlogTarget/pushlogTarget"
 import { SessionLogStore } from "../sessionLogStore/sessionLogStore"
 import { Result, error, ok } from "../util/result"
+import { NonEmptyArray } from "../util/array"
 
 type PushLogError = LogNotFound | NoUnpushed | PushUnsuccessful
 
@@ -30,9 +31,10 @@ export class PushlogService {
     }
 
     public async pushSessionLog(
+        classId: string,
         topicId: string,
         documentatorName: string,
-        mentorIds: Snowflake[],
+        mentorIds: NonEmptyArray<Snowflake>,
         sessionLogId: SessionLogId | undefined
     ): Promise<Result<undefined, PushLogError>> {
         const logToPush =
@@ -46,7 +48,7 @@ export class PushlogService {
                 : error({ type: "LogNotFound" })
         }
 
-        const pushData = this.toPushData(logToPush, topicId, documentatorName, mentorIds)
+        const pushData = this.toPushData(logToPush, classId, topicId, documentatorName, mentorIds)
         const pushResult = await this.pushlogTarget.push(pushData)
         if (pushResult === "FAILURE") {
             return error({ type: "PushUnsuccessful" })
@@ -57,11 +59,13 @@ export class PushlogService {
 
     private toPushData(
         sessionLog: SessionLog,
+        classId: string,
         topicId: string,
         recorderName: string,
-        mentorDiscordUserIds: Snowflake[]
+        mentorDiscordUserIds: NonEmptyArray<Snowflake>
     ): PushlogData {
         return {
+            classId: classId,
             topicId: topicId,
             sessionDateTime: sessionLog.timeStarted,
             sessionDuration: Duration.fromMillis(

@@ -26,7 +26,7 @@
     "luxon": "^2.5.2",
     "sqlite": "^4.2.1",
     "sqlite3": "^5.1.6",
-    "zod": "^3.21.4"
+    "zod": "^3.22.2"
   },
   "devDependencies": {
     "@types/jest": "^29.5.1",

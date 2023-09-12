@@ -1,5 +1,6 @@
 import { Snowflake } from "discord.js"
 import { DateTime, Duration } from "luxon"
+import { NonEmptyArray } from "../util/array"
 
 export type PushlogResponse = "SUCCESS" | "FAILURE"
 
@@ -9,11 +10,12 @@ export type AttendanceDetail = {
 }
 
 export type PushlogData = {
+    classId: string
     topicId: string
     sessionDateTime: DateTime
     sessionDuration: Duration
     recorderName: string
-    mentorDiscordUserIds: Array<Snowflake>
+    mentorDiscordUserIds: NonEmptyArray<Snowflake>
     attendees: Array<AttendanceDetail>
 }
 
