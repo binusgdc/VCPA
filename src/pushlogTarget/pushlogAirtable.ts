@@ -1,8 +1,9 @@
 import { AirtableBase } from "airtable/lib/airtable_base"
+import { z } from "zod"
+import { DateTime, Duration } from "luxon"
 
 import { AttendanceDetail, PushlogData, PushlogResponse, PushlogTarget } from "./pushlogTarget"
 import { Logger } from "../util/loggers/logger"
-import { z } from "zod"
 import { Result, error, ok } from "../util/result"
 import { NonEmptyArray } from "../util/array"
 
@@ -15,28 +16,20 @@ export type AirtableRoutes = {
     studentsTableId: string
 }
 
-type MemberDetailRecord = {
+type Student = {
     recordId: string
-    name: string
-    nim: string
-}
-
-type Mentor = {
     discordUid: string
     name: string
     nim: string
 }
 
-type FetchMentorsError = MissingMentors
+type StudentAttendanceDetail = AttendanceDetail & Student
 
-type MissingMentors = {
-    type: "MissingMentors"
-    found: Mentor[]
-    missing: NonEmptyArray<Mentor>
-}
-
-interface StringInterpretable {
-    toString(): string
+type Mentor = {
+    recordId: string
+    discordUid: string
+    name: string
+    nim: string
 }
 
 export class PushlogAirtable implements PushlogTarget {
@@ -128,42 +121,19 @@ export class PushlogAirtable implements PushlogTarget {
                     .join(" | ")}`
             )
 
-            const sessionRecordPayload = [
-                {
-                    fields: {
-                        ClassId: [classRecordId],
-                        TopicID: [topicRecordId],
-                        SessionAttendance: [],
-                        SessionDate: sessionDateTime.toISO(),
-                        SessionDuration: Math.max(Math.trunc(sessionDuration.as("seconds")), 60),
-                        "Recorder (Name String)": recorderName,
-                        "Mentor (Discord UID)": [
-                            mentorDiscordUserIds,
-                            ...mentorDiscordUserIds.tail,
-                        ].join(", "),
-                    },
-                },
-            ]
-
-            void this.logger.debug(
-                `Creating session record in base, payload: ${sessionRecordPayload}`
-            )
-
-            const createSessionRecordResult = await this.base(this.sessionsTableId).create(
-                sessionRecordPayload
-            )
-
-            const createdSessionIdParseResult = z
-                .string()
-                .nonempty()
-                .safeParse(createSessionRecordResult[0]?.id)
-
-            if (!createdSessionIdParseResult.success) {
+            const createSessionResult = await this.createSessionRecord({
+                classRecordId,
+                topicRecordId,
+                sessionDateTime,
+                sessionDuration,
+                recorderName,
+                mentorRecordIds: [...mentorsData.values()].map((e) => e.recordId),
+            })
+            if (!createSessionResult.ok) {
                 void this.logger.fatal(`Couldn't create the session! Aborting...`)
                 return "FAILURE"
             }
-
-            const sessionRecordId = createdSessionIdParseResult.data
+            const sessionRecordId = createSessionResult.value
 
             void this.logger.info(
                 `Created session record in airtable base with ID: ${sessionRecordId}`
@@ -175,7 +145,6 @@ export class PushlogAirtable implements PushlogTarget {
                 }. Batches: ${Math.ceil(attendees.length / this.createBatchSize)}`
             )
 
-            // TODO: refactor student fetch and unify to use Map
             for (let i = 0; i < attendees.length; i += this.createBatchSize) {
                 const batch = attendees.slice(i, i + this.createBatchSize)
 
@@ -183,92 +152,71 @@ export class PushlogAirtable implements PushlogTarget {
                     `Processing attendance: Batch ${i / this.createBatchSize + 1} (${batch.length})`
                 )
 
-                const getStudentsFormula = `OR(${[batch.map((e) => e.discordUserId)]
-                    .map((id) => `{DiscordUID} = ${id}`)
-                    .reduce((accum, next) => `${accum}, ${next}`)})`
+                const fetchStudentBatchResult = await this.fetchStudentsByDiscordId({
+                    head: batch[0].discordUserId,
+                    tail: batch.slice(1).map((e) => e.discordUserId),
+                })
+                if (!fetchStudentBatchResult.ok) {
+                    const errTxt = `Error in retrieving mentors: `
+                    switch (fetchStudentBatchResult.error) {
+                        case "ParseError":
+                            void this.logger.error(errTxt + "Could not parse student data")
+                            break
+                        default:
+                            void this.logger.error(errTxt + "Unknown, probably a network error")
+                            break
+                    }
 
-                const studentRecordsResult = await this.base(this.studentsTableId)
-                    .select({
-                        filterByFormula: getStudentsFormula,
-                        maxRecords: this.createBatchSize,
-                    })
-                    .all()
-
-                const studentRecordsParseResult = z
-                    .array(
-                        z.object({
-                            recordId: z.string().nonempty(),
-                            discordUid: z.string().nonempty(),
-                            name: z.string().nonempty(),
-                            nim: z.string().nonempty(),
-                        })
-                    )
-                    .safeParse([
-                        ...studentRecordsResult.map((e) => ({
-                            recordId: e.id,
-                            discordUid: e.get("DiscordUID")?.toString(),
-                            name: e.get("Name")?.toString(),
-                            nim: e.get("NIM")?.toString(),
-                        })),
-                    ])
-
-                if (!studentRecordsParseResult.success) {
                     return "FAILURE"
                 }
+                const studentsData = fetchStudentBatchResult.value
 
-                const studentsData = studentRecordsParseResult.data
+                const mergeStudentDataResult = batch.map<StudentAttendanceDetail | string>((e) => {
+                    const retrieved = studentsData.get(e.discordUserId)
+                    if (retrieved === undefined) {
+                        return e.discordUserId
+                    }
+                    return {
+                        ...e,
+                        ...retrieved,
+                    }
+                })
+                const missingStudentDiscordUids = mergeStudentDataResult.filter(
+                    (e) => typeof e === "string"
+                ) as string[]
+                const mergedStudentData = mergeStudentDataResult.filter(
+                    (e) => typeof e !== "string"
+                ) as StudentAttendanceDetail[]
 
-                if (studentsData.length !== batch.length) {
-                    const missingStudentIds = batch
-                        .map((e) => e.discordUserId)
-                        .filter(
-                            (requestedId) =>
-                                !studentsData.some(
-                                    (receivedStudent) => receivedStudent.discordUid === requestedId
-                                )
-                        )
+                if (missingStudentDiscordUids.length !== 0) {
                     void this.logger.warn(
-                        `Unable to retrieve students. Missing: ${missingStudentIds
+                        `Unable to retrieve all students. Missing: ${missingStudentDiscordUids
                             .map((e) => `<@${e}>`)
                             .join(" | ")}`
                     )
                 }
 
-                const unifiedStudentsData = studentsData.flatMap((airtableData) => {
-                    const target = batch.find((e) => e.discordUserId === airtableData.discordUid)
-                    return target === undefined
-                        ? []
-                        : [
-                              {
-                                  ...airtableData,
-                                  ...target,
-                              },
-                          ]
-                })
+                if (mergedStudentData.length === 0) {
+                    void this.logger.warn(
+                        `No students found for this batch. Moving on to next batch...`
+                    )
+                    continue
+                }
 
-                const attendanceBatchPayload = unifiedStudentsData.map((e) => ({
-                    fields: {
-                        SessionID: [sessionRecordId],
-                        StudentID: [e.recordId],
-                        AttendDuration: Math.max(
-                            Math.trunc(e.attendanceDuration.as("seconds")),
-                            60
-                        ),
-                    },
-                }))
-
-                void this.logger.debug(
-                    `Creating attendance records, payload: ${attendanceBatchPayload.toString()}`
+                const createAttendancesResult = await this.createAttendanceRecords(
+                    sessionRecordId,
+                    mergedStudentData
                 )
+                if (!createAttendancesResult.ok) {
+                    void this.logger.fatal(`Unable to create attendance records. Aborting...`)
+                    return "FAILURE"
+                }
 
-                await this.base(this.attendanceTableId).create(attendanceBatchPayload)
-                if (batch.length - attendanceBatchPayload.length === 0)
+                if (missingStudentDiscordUids.length === 0)
                     void this.logger.info(`Completed batch successfully`)
                 else {
                     void this.logger.warn(
-                        `Completed batch insertion with ${
-                            batch.length - attendanceBatchPayload.length
-                        } failed entries.`
+                        `Completed batch insertion with ${missingStudentDiscordUids.length} missing entries.`
                     )
                 }
             }
@@ -328,7 +276,6 @@ export class PushlogAirtable implements PushlogTarget {
             ]
                 .map((id) => `{DiscordUID} = ${id}`)
                 .reduce((accum, next) => `${accum}, ${next}`)})`
-
             const mentorRecords = await this.base(this.mentorsTableId)
                 .select({
                     filterByFormula: selectMentorsComposedFormula,
@@ -338,7 +285,7 @@ export class PushlogAirtable implements PushlogTarget {
             const mentorDataParseResult = z
                 .array(
                     z.object({
-                        id: z.string().nonempty(),
+                        recordId: z.string().nonempty(),
                         discordUid: z.string().nonempty(),
                         name: z.string().nonempty(),
                         nim: z.string().nonempty(),
@@ -346,7 +293,7 @@ export class PushlogAirtable implements PushlogTarget {
                 )
                 .safeParse([
                     ...mentorRecords.map((e) => ({
-                        id: e.id,
+                        recordId: e.id,
                         discordUid: e.get("DiscordUID")?.toString(),
                         name: e.get("Name")?.toString(),
                         nim: e.get("NIM")?.toString(),
@@ -367,5 +314,117 @@ export class PushlogAirtable implements PushlogTarget {
         }
     }
 
-    private async fetchStudentsWithDiscordId() {}
+    private async fetchStudentsByDiscordId(
+        studentDiscordUserIds: NonEmptyArray<string>
+    ): Promise<Result<Map<string, Student>, "ParseError" | "UnknownError">> {
+        try {
+            const studentDiscordUidsAsArray = [
+                studentDiscordUserIds.head,
+                ...studentDiscordUserIds.tail,
+            ]
+
+            const getStudentsFormula = `OR(${studentDiscordUidsAsArray
+                .map((id) => `{DiscordUID} = ${id}`)
+                .reduce((accum, next) => `${accum}, ${next}`)})`
+            const studentRecordsResult = await this.base(this.studentsTableId)
+                .select({
+                    filterByFormula: getStudentsFormula,
+                })
+                .all()
+
+            const studentRecordsParseResult = z
+                .array(
+                    z.object({
+                        recordId: z.string().nonempty(),
+                        discordUid: z.string().nonempty(),
+                        name: z.string().nonempty(),
+                        nim: z.string().nonempty(),
+                    })
+                )
+                .safeParse([
+                    ...studentRecordsResult.map((e) => ({
+                        recordId: e.id,
+                        discordUid: e.get("DiscordUID")?.toString(),
+                        name: e.get("Name")?.toString(),
+                        nim: e.get("NIM")?.toString(),
+                    })),
+                ])
+            if (!studentRecordsParseResult.success) {
+                return error("ParseError")
+            }
+            const studentsData = studentRecordsParseResult.data
+
+            const result = new Map<string, Student>()
+            for (const entry of studentsData) {
+                result.set(entry.discordUid, entry)
+            }
+            return ok(result)
+        } catch (_e) {
+            return error("UnknownError")
+        }
+    }
+
+    private async createSessionRecord({
+        classRecordId,
+        topicRecordId,
+        mentorRecordIds,
+        sessionDateTime,
+        sessionDuration,
+        recorderName,
+    }: {
+        classRecordId: string
+        topicRecordId: string
+        mentorRecordIds: string[]
+        sessionDateTime: DateTime
+        sessionDuration: Duration
+        recorderName: string
+    }): Promise<Result<string>> {
+        const payload = [
+            {
+                fields: {
+                    ClassId: [classRecordId],
+                    TopicID: [topicRecordId],
+                    SessionAttendance: [],
+                    SessionDate: sessionDateTime.toISO(),
+                    SessionDuration: Math.max(Math.trunc(sessionDuration.as("seconds")), 60),
+                    "Recorder (Name String)": recorderName,
+                    "Mentor (Discord UID)": mentorRecordIds,
+                },
+            },
+        ]
+
+        const createSessionRecordResult = await this.base(this.sessionsTableId).create(payload)
+        const createdSessionIdParseResult = z
+            .string()
+            .nonempty()
+            .safeParse(createSessionRecordResult[0]?.id)
+        if (!createdSessionIdParseResult.success) {
+            void this.logger.fatal(`Couldn't create the session! Aborting...`)
+            return error(undefined)
+        }
+
+        return ok(createdSessionIdParseResult.data)
+    }
+
+    private async createAttendanceRecords(
+        sessionRecordId: string,
+        attendances: StudentAttendanceDetail[]
+    ): Promise<Result<undefined>> {
+        try {
+            const payload = attendances.map((e) => ({
+                fields: {
+                    SessionID: [sessionRecordId],
+                    StudentID: [e.recordId],
+                    AttendDuration: Math.max(Math.trunc(e.attendanceDuration.as("seconds")), 60),
+                },
+            }))
+
+            void this.logger.debug(`Creating attendance records, payload: ${payload.toString()}`)
+
+            await this.base(this.attendanceTableId).create(payload)
+            return ok(undefined)
+        } catch (_e) {
+            return error(undefined)
+        }
+    }
 }
