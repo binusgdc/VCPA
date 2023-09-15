@@ -2,8 +2,6 @@ import { REST } from "@discordjs/rest"
 import Airtable from "airtable"
 import { ApplicationCommandData, Client, GatewayIntentBits, Snowflake } from "discord.js"
 import * as fs from "fs"
-import { ISqlite, open } from "sqlite"
-import sqlite3 from "sqlite3"
 
 import { AbstractCommandHandler } from "./commandsHandlers/abstractCommandHandler"
 import { LowerHandCommandHandler } from "./commandsHandlers/lowerHandCommandHandler"

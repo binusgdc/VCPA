@@ -43,14 +43,14 @@ export class PushlogAirtable implements PushlogTarget {
     private readonly studentsTableId: string
     private readonly logger: Logger
 
-    public constructor(base: AirtableBase, config: AirtableRoutes, logger: Logger) {
+    public constructor(base: AirtableBase, routes: AirtableRoutes, logger: Logger) {
         this.base = base
-        this.classesTableId = config.classesTableId
-        this.topicsTableId = config.topicsTableId
-        this.sessionsTableId = config.sessionsTableId
-        this.attendanceTableId = config.attendanceTableId
-        this.mentorsTableId = config.mentorsTableId
-        this.studentsTableId = config.studentsTableId
+        this.classesTableId = routes.classesTableId
+        this.topicsTableId = routes.topicsTableId
+        this.sessionsTableId = routes.sessionsTableId
+        this.attendanceTableId = routes.attendanceTableId
+        this.mentorsTableId = routes.mentorsTableId
+        this.studentsTableId = routes.studentsTableId
         this.logger = logger
     }
 

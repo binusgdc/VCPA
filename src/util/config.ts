@@ -19,10 +19,12 @@ type PushLogTargetHttpJson = {
 type PushLogTargetAirtable = {
     type: "airtable"
     baseId: string
+    classesTableId: string
     topicsTableId: string
     sessionsTableId: string
     attendanceTableId: string
-    membersTableId: string
+    mentorsTableId: string
+    studentsTableId: string
 }
 
 export type LoggerConfig = LoggerDiscordChannel | LoggerConsole
@@ -100,15 +102,17 @@ function parsePushlogTarget(env: Env): Result<PushlogTargetConfig, Error> {
         case "airtable":
             if (
                 !env.AIRTABLE_BASE_ID ||
+                !env.AIRTABLE_CLASSES_TABLE_ID ||
                 !env.AIRTABLE_TOPICS_TABLE_ID ||
                 !env.AIRTABLE_SESSIONS_TABLE_ID ||
                 !env.AIRTABLE_ATTENDANCE_TABLE_ID ||
-                !env.AIRTABLE_MEMBERS_TABLE_ID
+                !env.AIRTABLE_MENTORS_TABLE_ID ||
+                !env.AIRTABLE_STUDENTS_TABLE_ID
             ) {
                 return {
                     ok: false,
                     error: new Error(
-                        "Airtable base details missing: AIRTABLE_BASE_ID, AIRTABLE_TOPICS_TABLE_ID, AIRTABLE_SESSIONS_TABLE_ID, AIRTABLE_ATTENDANCE_TABLE_ID, or AIRTABLE_MEMBERS_TABLE_ID is not set"
+                        "One or more of these airtable base details are missing: AIRTABLE_BASE_ID, AIRTABLE_TOPICS_TABLE_ID, AIRTABLE_SESSIONS_TABLE_ID, AIRTABLE_ATTENDANCE_TABLE_ID, or AIRTABLE_MEMBERS_TABLE_ID is not set"
                     ),
                 }
             }
@@ -117,10 +121,12 @@ function parsePushlogTarget(env: Env): Result<PushlogTargetConfig, Error> {
                 value: {
                     type: "airtable",
                     baseId: env.AIRTABLE_BASE_ID,
+                    classesTableId: env.AIRTABLE_CLASSES_TABLE_ID,
                     topicsTableId: env.AIRTABLE_TOPICS_TABLE_ID,
                     sessionsTableId: env.AIRTABLE_SESSIONS_TABLE_ID,
                     attendanceTableId: env.AIRTABLE_ATTENDANCE_TABLE_ID,
-                    membersTableId: env.AIRTABLE_MEMBERS_TABLE_ID,
+                    mentorsTableId: env.AIRTABLE_MENTORS_TABLE_ID,
+                    studentsTableId: env.AIRTABLE_STUDENTS_TABLE_ID,
                 },
             }
     }
