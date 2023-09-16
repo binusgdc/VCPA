@@ -223,11 +223,7 @@ export class PushlogAirtable implements PushlogTarget {
             void this.logger.info("Push finished")
             return "SUCCESS"
         } catch (error) {
-            void this.logger.fatal(
-                `A fatal error occurred: ${
-                    error instanceof Error ? error.message : "UNKNOWN ERROR"
-                }`
-            )
+            void this.logger.fatal(`A fatal error occurred: ${(error as any).toString()}`)
             return "FAILURE"
         }
     }
@@ -236,7 +232,7 @@ export class PushlogAirtable implements PushlogTarget {
         try {
             const classRecordResult = await this.base(this.classesTableId)
                 .select({
-                    filterByFormula: `{ID} = ${classId}`,
+                    filterByFormula: `{ID} = '${classId}'`,
                     maxRecords: 1,
                 })
                 .all()
@@ -244,7 +240,8 @@ export class PushlogAirtable implements PushlogTarget {
             const classRecordId = z.string().parse(classRecordResult[0]?.id)
 
             return ok(classRecordId)
-        } catch (_e) {
+        } catch (e) {
+            void this.logger.error((e as any).toString())
             return error(undefined)
         }
     }
@@ -261,7 +258,8 @@ export class PushlogAirtable implements PushlogTarget {
             const topicRecordId = z.string().parse(topicRecordResult[0]?.id)
 
             return ok(topicRecordId)
-        } catch (_e) {
+        } catch (e) {
+            void this.logger.error((e as any).toString())
             return error(undefined)
         }
     }
@@ -274,7 +272,7 @@ export class PushlogAirtable implements PushlogTarget {
                 mentorDiscordUserIds.head,
                 ...mentorDiscordUserIds.tail,
             ]
-                .map((id) => `{DiscordUID} = ${id}`)
+                .map((id) => `{DiscordUID} = '${id}'`)
                 .reduce((accum, next) => `${accum}, ${next}`)})`
             const mentorRecords = await this.base(this.mentorsTableId)
                 .select({
@@ -309,7 +307,8 @@ export class PushlogAirtable implements PushlogTarget {
                 result.set(entry.discordUid, entry)
             }
             return ok(result)
-        } catch (_e) {
+        } catch (e) {
+            void this.logger.error((e as any).toString())
             return error("UnknownError")
         }
     }
@@ -324,7 +323,7 @@ export class PushlogAirtable implements PushlogTarget {
             ]
 
             const getStudentsFormula = `OR(${studentDiscordUidsAsArray
-                .map((id) => `{DiscordUID} = ${id}`)
+                .map((id) => `{DiscordUID} = '${id}'`)
                 .reduce((accum, next) => `${accum}, ${next}`)})`
             const studentRecordsResult = await this.base(this.studentsTableId)
                 .select({
@@ -359,7 +358,8 @@ export class PushlogAirtable implements PushlogTarget {
                 result.set(entry.discordUid, entry)
             }
             return ok(result)
-        } catch (_e) {
+        } catch (e) {
+            void this.logger.error((e as any).toString())
             return error("UnknownError")
         }
     }
@@ -379,31 +379,36 @@ export class PushlogAirtable implements PushlogTarget {
         sessionDuration: Duration
         recorderName: string
     }): Promise<Result<string>> {
-        const payload = [
-            {
-                fields: {
-                    ClassId: [classRecordId],
-                    TopicID: [topicRecordId],
-                    SessionAttendance: [],
-                    SessionDate: sessionDateTime.toISO(),
-                    SessionDuration: Math.max(Math.trunc(sessionDuration.as("seconds")), 60),
-                    "Recorder (Name String)": recorderName,
-                    "Mentor (Discord UID)": mentorRecordIds,
+        try {
+            const payload = [
+                {
+                    fields: {
+                        ClassID: [classRecordId],
+                        TopicID: [topicRecordId],
+                        SessionAttendance: [],
+                        SessionDate: sessionDateTime.toISO(),
+                        SessionDuration: Math.max(Math.trunc(sessionDuration.as("seconds")), 60),
+                        "Recorder (Name String)": recorderName,
+                        MentorDiscordUID: mentorRecordIds,
+                    },
                 },
-            },
-        ]
+            ]
 
-        const createSessionRecordResult = await this.base(this.sessionsTableId).create(payload)
-        const createdSessionIdParseResult = z
-            .string()
-            .nonempty()
-            .safeParse(createSessionRecordResult[0]?.id)
-        if (!createdSessionIdParseResult.success) {
-            void this.logger.fatal(`Couldn't create the session! Aborting...`)
+            const createSessionRecordResult = await this.base(this.sessionsTableId).create(payload)
+            const createdSessionIdParseResult = z
+                .string()
+                .nonempty()
+                .safeParse(createSessionRecordResult[0]?.id)
+            if (!createdSessionIdParseResult.success) {
+                void this.logger.fatal(`Couldn't create the session! Aborting...`)
+                return error(undefined)
+            }
+
+            return ok(createdSessionIdParseResult.data)
+        } catch (e) {
+            void this.logger.error((e as any).toString())
             return error(undefined)
         }
-
-        return ok(createdSessionIdParseResult.data)
     }
 
     private async createAttendanceRecords(
@@ -423,7 +428,8 @@ export class PushlogAirtable implements PushlogTarget {
 
             await this.base(this.attendanceTableId).create(payload)
             return ok(undefined)
-        } catch (_e) {
+        } catch (e) {
+            void this.logger.error((e as any).toString())
             return error(undefined)
         }
     }
