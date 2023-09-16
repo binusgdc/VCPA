@@ -16,5 +16,4 @@ RUN npm run build
 FROM base AS run
 COPY --from=build /app/build ./build
 COPY --from=dependencies /app/node_modules ./node_modules
-COPY data ./data
 ENTRYPOINT [ "npm", "start" ]
