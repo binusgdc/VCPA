@@ -33,6 +33,8 @@ export class StartCommandHandler extends AbstractCommandHandler {
     }
 
     public async handle(interaction: ChatInputCommandInteraction): Promise<void> {
+        await interaction.deferReply()
+
         if (interaction.guild === null) {
             return
         }
@@ -45,7 +47,7 @@ export class StartCommandHandler extends AbstractCommandHandler {
             console.log(
                 `>>> Failed to start session: ${interaction.user.id} tried to start a session but they're not in a voice channel!`
             )
-            await interaction.reply(
+            await interaction.editReply(
                 `>>> Failed to start session: <@${interaction.user.id}> tried to start a session but they're not in a voice channel!`
             )
             return
@@ -55,7 +57,7 @@ export class StartCommandHandler extends AbstractCommandHandler {
             console.log(
                 `>>> Failed to start session: ${interaction.user.id} tried to start a session somewhere not a voice channel!`
             )
-            await interaction.reply(
+            await interaction.editReply(
                 `>>> Failed to start session: <@${interaction.user.id}> tried to start a session somewhere not a voice channel!`
             )
             return
@@ -74,7 +76,7 @@ export class StartCommandHandler extends AbstractCommandHandler {
                 console.log(
                     `>>> Failed to start session: ${interaction.user.id} tried to start a session in ${targetChannel.id} but a session is already running there!`
                 )
-                await interaction.reply(
+                await interaction.editReply(
                     `>>> Failed to start a session: <@${interaction.user.id}> tried to start a session <#${targetChannel.id}> but a session is already running there!`
                 )
             }
@@ -82,7 +84,7 @@ export class StartCommandHandler extends AbstractCommandHandler {
         }
 
         console.log(`>>> ${interaction.user.id} started a session in ${targetChannel.id}!`)
-        await interaction.reply(
+        await interaction.editReply(
             `>>> <@${interaction.user.id}> started a session in <#${targetChannel.id}>!`
         )
     }

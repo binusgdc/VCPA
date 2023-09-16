@@ -33,6 +33,8 @@ export class StopCommandHandler extends AbstractCommandHandler {
         }
     }
     public async handle(interaction: ChatInputCommandInteraction): Promise<void> {
+        await interaction.deferReply()
+
         if (interaction.guild === null) {
             return
         }
@@ -45,7 +47,7 @@ export class StopCommandHandler extends AbstractCommandHandler {
             console.log(
                 `>>> Failed to stop session: ${interaction.user.id} tried to stop a session without specifying which!`
             )
-            await interaction.reply(
+            await interaction.editReply(
                 `>>> Failed to stop session: <@${interaction.user.id}> tried to stop a session without specifying which!`
             )
             return
@@ -55,7 +57,7 @@ export class StopCommandHandler extends AbstractCommandHandler {
             console.log(
                 `>>> Failed to stop session: ${interaction.user.id} tried to stop a session somewhere it couldn't be in anyway!`
             )
-            await interaction.reply(
+            await interaction.editReply(
                 `>>> Failed to stop session: <@${interaction.user.id}> tried to stop a session somewhere it couldn't be in anyway!`
             )
             return
@@ -74,13 +76,13 @@ export class StopCommandHandler extends AbstractCommandHandler {
                 console.log(
                     `>>> Failed to stop session: ${interaction.user.id} tried to stop a non-existent session!`
                 )
-                await interaction.reply(
+                await interaction.editReply(
                     `>>> Failed to stop session: <@${interaction.user.id}> tried to stop a non-existent session!`
                 )
             }
             if (stopSessionResult.error.type === "LogNotStored") {
                 console.log(`>>> FAILED to store the session log!`)
-                await interaction.reply(`>>> FAILED to store the session log!`)
+                await interaction.editReply(`>>> FAILED to store the session log!`)
                 const { sessionData, fileOutputPaths } = stopSessionResult.error.sessionOutput
                 await interaction.followUp({
                     embeds: [this.buildEmbedFromSessionDetails(sessionData)],
@@ -95,7 +97,7 @@ export class StopCommandHandler extends AbstractCommandHandler {
         console.log(
             `${interaction.user.id} stopped a session in ${targetChannel.id}! Session Log stored as: ${sessionLog.id}`
         )
-        await interaction.reply(
+        await interaction.editReply(
             `<@${interaction.user.id}> stopped a session in <#${targetChannel.id}>! Session Log stored as: ${sessionLog.id}`
         )
         await interaction.followUp({
