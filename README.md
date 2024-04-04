@@ -7,8 +7,7 @@
 1. Create an application at the [discord developer portal](https://discord.com/developers/applications)
 2. Clone the repository
 3. Create a .env file (see example.env) at the repository root
-4. [Create a `config.json` file](https://github.com/binusgdc/VCPA/wiki/Setup#configjson) at the repository root
-5. Build (`npm build`) and run (`npm start`)
+4. Build (`npm build`) and run (`npm start`)
 
 ## Contributing
 
