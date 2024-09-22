@@ -1,9 +1,7 @@
 build/
-config.json
 gcreds.json
 node_modules/
 run/
 coverage/
 .vscode/
 data/*.db
-.env*

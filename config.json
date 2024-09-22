@@ -1,0 +1,28 @@
+{
+    "token": "MTI4MDQxOTA4ODQ1OTM2NjUwMQ.GztSOg.-ebISvc8CLkLMh49H3EVOP-v9c4QZA0bT2i-tg",                  
+    "serviceLocationWhiteList": [     
+        {
+            "guildId": "1280424725935292438",             
+            "ioChannelId": "1280424725935292441",          
+            "commandAccessRoleIds": [   
+            "1280430569586557030"
+
+            ]
+        }
+    ],
+
+    "bgdc": {
+        "msSessionsSheetId": "1WIQQltSMUtSGrN4J-1u6_2vjj7UxeVOj2DqyZVlBZlE",
+        "msSessionsSubjectRanges": {
+            "PROGA": "MsSessions!B27:K53",
+            "PROGB": "MsSessions!B56:K81",
+            "DESG": "MsSessions!B84:K109",
+            "A2D": "MsSessions!B112:K138",
+            "A3D": "MsSessions!B141:K166",
+            "SND": "MsSessions!B169:K194"
+        },
+
+        "attdetCsvGdriveFolderId": "1CjW7NGcleH8qr_0pndqinpWF2M-OaAEiaYGB7BUUxUPNST2vMKM57874XpJHB0VhtoOm8lbl",
+        "procdetCsvGdriveFolderId": "1JxIY4ufB4LEAmL0olV-GftWV3xq6YNdZYjL5zndn4_bTjuOlHYf8B_TjB9veMaLFBVBb0scH"
+    }
+}
