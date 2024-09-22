@@ -13,15 +13,15 @@ type FormatDateStyle = "VERBOSE" | "STD" | "DATE" | "TME" | "EXCEL"
 export function formatDate(date: DateTime, style: FormatDateStyle) {
     switch (style) {
         case "VERBOSE":
-            return date.setZone("UTC+7").toFormat("d MMMM yyyy HH:mm:ss.SSS 'UTC'Z")
+            return date.setZone("UTC+7").toFormat("d MMMM yyyy HH-mm-ss.SSS 'UTC'Z")
         case "STD":
-            return date.toString()
+            return date.toFormat("d MMMM yyyy HH-mm-ss.SSS 'UTC'Z")
         case "DATE":
             return date.setZone("UTC+7").toFormat("yyyy-MM-dd")
         case "TME":
             return date.setZone("UTC+7").toFormat("HH:mm")
         case "EXCEL":
-            return date.setZone("UTC+7").toFormat("yyyy-MM-dd HH:mm:ss.SSS")
+            return date.setZone("UTC+7").toFormat("yyyy-MM-dd HH-mm-ss.SSS")
     }
 }
 
