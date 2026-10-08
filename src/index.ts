@@ -1,3 +1,4 @@
+import { loadEnv } from "./util/env"
 import { REST } from "@discordjs/rest"
 import Airtable from "airtable"
 import { ApplicationCommandData, Client, GatewayIntentBits, Snowflake } from "discord.js"
@@ -21,7 +22,6 @@ import { InMemoryBufferSessionLogStore } from "./sessionLogStore/inMemoryBufferS
 import { SessionLogStore } from "./sessionLogStore/sessionLogStore"
 import { LoggerConfig, SessionLogStoreConfig, loadAndParseConfig } from "./util/config"
 import { DateTimeProvider, dtnow } from "./util/date"
-import { loadEnv } from "./util/env"
 import { CompositeLogger } from "./util/loggers/compositeLogger"
 import { ConsoleLogger } from "./util/loggers/consoleLogger"
 import { DiscordChannelLogger } from "./util/loggers/discordChannelLogger"
