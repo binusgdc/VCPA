@@ -106,9 +106,9 @@ export class SessionService {
 
         const { sesinfo, attdet, procdet } = generateSessionOutput(completedSession)
         const fileBaseName = formatDate(completedSession.timeEnded, "STD")
-        const sesinfoFilePath = `.../run/${fileBaseName}-sesinfo.csv`
-        const attdetFilePath = `.../run/${fileBaseName}-attdet.csv`
-        const procdetFilePath = `.../run/${fileBaseName}-procdet.csv`
+        const sesinfoFilePath = `run/${fileBaseName}-sesinfo.csv`
+        const attdetFilePath = `run/${fileBaseName}-attdet.csv`
+        const procdetFilePath = `run/${fileBaseName}-procdet.csv`
         const fileOutputPaths = [sesinfoFilePath, attdetFilePath, procdetFilePath]
         fs.writeFileSync(sesinfoFilePath, sesinfo)
         fs.writeFileSync(attdetFilePath, attdet)
